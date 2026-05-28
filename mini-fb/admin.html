@@ -476,8 +476,13 @@
     await bootstrap();
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await firebase.auth.signOut();
-      window.location.href = "login.html";
+      try {
+        await firebase.auth.signOut();
+        window.location.href = "/mini-fb/login.html";
+      } catch (error) {
+        console.error("Logout failed:", error);
+        alert("Logout failed. Please try again.");
+      }
     });
 
     // Dark mode toggle

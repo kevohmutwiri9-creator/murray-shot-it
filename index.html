@@ -249,8 +249,13 @@
 
     const user = getCurrentUser();
     document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await firebase.auth.signOut();
-      window.location.href = "mini-fb/login.html";
+      try {
+        await firebase.auth.signOut();
+        window.location.href = "/mini-fb/login.html";
+      } catch (error) {
+        console.error("Logout failed:", error);
+        alert("Logout failed. Please try again.");
+      }
     });
 
     // Store current user for feed.js

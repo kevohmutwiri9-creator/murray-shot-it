@@ -3,7 +3,7 @@
 
 const IMGBB_API_KEY = "ff9881bca38d9ff39e53033360d2b6ec";
 
-export async function compressImage(file, maxWidth = 1920, quality = 0.8) {
+export async function compressImage(file, maxWidth = 2560, quality = 0.95) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
