@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapVerse • Search</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1a1a2e',
+            secondary: '#16213e',
+            accent: '#e94560',
+            light: '#f8f9fa',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+  <!-- Header -->
+  <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center space-x-2">
+          <img src="murray.png" alt="SnapVerse" class="w-8 h-8"/>
+          <span class="text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg id="sunIcon" class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <a href="index.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Feed</a>
+          <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-primary text-white hover:bg-secondary transition">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search Bar -->
+    <section class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search for users, posts, or hashtags..."
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30"
+        />
+        <div class="mt-3 flex gap-2">
+          <button id="searchUsersBtn" class="px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">Users</button>
+          <button id="searchPostsBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Posts</button>
+          <button id="searchHashtagsBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Hashtags</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Results -->
+    <section>
+      <h2 id="resultsTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Search Results</h2>
+      <div id="searchResults" class="space-y-4">
+        <div class="text-center text-gray-500 dark:text-gray-400 py-12">Enter a search term above</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { ensureAuth, getCurrentUser } from "./src/auth.js";
+    import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebase = initFirebase();
+    await ensureAuth(firebase);
+
+    const user = getCurrentUser();
+    const db = firebase.__db;
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+
+    if (localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    }
+
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await firebase.__auth.signOut();
+      window.location.href = "login.html";
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById("searchInput");
+    const searchResults = document.getElementById("searchResults");
+    const resultsTitle = document.getElementById("resultsTitle");
+    let currentSearchType = "users";
+
+    document.getElementById("searchUsersBtn").addEventListener("click", () => {
+      currentSearchType = "users";
+      updateButtonStyles();
+      if (searchInput.value.trim()) performSearch();
+    });
+
+    document.getElementById("searchPostsBtn").addEventListener("click", () => {
+      currentSearchType = "posts";
+      updateButtonStyles();
+      if (searchInput.value.trim()) performSearch();
+    });
+
+    document.getElementById("searchHashtagsBtn").addEventListener("click", () => {
+      currentSearchType = "hashtags";
+      updateButtonStyles();
+      if (searchInput.value.trim()) performSearch();
+    });
+
+    function updateButtonStyles() {
+      const usersBtn = document.getElementById("searchUsersBtn");
+      const postsBtn = document.getElementById("searchPostsBtn");
+      const hashtagsBtn = document.getElementById("searchHashtagsBtn");
+
+      usersBtn.className = currentSearchType === "users" 
+        ? "px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition"
+        : "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+      
+      postsBtn.className = currentSearchType === "posts"
+        ? "px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition"
+        : "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+      
+      hashtagsBtn.className = currentSearchType === "hashtags"
+        ? "px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition"
+        : "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+    }
+
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim()) {
+        performSearch();
+      } else {
+        searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">Enter a search term above</div>';
+      }
+    });
+
+    async function performSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) return;
+
+      searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">Searching...</div>';
+
+      try {
+        if (currentSearchType === "users") {
+          await searchUsers(query);
+        } else if (currentSearchType === "posts") {
+          await searchPosts(query);
+        } else if (currentSearchType === "hashtags") {
+          await searchHashtags(query);
+        }
+      } catch (error) {
+        searchResults.innerHTML = `<div class="text-center text-rose-600 dark:text-rose-400 py-12">Error: ${error.message}</div>`;
+      }
+    }
+
+    async function searchUsers(query) {
+      resultsTitle.textContent = "Users";
+      const profilesCol = collection(db, "profiles");
+      const snapshot = await getDocs(profilesCol);
+
+      const results = [];
+      snapshot.forEach((docSnap) => {
+        const profile = docSnap.data();
+        const displayName = (profile.displayName || "").toLowerCase();
+        const email = (profile.email || "").toLowerCase();
+        if (displayName.includes(query) || email.includes(query)) {
+          results.push({ id: docSnap.id, ...profile });
+        }
+      });
+
+      displayUserResults(results);
+    }
+
+    async function searchPosts(query) {
+      resultsTitle.textContent = "Posts";
+      const postsCol = collection(db, "posts");
+      const snapshot = await getDocs(postsCol);
+
+      const results = [];
+      snapshot.forEach((docSnap) => {
+        const post = docSnap.data();
+        const title = (post.title || "").toLowerCase();
+        const text = (post.text || "").toLowerCase();
+        if (title.includes(query) || text.includes(query)) {
+          results.push({ id: docSnap.id, ...post });
+        }
+      });
+
+      displayPostResults(results);
+    }
+
+    async function searchHashtags(query) {
+      resultsTitle.textContent = "Hashtags";
+      const hashtagsCol = collection(db, "hashtags");
+      const snapshot = await getDocs(hashtagsCol);
+
+      const results = [];
+      snapshot.forEach((docSnap) => {
+        const tag = docSnap.id.toLowerCase();
+        if (tag.includes(query)) {
+          results.push({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+
+      displayHashtagResults(results);
+    }
+
+    function displayUserResults(results) {
+      if (results.length === 0) {
+        searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">No users found</div>';
+        return;
+      }
+
+      searchResults.innerHTML = "";
+      results.forEach((profile) => {
+        const card = document.createElement("div");
+        card.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4";
+        card.innerHTML = `
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
+            ${(profile.displayName || profile.email || "U").charAt(0).toUpperCase()}
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-900 dark:text-white">${profile.displayName || profile.email}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">${profile.email}</p>
+            ${profile.bio ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${profile.bio}</p>` : ""}
+          </div>
+          <a href="profile.html" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+        `;
+        searchResults.appendChild(card);
+      });
+    }
+
+    function displayPostResults(results) {
+      if (results.length === 0) {
+        searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">No posts found</div>';
+        return;
+      }
+
+      searchResults.innerHTML = "";
+      results.forEach((post) => {
+        const card = document.createElement("div");
+        card.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4";
+        card.innerHTML = `
+          <h3 class="font-bold text-gray-900 dark:text-white">${post.title || "Untitled"}</h3>
+          <p class="text-gray-700 dark:text-gray-300 mt-1">${post.text || ""}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">By ${post.authorEmail || "Unknown"}</p>
+        `;
+        searchResults.appendChild(card);
+      });
+    }
+
+    function displayHashtagResults(results) {
+      if (results.length === 0) {
+        searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">No hashtags found</div>';
+        return;
+      }
+
+      searchResults.innerHTML = "";
+      results.forEach((hashtag) => {
+        const card = document.createElement("div");
+        card.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between";
+        card.innerHTML = `
+          <div>
+            <h3 class="font-bold text-gray-900 dark:text-white">#${hashtag.id}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">${hashtag.count || 0} posts</p>
+          </div>
+          <a href="hashtag.html?tag=${hashtag.id}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+        `;
+        searchResults.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapVerse • Feed</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1a1a2e',
+            secondary: '#16213e',
+            accent: '#e94560',
+            light: '#f8f9fa',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+  <!-- Header -->
+  <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center space-x-2">
+          <img src="murray.png" alt="SnapVerse" class="w-8 h-8"/>
+          <span class="text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg id="sunIcon" class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <div class="relative">
+            <button id="notificationsBtn" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition relative">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              <span id="notificationBadge" class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-white text-xs flex items-center justify-center hidden">0</span>
+            </button>
+            <div id="notificationsPanel" class="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hidden z-50">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-gray-900 dark:text-white">Notifications</h3>
+              </div>
+              <div id="notificationsList" class="max-h-96 overflow-y-auto">
+                <div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>
+              </div>
+            </div>
+          </div>
+          <div class="hidden sm:block">
+            <a href="search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Search</a>
+            <a href="profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Profile</a>
+            <a href="admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Admin</a>
+          </div>
+          <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-primary text-white hover:bg-secondary transition">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stories Section -->
+    <section class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Stories</h2>
+        <div id="storiesContainer" class="flex gap-4 overflow-x-auto pb-2">
+          <!-- Stories render here -->
+        </div>
+        <button id="addStoryBtn" class="mt-4 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">
+          + Add Story
+        </button>
+      </div>
+    </section>
+
+    <!-- Trending Topics -->
+    <section class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Trending Topics</h2>
+        <div id="trendingTopics" class="flex flex-wrap gap-2">
+          <!-- Trending hashtags render here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Post composer -->
+    <section class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create a post</h2>
+          <p class="text-gray-600 dark:text-gray-400 mt-1">Share photos/videos with your community.</p>
+        </div>
+
+        <form id="createPostForm" class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Title</label>
+              <input
+                id="postTitle"
+                type="text"
+                required
+                maxlength="80"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white"
+                placeholder="e.g., Summer Shoot"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Text</label>
+              <input
+                id="postText"
+                type="text"
+                required
+                maxlength="140"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white"
+                placeholder="Short description"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Media (image/video)</label>
+            <input
+              id="postFile"
+              type="file"
+              accept="image/*,video/*"
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Recommended: JPG/PNG for images (max 32MB). Videos supported (small files only).
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Schedule (optional)</label>
+            <input
+              id="postSchedule"
+              type="datetime-local"
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Leave empty to publish immediately.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button
+              type="submit"
+              id="createPostBtn"
+              class="px-5 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Publish
+            </button>
+
+            <div id="createPostStatus" class="text-sm text-gray-600 dark:text-gray-400"></div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Feed -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feed</h2>
+        <div class="text-sm text-gray-500 dark:text-gray-400" id="feedCount"></div>
+      </div>
+
+      <div id="feed" class="space-y-4">
+        <!-- Posts render here -->
+      </div>
+
+      <div id="feedEmpty" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
+        No posts yet. Create the first one above.
+      </div>
+    </section>
+
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Edit Post</h2>
+        <form id="editPostForm" class="space-y-4">
+          <input type="hidden" id="editPostId" />
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Title</label>
+            <input
+              id="editPostTitle"
+              type="text"
+              maxlength="80"
+              required
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30"
+              placeholder="e.g., Summer Shoot"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Text</label>
+            <textarea
+              id="editPostText"
+              maxlength="140"
+              rows="3"
+              required
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 resize-none"
+              placeholder="Short description"
+            ></textarea>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">
+              Save
+            </button>
+            <button type="button" id="cancelEditBtn" class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { ensureAuth, getCurrentUser } from "./src/auth.js";
+    import { startFeed } from "./src/feed.js";
+    import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { bindCreatePost } from "./src/admin.js";
+
+    // Boot
+    const firebase = initFirebase();
+    await ensureAuth(firebase);
+
+    const user = getCurrentUser();
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await firebase.auth.signOut();
+      window.location.href = "login.html";
+    });
+
+    // Store current user for feed.js
+    window.currentFirebaseUser = user;
+
+    startFeed(firebase);
+
+    bindCreatePost(firebase, {
+      titleEl: document.getElementById("postTitle"),
+      textEl: document.getElementById("postText"),
+      fileEl: document.getElementById("postFile"),
+      scheduleEl: document.getElementById("postSchedule"),
+      formEl: document.getElementById("createPostForm"),
+      btnEl: document.getElementById("createPostBtn"),
+      statusEl: document.getElementById("createPostStatus"),
+    });
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      }).catch((error) => {
+        console.error('Service Worker registration failed:', error);
+      });
+    }
+
+    // Check for saved preference or system preference
+    if (localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    }
+
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+    });
+
+    // Notifications
+    const notificationsBtn = document.getElementById("notificationsBtn");
+    const notificationsPanel = document.getElementById("notificationsPanel");
+    const notificationsList = document.getElementById("notificationsList");
+    const notificationBadge = document.getElementById("notificationBadge");
+
+    let notificationsPanelOpen = false;
+
+    notificationsBtn.addEventListener("click", () => {
+      notificationsPanelOpen = !notificationsPanelOpen;
+      notificationsPanel.classList.toggle("hidden", !notificationsPanelOpen);
+    });
+
+    // Close notifications panel when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!notificationsBtn.contains(e.target) && !notificationsPanel.contains(e.target)) {
+        notificationsPanelOpen = false;
+        notificationsPanel.classList.add("hidden");
+      }
+    });
+
+    // Load notifications
+    const loadNotifications = () => {
+      const user = getCurrentUser();
+      if (!user) return;
+
+      const db = firebase.__db;
+      const notificationsCol = collection(db, "notifications");
+      const q = query(notificationsCol, orderBy("createdAt", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        const notifications = [];
+        snapshot.forEach((docSnap) => {
+          const notif = docSnap.data();
+          if (notif.toUid === user.uid) {
+            notifications.push({ id: docSnap.id, ...notif });
+          }
+        });
+
+        notificationBadge.textContent = notifications.length;
+        notificationBadge.classList.toggle("hidden", notifications.length === 0);
+
+        notificationsList.innerHTML = "";
+        if (notifications.length === 0) {
+          notificationsList.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
+        } else {
+          notifications.forEach((notif) => {
+            const item = document.createElement("div");
+            item.className = "p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition";
+            
+            let icon = "";
+            let color = "";
+            if (notif.type === "like") {
+              icon = "♥";
+              color = "text-rose-500";
+            } else if (notif.type === "comment") {
+              icon = "✎";
+              color = "text-blue-500";
+            } else if (notif.type === "share") {
+              icon = "↗";
+              color = "text-green-500";
+            }
+
+            item.innerHTML = `
+              <div class="flex items-start gap-3">
+                <span class="text-lg ${color}">${icon}</span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 dark:text-white">${notif.message || "New notification"}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${notif.createdAt?.toDate?.() ? notif.createdAt.toDate().toLocaleString() : "Just now"}</p>
+                </div>
+              </div>
+            `;
+            notificationsList.appendChild(item);
+          });
+        }
+      });
+    };
+
+    loadNotifications();
+
+    // Load trending topics
+    const loadTrendingTopics = async () => {
+      const hashtagsCol = collection(db, "hashtags");
+      const snapshot = await getDocs(hashtagsCol);
+
+      const trending = [];
+      snapshot.forEach((docSnap) => {
+        trending.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      // Sort by count and take top 10
+      trending.sort((a, b) => (b.count || 0) - (a.count || 0));
+      const topTrending = trending.slice(0, 10);
+
+      const container = document.getElementById("trendingTopics");
+      container.innerHTML = "";
+
+      if (topTrending.length === 0) {
+        container.innerHTML = '<span class="text-gray-500 dark:text-gray-400 text-sm">No trending topics yet</span>';
+      } else {
+        topTrending.forEach((hashtag) => {
+          const tag = document.createElement("a");
+          tag.href = `hashtag.html?tag=${hashtag.id}`;
+          tag.className = "inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition";
+          tag.textContent = `#${hashtag.id}`;
+          container.appendChild(tag);
+        });
+      }
+    };
+
+    loadTrendingTopics();
+
+    // Load stories
+    const loadStories = () => {
+      const storiesCol = collection(db, "stories");
+      const q = query(storiesCol, orderBy("createdAt", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById("storiesContainer");
+        container.innerHTML = "";
+
+        const now = new Date();
+        const stories = [];
+
+        snapshot.forEach((docSnap) => {
+          const story = docSnap.data();
+          const expiresAt = new Date(story.expiresAt);
+          if (expiresAt > now) {
+            stories.push({ id: docSnap.id, ...story });
+          }
+        });
+
+        if (stories.length === 0) {
+          container.innerHTML = '<span class="text-gray-500 dark:text-gray-400 text-sm">No stories yet</span>';
+        } else {
+          stories.forEach((story) => {
+            const storyEl = document.createElement("div");
+            storyEl.className = "flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-accent to-purple-600 cursor-pointer relative overflow-hidden";
+            
+            if (story.mediaUrl) {
+              const img = document.createElement("img");
+              img.src = story.mediaUrl;
+              img.alt = "Story";
+              img.className = "w-full h-full object-cover";
+              storyEl.appendChild(img);
+            }
+            
+            const overlay = document.createElement("div");
+            overlay.className = "absolute inset-0 bg-black/30";
+            storyEl.appendChild(overlay);
+            
+            const label = document.createElement("div");
+            label.className = "absolute bottom-1 left-1 text-white text-xs font-semibold truncate w-18";
+            label.textContent = story.authorEmail?.split("@")[0] || "User";
+            storyEl.appendChild(label);
+            
+            storyEl.addEventListener("click", () => {
+              alert("Story viewer coming soon!");
+            });
+            container.appendChild(storyEl);
+          });
+        }
+      });
+    };
+
+    loadStories();
+
+    // Add story button
+    document.getElementById("addStoryBtn").addEventListener("click", () => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+          const { uploadMedia } = await import("./src/image-upload.js");
+          const result = await uploadMedia(file);
+          
+          const storiesCol = collection(db, "stories");
+          await addDoc(storiesCol, {
+            mediaUrl: result.url,
+            mediaType: result.mediaType,
+            authorUid: user.uid,
+            authorEmail: user.email || null,
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+          });
+
+          alert("Story added!");
+        } catch (error) {
+          alert("Failed to add story: " + error.message);
+        }
+      };
+      fileInput.click();
+    });
+
+    // Edit post functionality
+    const editPostModal = document.getElementById("editPostModal");
+    const editPostForm = document.getElementById("editPostForm");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+    // Handle edit button clicks from feed
+    document.addEventListener("click", (e) => {
+      const editBtn = e.target.closest("[data-edit-id]");
+      if (editBtn) {
+        const postId = editBtn.dataset.editId;
+        const title = editBtn.dataset.editTitle;
+        const text = editBtn.dataset.editText;
+
+        document.getElementById("editPostId").value = postId;
+        document.getElementById("editPostTitle").value = title;
+        document.getElementById("editPostText").value = text;
+        editPostModal.classList.remove("hidden");
+      }
+    });
+
+    cancelEditBtn.addEventListener("click", () => {
+      editPostModal.classList.add("hidden");
+    });
+
+    editPostForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const postId = document.getElementById("editPostId").value;
+      const title = document.getElementById("editPostTitle").value.trim();
+      const text = document.getElementById("editPostText").value.trim();
+
+      const db = firebase.__db;
+      const postRef = doc(db, "posts", postId);
+      await updateDoc(postRef, {
+        title,
+        text,
+        updatedAt: new Date()
+      });
+
+      editPostModal.classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

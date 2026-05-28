@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapVerse • Admin</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0f172a',
+            secondary: '#111827',
+            accent: '#e94560',
+            light: '#f8fafc',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(233,69,96,0.16),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] dark:from-gray-900 dark:to-gray-800 text-slate-900 dark:text-slate-100 font-sans">
+  <nav class="sticky top-0 z-40 border-b border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between gap-4">
+        <a href="index.html" class="flex items-center gap-3">
+          <img src="murray.png" alt="SnapVerse" class="h-9 w-9 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-1"/>
+          <div>
+            <p class="text-sm font-black uppercase tracking-[0.24em] text-accent">SnapVerse</p>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Admin dashboard</p>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button id="darkModeToggle" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-gray-700 transition">
+            <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg id="sunIcon" class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <a href="profile.html" class="hidden rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:border-accent hover:text-accent sm:inline-flex">
+            Profile
+          </a>
+          <a href="index.html" class="hidden rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:border-accent hover:text-accent sm:inline-flex">
+            Open feed
+          </a>
+          <button id="logoutBtn" class="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+      <div class="grid lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="p-8 sm:p-10 lg:p-12">
+          <span class="inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-accent">
+            Professional moderation
+          </span>
+          <h1 class="mt-5 text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+            Manage posts with a cleaner, more polished workflow.
+          </h1>
+          <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-400 sm:text-lg">
+            Review the live feed, publish new content, and remove posts when needed. This dashboard is designed to feel like a real production tool.
+          </p>
+
+          <div class="mt-8 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4">
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">Realtime moderation</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">See updates as soon as content changes.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4">
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">Media publishing</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">Upload image or video posts directly.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4">
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">Secure access</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">Only admin accounts can manage content.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 dark:border-slate-700 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-8 text-white lg:border-l lg:border-t-0 lg:p-10">
+          <h2 class="text-2xl font-bold">Dashboard status</h2>
+          <p class="mt-2 text-sm leading-6 text-white/70">
+            Monitor access and moderation activity from one place.
+          </p>
+
+          <div class="mt-6 space-y-4">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Access</p>
+              <p id="adminStatus" class="mt-2 text-sm font-medium text-white/85">Checking permissions...</p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Workflow</p>
+              <p class="mt-2 text-sm leading-6 text-white/75">Delete, create, and review posts from the same dashboard.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid gap-8 lg:grid-cols-[1fr_0.95fr]">
+      <!-- Analytics Section -->
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Analytics</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Platform engagement metrics.</p>
+        </div>
+        <div class="px-6 py-6 sm:px-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4 text-center">
+              <p id="totalPosts" class="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Posts</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4 text-center">
+              <p id="totalUsers" class="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Users</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4 text-center">
+              <p id="totalLikes" class="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Likes</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 p-4 text-center">
+              <p id="totalComments" class="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Comments</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Posts</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Real-time list of posts visible in the public feed.</p>
+        </div>
+
+        <div class="px-6 py-6 sm:px-8">
+          <div id="adminPosts" class="space-y-4">
+            <!-- Posts render here -->
+          </div>
+
+          <div id="adminEmpty" class="hidden rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 py-12 text-center text-slate-500 dark:text-slate-400">
+            No posts yet.
+          </div>
+        </div>
+      </section>
+
+      <!-- Flagged Posts Section -->
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Flagged Posts</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Posts reported by users for review.</p>
+        </div>
+
+        <div class="px-6 py-6 sm:px-8">
+          <div id="flaggedPosts" class="space-y-4">
+            <!-- Flagged posts render here -->
+          </div>
+
+          <div id="noFlags" class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 py-12 text-center text-slate-500 dark:text-slate-400">
+            No flagged posts.
+          </div>
+        </div>
+      </section>
+
+      <!-- User Management Section -->
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">User Management</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage user accounts and ban status.</p>
+        </div>
+
+        <div class="px-6 py-6 sm:px-8">
+          <div id="userList" class="space-y-4">
+            <!-- Users render here -->
+          </div>
+        </div>
+      </section>
+
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Create a post</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Publish content for the community with an optional media upload.</p>
+        </div>
+
+        <div class="px-6 py-6 sm:px-8">
+          <form id="adminCreatePostForm" class="space-y-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Title</label>
+                <input
+                  id="adminPostTitle"
+                  type="text"
+                  maxlength="80"
+                  required
+                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-4 py-3 text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-accent focus:bg-white dark:focus:bg-gray-600 focus:ring-4 focus:ring-accent/10"
+                  placeholder="e.g., Behind the scenes"
+                />
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Text</label>
+                <input
+                  id="adminPostText"
+                  type="text"
+                  maxlength="140"
+                  required
+                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-4 py-3 text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-accent focus:bg-white dark:focus:bg-gray-600 focus:ring-4 focus:ring-accent/10"
+                  placeholder="Short description"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Media</label>
+              <input
+                id="adminPostFile"
+                type="file"
+                accept="image/*"
+                class="w-full rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-secondary"
+              />
+              <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                Optional. Images only (max 32MB).
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3 font-semibold text-white shadow-[0_14px_30px_rgba(233,69,96,0.24)] transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+                id="adminPublishBtn"
+              >
+                Publish post
+              </button>
+              <div id="adminCreateStatus" class="text-sm text-slate-600 dark:text-slate-400"></div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { ensureAuth, getCurrentUser, isAdmin } from "./src/auth.js";
+    import { renderAdminPosts, adminBindCreatePost, adminDeletePost } from "./src/admin.js";
+    import { getDocs, collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebase = initFirebase();
+
+    const adminStatus = document.getElementById("adminStatus");
+    const adminCreateStatus = document.getElementById("adminCreateStatus");
+
+    const bootstrap = async () => {
+      try {
+        await ensureAuth(firebase);
+      } catch {
+        adminStatus.textContent = "Please sign in first.";
+        window.location.href = "login.html";
+        return;
+      }
+
+      const user = getCurrentUser();
+      const admin = await isAdmin(firebase, user.uid);
+
+      if (!admin) {
+        adminStatus.textContent = "Access denied: not an admin.";
+        adminCreateStatus.textContent = "You do not have permission to publish or delete posts.";
+        return;
+      }
+
+      adminStatus.textContent = `Signed in as admin: ${user.email || user.uid}`;
+
+      // Load analytics
+      loadAnalytics(firebase);
+
+      // Load flagged posts
+      loadFlaggedPosts(firebase);
+
+      // Load user management
+      loadUserManagement(firebase);
+
+      renderAdminPosts(firebase, {
+        containerEl: document.getElementById("adminPosts"),
+        emptyEl: document.getElementById("adminEmpty"),
+        onDelete: async (postId) => {
+          await adminDeletePost(firebase, postId);
+        },
+      });
+
+      adminBindCreatePost(firebase, {
+        titleEl: document.getElementById("adminPostTitle"),
+        textEl: document.getElementById("adminPostText"),
+        fileEl: document.getElementById("adminPostFile"),
+        formEl: document.getElementById("adminCreatePostForm"),
+        btnEl: document.getElementById("adminPublishBtn"),
+        statusEl: adminCreateStatus,
+      });
+    };
+
+    const loadAnalytics = async (firebase) => {
+      const db = firebase.__db;
+
+      try {
+        // Load total posts
+        const postsSnap = await getDocs(collection(db, "posts"));
+        document.getElementById("totalPosts").textContent = postsSnap.size;
+
+        // Load total users (profiles)
+        const profilesSnap = await getDocs(collection(db, "profiles"));
+        document.getElementById("totalUsers").textContent = profilesSnap.size;
+
+        // Load total likes (sum of likes across all posts)
+        let totalLikes = 0;
+        postsSnap.forEach((docSnap) => {
+          const likes = docSnap.data().likes || 0;
+          totalLikes += likes;
+        });
+        document.getElementById("totalLikes").textContent = totalLikes;
+
+        // Load total comments
+        let totalComments = 0;
+        for (const postDoc of postsSnap.docs) {
+          const commentsCol = collection(db, "posts", postDoc.id, "comments");
+          const commentsSnap = await getDocs(commentsCol);
+          totalComments += commentsSnap.size;
+        }
+        document.getElementById("totalComments").textContent = totalComments;
+      } catch (error) {
+        console.error("Error loading analytics:", error);
+      }
+    };
+
+    const loadFlaggedPosts = (firebase) => {
+      const db = firebase.__db;
+      const flagsCol = collection(db, "flags");
+      const q = query(flagsCol, orderBy("createdAt", "desc"));
+
+      onSnapshot(q, async (snapshot) => {
+        const container = document.getElementById("flaggedPosts");
+        const noFlagsEl = document.getElementById("noFlags");
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+          noFlagsEl.classList.remove("hidden");
+          return;
+        }
+
+        noFlagsEl.classList.add("hidden");
+
+        for (const flagDoc of snapshot.docs) {
+          const flag = flagDoc.data();
+          const postRef = doc(db, "posts", flag.postId);
+          const postSnap = await getDoc(postRef);
+
+          if (!postSnap.exists()) continue;
+
+          const post = postSnap.data();
+
+          const card = document.createElement("div");
+          card.className = "rounded-2xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/10 p-4";
+          card.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="font-bold text-slate-900 dark:text-white">${post.title || "Untitled"}</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">${post.text || ""}</p>
+              </div>
+              <span class="text-xs bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 px-2 py-1 rounded-full">${flag.status || "pending"}</span>
+            </div>
+            <div class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+              <p><strong>Reason:</strong> ${flag.reason || "No reason provided"}</p>
+              <p><strong>Reported by:</strong> ${flag.reporterEmail || "Unknown"}</p>
+              <p><strong>Post ID:</strong> ${flag.postId}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="px-3 py-1 rounded-lg bg-green-500 text-white text-sm hover:bg-green-600 transition" data-flag-id="${flagDoc.id}" data-post-id="${flag.postId}" data-action="resolve">Resolve</button>
+              <button class="px-3 py-1 rounded-lg bg-rose-500 text-white text-sm hover:bg-rose-600 transition" data-flag-id="${flagDoc.id}" data-post-id="${flag.postId}" data-action="delete">Delete Post</button>
+            </div>
+          `;
+          container.appendChild(card);
+        }
+
+        // Add event listeners for flag actions
+        container.querySelectorAll("button[data-action]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const flagId = btn.dataset.flagId;
+            const postId = btn.dataset.postId;
+            const action = btn.dataset.action;
+
+            if (action === "resolve") {
+              await updateDoc(doc(db, "flags", flagId), { status: "resolved" });
+              alert("Flag resolved.");
+            } else if (action === "delete") {
+              if (confirm("Delete this post?")) {
+                await adminDeletePost(firebase, postId);
+                await updateDoc(doc(db, "flags", flagId), { status: "post_deleted" });
+              }
+            }
+          });
+        });
+      });
+    };
+
+    const loadUserManagement = (firebase) => {
+      const db = firebase.__db;
+      const profilesCol = collection(db, "profiles");
+
+      onSnapshot(profilesCol, (snapshot) => {
+        const container = document.getElementById("userList");
+        container.innerHTML = "";
+
+        snapshot.forEach((docSnap) => {
+          const profile = docSnap.data();
+          const card = document.createElement("div");
+          card.className = "rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 p-4 flex items-center justify-between";
+          card.innerHTML = `
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-lg font-bold flex items-center justify-center">
+                ${(profile.displayName || profile.email || "U").charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 dark:text-white">${profile.displayName || profile.email}</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">${profile.email}</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button class="px-3 py-1 rounded-lg bg-rose-500 text-white text-sm hover:bg-rose-600 transition" data-user-uid="${profile.uid}" data-action="ban">Ban</button>
+              <button class="px-3 py-1 rounded-lg bg-green-500 text-white text-sm hover:bg-green-600 transition" data-user-uid="${profile.uid}" data-action="unban">Unban</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        // Add event listeners for ban/unban actions
+        container.querySelectorAll("button[data-action]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const uid = btn.dataset.userUid;
+            const action = btn.dataset.action;
+
+            if (action === "ban") {
+              if (confirm("Ban this user?")) {
+                await setDoc(doc(db, "banned", uid), {
+                  uid,
+                  bannedAt: new Date(),
+                  bannedBy: user.email || user.uid
+                });
+                alert("User banned.");
+              }
+            } else if (action === "unban") {
+              if (confirm("Unban this user?")) {
+                await deleteDoc(doc(db, "banned", uid));
+                alert("User unbanned.");
+              }
+            }
+          });
+        });
+      });
+    };
+
+    await bootstrap();
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await firebase.auth.signOut();
+      window.location.href = "login.html";
+    });
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+
+    // Check for saved preference or system preference
+    if (localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    }
+
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+    });
+  </script>
+</body>
+</html>

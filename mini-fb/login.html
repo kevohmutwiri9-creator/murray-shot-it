@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapVerse • Login</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0f172a',
+            secondary: '#111827',
+            accent: '#e94560',
+            light: '#f8fafc',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(233,69,96,0.25),_transparent_30%),linear-gradient(135deg,#0f172a_0%,#111827_50%,#0f172a_100%)] text-white font-sans">
+  <main class="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
+    <div class="grid w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:grid-cols-[1.1fr_0.9fr]">
+      <section class="flex flex-col justify-between gap-8 p-8 sm:p-10 lg:p-12">
+        <div class="flex items-center justify-between gap-4">
+          <a href="index.html" class="flex items-center gap-3">
+            <img src="murray.png" alt="SnapVerse" class="h-12 w-12 rounded-2xl border border-white/10 bg-white/10 p-1"/>
+            <div>
+              <h1 class="text-2xl font-extrabold tracking-tight">SnapVerse</h1>
+              <p class="text-sm text-white/70">Professional social feed for creators</p>
+            </div>
+          </a>
+
+          <div class="flex items-center gap-3">
+            <button id="darkModeToggle" class="rounded-full border border-white/15 bg-white/5 p-2 text-white/80 transition hover:bg-white/10 hover:text-white">
+              <svg id="moonIcon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              <svg id="sunIcon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </button>
+            <a href="index.html" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white">
+              Back to feed
+            </a>
+          </div>
+        </div>
+
+        <div class="max-w-xl">
+          <span class="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-accent">
+            Creator access
+          </span>
+          <h2 class="mt-5 text-4xl font-black leading-tight sm:text-5xl">
+            Sign in to manage posts, media, and moderation.
+          </h2>
+          <p class="mt-4 max-w-lg text-base leading-7 text-white/75 sm:text-lg">
+            Use your SnapVerse account to publish content, keep the feed active, and access the admin dashboard.
+          </p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p class="text-sm font-semibold text-white">Fast publishing</p>
+            <p class="mt-1 text-sm leading-6 text-white/65">Create polished posts with optional images and video.</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p class="text-sm font-semibold text-white">Realtime feed</p>
+            <p class="mt-1 text-sm leading-6 text-white/65">Your updates appear instantly across the app.</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p class="text-sm font-semibold text-white">Admin tools</p>
+            <p class="mt-1 text-sm leading-6 text-white/65">Moderate content with secure admin gating.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="border-t border-white/10 bg-white/10 p-8 sm:p-10 lg:border-l lg:border-t-0 lg:p-12">
+        <div class="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 shadow-inner sm:p-8">
+          <h2 class="text-3xl font-bold">Login</h2>
+          <p class="mt-2 text-sm leading-6 text-white/70">
+            Sign in to publish content or create an account if you’re new to SnapVerse.
+          </p>
+
+          <form id="loginForm" class="mt-8 space-y-5">
+            <div>
+              <label for="email" class="mb-2 block text-sm font-semibold text-white/85">Email address</label>
+              <input
+                id="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-accent focus:bg-white/10 focus:ring-4 focus:ring-accent/15"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label for="password" class="mb-2 block text-sm font-semibold text-white/85">Password</label>
+              <input
+                id="password"
+                type="password"
+                required
+                minlength="6"
+                autocomplete="current-password"
+                class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-accent focus:bg-white/10 focus:ring-4 focus:ring-accent/15"
+                placeholder="••••••••"
+              />
+              <p class="mt-2 text-xs text-white/50">Passwords must be at least 6 characters.</p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3.5 font-semibold text-white shadow-[0_14px_30px_rgba(233,69,96,0.28)] transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+                id="loginBtn"
+              >
+                Sign in
+              </button>
+
+              <button
+                type="button"
+                id="createAccountBtn"
+                class="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 font-semibold text-white transition hover:bg-white/10"
+              >
+                Create account
+              </button>
+            </div>
+
+            <div id="authStatus" class="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80"></div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { ensureAuth, login, createAccount, getCurrentUser } from "./src/auth.js";
+
+    const firebase = initFirebase();
+
+    const form = document.getElementById("loginForm");
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const authStatus = document.getElementById("authStatus");
+    const loginBtn = document.getElementById("loginBtn");
+    const createAccountBtn = document.getElementById("createAccountBtn");
+
+    const showStatus = (msg, isError = false) => {
+      authStatus.textContent = msg;
+      authStatus.className = isError
+        ? "rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"
+        : "rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80";
+    };
+
+    const goToFeed = () => {
+      window.location.href = "index.html";
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginBtn.disabled = true;
+      showStatus("Signing in...");
+      try {
+        await login(firebase, emailEl.value, passwordEl.value);
+        showStatus("Signed in successfully.");
+        goToFeed();
+      } catch (err) {
+        showStatus(err?.message || "Login failed.", true);
+      } finally {
+        loginBtn.disabled = false;
+      }
+    });
+
+    createAccountBtn.addEventListener("click", async () => {
+      createAccountBtn.disabled = true;
+      showStatus("Creating account...");
+      try {
+        await createAccount(firebase, emailEl.value, passwordEl.value);
+        showStatus("Account created. You can now sign in.");
+      } catch (err) {
+        showStatus(err?.message || "Account creation failed.", true);
+      } finally {
+        createAccountBtn.disabled = false;
+      }
+    });
+
+    await ensureAuth(firebase).catch(() => {});
+    const user = getCurrentUser();
+    if (user) goToFeed();
+    else showStatus("Use your email and password to continue.");
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+
+    // Check for saved preference or system preference
+    if (localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+      moonIcon.classList.add("hidden");
+      sunIcon.classList.remove("hidden");
+    }
+
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+      moonIcon.classList.toggle("hidden");
+      sunIcon.classList.toggle("hidden");
+    });
+  </script>
+</body>
+</html>
