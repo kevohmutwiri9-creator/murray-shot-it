@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SnapVerse • Feed</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="mini-fb/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="murray.png" type="image/png" />
+  <link rel="icon" href="mini-fb/murray.png" type="image/png" />
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -36,7 +36,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <a href="index.html" class="flex items-center space-x-2">
-          <img src="murray.png" alt="SnapVerse" class="w-8 h-8"/>
+          <img src="mini-fb/murray.png" alt="SnapVerse" class="w-8 h-8"/>
           <span class="text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
         </a>
 
@@ -66,9 +66,9 @@
             </div>
           </div>
           <div class="hidden sm:block">
-            <a href="search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Search</a>
-            <a href="profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Profile</a>
-            <a href="admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Admin</a>
+            <a href="mini-fb/search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Search</a>
+            <a href="mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Profile</a>
+            <a href="mini-fb/admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Admin</a>
           </div>
           <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-primary text-white hover:bg-secondary transition">
             Logout
@@ -237,11 +237,11 @@
 
   <!-- Scripts -->
   <script type="module">
-    import { initFirebase } from "./src/firebase-config.js";
-    import { ensureAuth, getCurrentUser } from "./src/auth.js";
-    import { startFeed } from "./src/feed.js";
+    import { initFirebase } from "./mini-fb/src/firebase-config.js";
+    import { ensureAuth, getCurrentUser } from "./mini-fb/src/auth.js";
+    import { startFeed } from "./mini-fb/src/feed.js";
     import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { bindCreatePost } from "./src/admin.js";
+    import { bindCreatePost } from "./mini-fb/src/admin.js";
 
     // Boot
     const firebase = initFirebase();
@@ -250,7 +250,7 @@
     const user = getCurrentUser();
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await firebase.auth.signOut();
-      window.location.href = "login.html";
+      window.location.href = "mini-fb/login.html";
     });
 
     // Store current user for feed.js
@@ -275,7 +275,7 @@
 
     // Register service worker for offline support
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then((registration) => {
+      navigator.serviceWorker.register('/mini-fb/sw.js').then((registration) => {
         console.log('Service Worker registered with scope:', registration.scope);
       }).catch((error) => {
         console.error('Service Worker registration failed:', error);
@@ -396,7 +396,7 @@
       } else {
         topTrending.forEach((hashtag) => {
           const tag = document.createElement("a");
-          tag.href = `hashtag.html?tag=${hashtag.id}`;
+          tag.href = `mini-fb/hashtag.html?tag=${hashtag.id}`;
           tag.className = "inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition";
           tag.textContent = `#${hashtag.id}`;
           container.appendChild(tag);
@@ -471,7 +471,7 @@
         if (!file) return;
 
         try {
-          const { uploadMedia } = await import("./src/image-upload.js");
+          const { uploadMedia } = await import("./mini-fb/src/image-upload.js");
           const result = await uploadMedia(file);
           
           const storiesCol = collection(db, "stories");
