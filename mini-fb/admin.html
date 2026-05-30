@@ -272,7 +272,7 @@
         await ensureAuth(firebase);
       } catch {
         adminStatus.textContent = "Please sign in first.";
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
         return;
       }
 
@@ -478,7 +478,7 @@
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       try {
         await firebase.auth.signOut();
-        window.location.href = "/mini-fb/login.html";
+        window.location.href = "/login.html";
       } catch (error) {
         console.error("Logout failed:", error);
         alert("Logout failed. Please try again.");
