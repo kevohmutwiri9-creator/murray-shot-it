@@ -148,7 +148,7 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { ensureAuth, getCurrentUser } from "./src/auth.js";
+    import { ensureAuth, getCurrentUser, isAdmin } from "./src/auth.js";
     import { collection, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
@@ -156,6 +156,15 @@
 
     const user = getCurrentUser();
     const db = firebase.__db;
+
+    // Check if user is admin and hide admin dashboard link if not
+    const userIsAdmin = await isAdmin(firebase, user.uid);
+    if (!userIsAdmin) {
+      const adminLink = document.querySelector('a[href="/mini-fb/admin.html"]');
+      if (adminLink) {
+        adminLink.style.display = 'none';
+      }
+    }
 
     // Load account info
     const loadAccountInfo = async () => {

@@ -236,7 +236,7 @@
   <!-- Scripts -->
   <script type="module">
     import { initFirebase } from "./mini-fb/src/firebase-config.js";
-    import { ensureAuth, getCurrentUser } from "./mini-fb/src/auth.js";
+    import { ensureAuth, getCurrentUser, isAdmin } from "./mini-fb/src/auth.js";
     import { startFeed } from "./mini-fb/src/feed.js";
     import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { bindCreatePost } from "./mini-fb/src/admin.js";
@@ -248,6 +248,15 @@
     const user = getCurrentUser();
     if (!user) {
       window.location.href = "/login.html";
+    }
+
+    // Check if user is admin and hide admin button if not
+    const userIsAdmin = await isAdmin(firebase, user.uid);
+    if (!userIsAdmin) {
+      const adminLink = document.querySelector('a[href="mini-fb/admin.html"]');
+      if (adminLink) {
+        adminLink.style.display = 'none';
+      }
     }
 
     // Store current user for feed.js
