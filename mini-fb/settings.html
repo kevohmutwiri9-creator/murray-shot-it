@@ -161,10 +161,13 @@
 
     // Check if user is admin and hide admin dashboard link if not
     const userIsAdmin = await isAdmin(firebase, user.uid);
+    console.log("User is admin:", userIsAdmin);
     if (!userIsAdmin) {
-      const adminLinks = document.querySelectorAll('a[href="/mini-fb/admin.html"], a[href="admin.html"]');
+      const adminLinks = document.querySelectorAll('a[href*="admin.html"]');
+      console.log("Found admin links:", adminLinks.length);
       adminLinks.forEach(link => {
         link.style.display = 'none';
+        console.log("Hiding admin link:", link.href);
       });
     }
 
