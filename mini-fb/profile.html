@@ -33,31 +33,55 @@
 <body class="bg-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
   <!-- Header -->
   <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16">
         <a href="/index.html" class="flex items-center space-x-2">
-          <img src="murray.png" alt="SnapVerse" class="w-8 h-8"/>
-          <span class="text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
+          <img src="murray.png" alt="SnapVerse" class="w-7 h-7 sm:w-8 sm:h-8"/>
+          <span class="text-lg sm:text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
         </a>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
             <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
             </svg>
             <svg id="sunIcon" class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
           </button>
-          <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Feed</a>
-          <a href="settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Settings</a>
+          <div class="hidden sm:flex sm:items-center sm:gap-3">
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Feed</a>
+            <a href="settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Settings</a>
+          </div>
+          <button id="mobileMenuBtn" class="sm:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
   </nav>
 
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="fixed inset-0 bg-black/50 z-50 hidden sm:hidden">
+    <div class="absolute right-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl">
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <button id="closeMobileMenu" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="p-4 space-y-2">
+        <a href="/index.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Feed</a>
+        <a href="settings.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Settings</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Main -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Profile Header -->
     <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
       <div class="h-32 bg-gradient-to-r from-accent to-purple-600"></div>
@@ -166,6 +190,25 @@
       document.documentElement.classList.toggle("dark");
       const isDark = document.documentElement.classList.contains("dark");
       localStorage.setItem("darkMode", isDark);
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const closeMobileMenu = document.getElementById("closeMobileMenu");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    mobileMenuBtn.addEventListener("click", () => {
+      mobileMenu.classList.remove("hidden");
+    });
+
+    closeMobileMenu.addEventListener("click", () => {
+      mobileMenu.classList.add("hidden");
+    });
+
+    mobileMenu.addEventListener("click", (e) => {
+      if (e.target === mobileMenu) {
+        mobileMenu.classList.add("hidden");
+      }
     });
 
     // Load profile
