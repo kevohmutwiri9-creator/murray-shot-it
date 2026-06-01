@@ -132,5 +132,26 @@ service cloud.firestore {
       allow read: if true;
       allow write: if notBanned();
     }
+
+    match /saves/{saveId} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if notBanned() && request.resource.data.uid == request.auth.uid;
+      allow delete: if notBanned() && resource.data.uid == request.auth.uid;
+    }
+
+    match /conversations/{convId} {
+      allow read: if isSignedIn()
+        && request.auth.uid in resource.data.participants;
+      allow create, update: if notBanned()
+        && request.auth.uid in request.resource.data.participants;
+
+      match /messages/{msgId} {
+        allow read: if isSignedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
+        allow create: if notBanned()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants
+          && request.resource.data.senderUid == request.auth.uid;
+      }
+    }
   }
 }

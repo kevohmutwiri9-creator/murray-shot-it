@@ -27,11 +27,14 @@ Open `http://localhost:3000/login.html`, create an account, then use `/index.htm
 2. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. After deploy, your site URL is shown under **Settings → Pages** (e.g. `https://kevohmutwiri9-creator.github.io/murray-shot-it/`).
 
-### Firebase after Pages deploy
+### Firebase after deploy (Netlify or GitHub Pages)
 
-In [Firebase Console](https://console.firebase.google.com) → **Authentication → Settings → Authorized domains**, add:
+In [Firebase Console](https://console.firebase.google.com) → **Authentication → Settings → Authorized domains**, add your live host, e.g.:
 
-- `kevohmutwiri9-creator.github.io` (or your Pages hostname)
+- `murray-shot-it.netlify.app` ([live site](https://murray-shot-it.netlify.app/))
+- `kevohmutwiri9-creator.github.io` (if using GitHub Pages)
+
+**No Node.js?** See `DEPLOY-NO-CLI.md` to paste rules and create indexes in the browser.
 
 ## Deploy Firestore rules & indexes
 

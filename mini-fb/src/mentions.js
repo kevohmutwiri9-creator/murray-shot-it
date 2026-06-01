@@ -1,5 +1,5 @@
-// Mentions utilities for SnapVerse
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { profileUrlForHandle } from "./profiles-cache.js";
 
 export function extractMentions(text) {
   const mentionRegex = /@(\w+)/g;
@@ -8,11 +8,14 @@ export function extractMentions(text) {
   while ((match = mentionRegex.exec(text)) !== null) {
     mentions.push(match[1].toLowerCase());
   }
-  return [...new Set(mentions)]; // Remove duplicates
+  return [...new Set(mentions)];
 }
 
 export function formatTextWithMentions(text) {
-  return text.replace(/@(\w+)/g, '<a href="profile.html?user=$1" class="text-accent hover:underline font-medium">@$1</a>');
+  return text.replace(/@(\w+)/g, (_, handle) => {
+    const href = profileUrlForHandle(handle);
+    return `<a href="${href}" class="text-accent hover:underline font-medium">@${handle}</a>`;
+  });
 }
 
 export async function saveMentions(db, postId, mentions) {

@@ -140,13 +140,20 @@ export function openStoryViewer(story) {
     ? story.expiresAt.toDate()
     : new Date(story.expiresAt);
 
+  const profileLink = story.authorUid
+    ? `/mini-fb/profile.html?uid=${encodeURIComponent(story.authorUid)}`
+    : null;
+
   overlay.innerHTML = `
-    <div class="flex items-center justify-between p-4 text-white">
-      <div>
+    <div class="flex items-center justify-between p-4 text-white gap-2">
+      <div class="min-w-0">
         <p class="font-semibold">${author}</p>
         <p class="text-xs text-white/70">Expires ${expires.toLocaleString()}</p>
       </div>
-      <button type="button" id="closeStoryViewer" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition" aria-label="Close">✕</button>
+      <div class="flex items-center gap-2 shrink-0">
+        ${profileLink ? `<a href="${profileLink}" class="px-3 py-1.5 rounded-full bg-white/10 text-sm font-semibold hover:bg-white/20">Profile</a>` : ""}
+        <button type="button" id="closeStoryViewer" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition" aria-label="Close">✕</button>
+      </div>
     </div>
     <div class="flex-1 flex items-center justify-center p-4 min-h-0" id="storyViewerMedia"></div>
   `;
@@ -178,6 +185,70 @@ export function openStoryViewer(story) {
       close();
       document.removeEventListener("keydown", onEsc);
     }
+  });
+}
+
+export function showReactionPicker(anchorEl, onPick) {
+  const existing = document.getElementById("reactionPicker");
+  existing?.remove();
+
+  const pop = document.createElement("div");
+  pop.id = "reactionPicker";
+  pop.className = "fixed z-[9999] flex gap-1 rounded-2xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 shadow-xl";
+  pop.innerHTML = ["👍", "❤️", "😂", "😮", "😢", "😠"]
+    .map((emoji, i) => {
+      const ids = ["like", "love", "haha", "wow", "sad", "angry"];
+      return `<button type="button" data-reaction="${ids[i]}" class="text-2xl hover:scale-125 transition p-1">${emoji}</button>`;
+    })
+    .join("");
+
+  document.body.appendChild(pop);
+  const rect = anchorEl.getBoundingClientRect();
+  pop.style.left = `${Math.max(8, rect.left)}px`;
+  pop.style.top = `${rect.top - 48}px`;
+
+  const close = () => pop.remove();
+  pop.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      onPick(btn.dataset.reaction);
+      close();
+    });
+  });
+  setTimeout(() => {
+    document.addEventListener("click", function handler(e) {
+      if (!pop.contains(e.target) && e.target !== anchorEl) {
+        close();
+        document.removeEventListener("click", handler);
+      }
+    });
+  }, 0);
+}
+
+export function promptTextInput({ title, placeholder, maxLength = 200 }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "fixed inset-0 bg-black/50 z-[9998] flex items-center justify-center p-4";
+    overlay.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-3">${title}</h2>
+        <textarea id="promptTextInput" rows="3" maxlength="${maxLength}" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white resize-none" placeholder="${placeholder || ""}"></textarea>
+        <div class="flex gap-3 mt-4">
+          <button type="button" id="promptOk" class="flex-1 py-2 rounded-xl bg-accent text-white font-semibold">OK</button>
+          <button type="button" id="promptCancel" class="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-600">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector("#promptTextInput");
+    input.focus();
+    overlay.querySelector("#promptOk").addEventListener("click", () => {
+      resolve(input.value.trim());
+      overlay.remove();
+    });
+    overlay.querySelector("#promptCancel").addEventListener("click", () => {
+      resolve(null);
+      overlay.remove();
+    });
   });
 }
 

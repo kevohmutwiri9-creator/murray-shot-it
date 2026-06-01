@@ -95,7 +95,9 @@
           </div>
           <div class="hidden sm:flex sm:items-center sm:gap-3">
             <a href="mini-fb/search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Search</a>
-            <a href="mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
+            <a href="mini-fb/messages.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Messages</a>
+            <a href="mini-fb/saved.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Saved</a>
+            <a href="/mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
             <a href="mini-fb/admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Admin</a>
             <a href="mini-fb/settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Settings</a>
           </div>
@@ -121,7 +123,9 @@
       </div>
       <div class="p-4 space-y-2">
         <a href="mini-fb/search.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Search</a>
-        <a href="mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Profile</a>
+        <a href="mini-fb/messages.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Messages</a>
+        <a href="mini-fb/saved.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Saved</a>
+        <a href="/mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Profile</a>
         <a href="mini-fb/admin.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Admin</a>
         <a href="mini-fb/settings.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Settings</a>
       </div>
@@ -206,6 +210,14 @@
               Images up to 32MB. Short videos up to ~800KB.
             </p>
             <div id="postMediaPreview" class="hidden mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600"></div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Audience</label>
+            <select id="postVisibility" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white">
+              <option value="public">Public — everyone</option>
+              <option value="followers">Followers only</option>
+            </select>
           </div>
 
           <div>

@@ -8,6 +8,8 @@ const urlsToCache = [
   '/mini-fb/admin.html',
   '/mini-fb/hashtag.html',
   '/mini-fb/settings.html',
+  '/mini-fb/messages.html',
+  '/mini-fb/saved.html',
   '/mini-fb/manifest.json',
   '/mini-fb/murray.png',
 ];

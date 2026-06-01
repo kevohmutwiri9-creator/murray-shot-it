@@ -2,6 +2,7 @@ import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
 import { requireAuth, hideAdminNavIfNeeded, bootPage } from "./page-boot.js";
 import { startFeed } from "./feed.js";
+import { loadProfilesCache } from "./profiles-cache.js";
 import { bindCreatePost } from "./admin.js";
 import { publishDueScheduledPosts } from "./scheduled-posts.js";
 import { startStories } from "./stories.js";
@@ -47,7 +48,8 @@ export async function bootFeedPage(firebase) {
   // Feed filter: all | following
   const feedFilterAll = document.getElementById("feedFilterAll");
   const feedFilterFollowing = document.getElementById("feedFilterFollowing");
-  let feedMode = localStorage.getItem("feedMode") || "all";
+  let feedMode = localStorage.getItem("feedMode");
+  if (feedMode !== "following") feedMode = "all";
 
   const styleFilterBtn = (btn, active) => {
     if (!btn) return;
@@ -66,6 +68,8 @@ export async function bootFeedPage(firebase) {
 
   feedFilterAll?.addEventListener("click", () => setFeedMode("all"));
   feedFilterFollowing?.addEventListener("click", () => setFeedMode("following"));
+
+  await loadProfilesCache(db);
   setFeedMode(feedMode);
 
   bindCreatePost(firebase, {
@@ -73,6 +77,7 @@ export async function bootFeedPage(firebase) {
     textEl: document.getElementById("postText"),
     fileEl: document.getElementById("postFile"),
     scheduleEl: document.getElementById("postSchedule"),
+    visibilityEl: document.getElementById("postVisibility"),
     formEl: document.getElementById("createPostForm"),
     btnEl: document.getElementById("createPostBtn"),
     statusEl: document.getElementById("createPostStatus"),

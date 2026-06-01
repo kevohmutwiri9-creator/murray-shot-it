@@ -153,7 +153,7 @@ export function renderAdminPosts(firebaseApp, { containerEl, emptyEl, onDelete }
  * Any logged-in user can publish.
  * Admin gating is handled only on admin.html moderation actions (delete).
  */
-export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleEl, formEl, btnEl, statusEl }) {
+export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleEl, visibilityEl, formEl, btnEl, statusEl }) {
   formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
     btnEl.disabled = true;
@@ -189,6 +189,8 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
 
       const db = getDbService(firebaseApp);
 
+      const visibility = visibilityEl?.value === "followers" ? "followers" : "public";
+
       const postRef = await addDoc(collection(db, "posts"), {
         title,
         text,
@@ -199,6 +201,8 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
         createdAt: serverTimestamp(),
         scheduledFor: scheduledTime ? scheduledTime.toISOString() : null,
         status: scheduledTime ? "scheduled" : "published",
+        visibility,
+        type: "post",
         ...INITIAL_POST_STATS,
       });
 

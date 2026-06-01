@@ -98,7 +98,7 @@
               <span id="followingCount" class="text-gray-600 dark:text-gray-400">0 following</span>
             </div>
           </div>
-          <div class="flex gap-2">
+          <div id="profileActions" class="flex gap-2 flex-wrap">
             <button id="editProfileBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
               Edit Profile
             </button>
@@ -150,7 +150,7 @@
     <!-- User's Posts -->
     <section>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">My Posts</h2>
+        <h2 id="postsSectionTitle" class="text-2xl font-bold text-gray-900 dark:text-white">Posts</h2>
         <div class="text-sm text-gray-500 dark:text-gray-400" id="postCount"></div>
       </div>
 
@@ -170,44 +170,85 @@
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
     import { showToast } from "./src/ui.js";
+    import { loadProfilesCache } from "./src/profiles-cache.js";
+    import { renderPostCard } from "./src/post-card.js";
     import { collection, query, orderBy, where, onSnapshot, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount } from "./src/follows.js";
 
     const firebase = initFirebase();
-    const user = await requireAuth(firebase);
-    if (!user) throw new Error("Not signed in");
+    const me = await requireAuth(firebase);
+    if (!me) throw new Error("Not signed in");
 
     const db = firebase.__db;
     bootPage(firebase);
+    window.currentFirebaseUser = me;
+    window.__firebaseApp = firebase;
+    await loadProfilesCache(db);
+
+    const viewUid = new URLSearchParams(location.search).get("uid") || me.uid;
+    const isOwnProfile = viewUid === me.uid;
 
     // Load profile
     const loadProfile = async () => {
-      const profileRef = doc(db, "profiles", user.uid);
+      const profileRef = doc(db, "profiles", viewUid);
       const profileSnap = await getDoc(profileRef);
 
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data();
-        document.getElementById("profileName").textContent = profile.displayName || user.email;
-        document.getElementById("profileEmail").textContent = user.email;
-        document.getElementById("profileBio").textContent = profile.bio || "No bio yet. Click Edit Profile to add one!";
-        document.getElementById("profileAvatar").textContent = (profile.displayName || user.email).charAt(0).toUpperCase();
-      } else {
-        document.getElementById("profileName").textContent = user.email;
-        document.getElementById("profileEmail").textContent = user.email;
-        document.getElementById("profileAvatar").textContent = user.email.charAt(0).toUpperCase();
-      }
+      const profile = profileSnap.exists() ? profileSnap.data() : {};
+      const displayName = profile.displayName || profile.email || "User";
+      document.getElementById("profileName").textContent = displayName;
+      document.getElementById("profileEmail").textContent = profile.email || (isOwnProfile ? me.email : "");
+      document.getElementById("profileBio").textContent = profile.bio || (isOwnProfile ? "No bio yet. Click Edit Profile to add one!" : "No bio yet.");
+      document.getElementById("profileAvatar").textContent = displayName.charAt(0).toUpperCase();
 
-      // Load follower counts
-      const followersCount = await getFollowersCount(db, user.uid);
-      const followingCount = await getFollowingCount(db, user.uid);
+      const followersCount = await getFollowersCount(db, viewUid);
+      const followingCount = await getFollowingCount(db, viewUid);
       document.getElementById("followersCount").textContent = `${followersCount} followers`;
       document.getElementById("followingCount").textContent = `${followingCount} following`;
+
+      const actions = document.getElementById("profileActions");
+      actions.innerHTML = "";
+
+      if (isOwnProfile) {
+        const editBtn = document.createElement("button");
+        editBtn.id = "editProfileBtn";
+        editBtn.className = "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+        editBtn.textContent = "Edit Profile";
+        actions.appendChild(editBtn);
+        editBtn.addEventListener("click", openEditModal);
+      } else {
+        let following = await isFollowing(db, me.uid, viewUid);
+        const followBtn = document.createElement("button");
+        const styleFollowBtn = () => {
+          followBtn.className = `px-4 py-2 rounded-xl font-semibold transition ${following ? "border border-gray-200 dark:border-gray-600" : "bg-accent text-white"}`;
+          followBtn.textContent = following ? "Following" : "Follow";
+        };
+        styleFollowBtn();
+        followBtn.addEventListener("click", async () => {
+          if (following) {
+            await unfollowUser(db, me.uid, viewUid);
+            following = false;
+            showToast("Unfollowed.", "info");
+          } else {
+            await followUser(db, me.uid, viewUid, firebase);
+            following = true;
+            showToast("Following!", "success");
+          }
+          styleFollowBtn();
+        });
+        const msgBtn = document.createElement("a");
+        msgBtn.href = `messages.html?uid=${viewUid}`;
+        msgBtn.className = "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition font-semibold";
+        msgBtn.textContent = "Message";
+        actions.append(followBtn, msgBtn);
+      }
+
+      document.getElementById("postsSectionTitle").textContent = isOwnProfile ? "My Posts" : "Posts";
     };
 
     // Load user's posts
     const loadUserPosts = () => {
       const postsCol = collection(db, "posts");
-      const q = query(postsCol, where("authorUid", "==", user.uid), orderBy("createdAt", "desc"));
+      const q = query(postsCol, where("authorUid", "==", viewUid), orderBy("createdAt", "desc"));
 
       onSnapshot(q, (snapshot) => {
         const posts = [];
@@ -225,39 +266,26 @@
         countEl.textContent = `${posts.length} post${posts.length === 1 ? "" : "s"}`;
 
         posts.forEach((post) => {
-          const card = document.createElement("article");
-          card.className = "overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-5";
-          card.innerHTML = `
-            <div class="flex justify-between items-start mb-3">
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">${post.title || "Untitled"}</h3>
-              <span class="text-xs text-gray-500 dark:text-gray-400">${post.createdAt?.toDate?.() ? post.createdAt.toDate().toLocaleDateString() : "Just now"}</span>
-            </div>
-            <p class="text-gray-700 dark:text-gray-300">${post.text || ""}</p>
-            ${post.mediaUrl ? `<img src="${post.mediaUrl}" alt="Post media" class="mt-3 rounded-xl max-h-64 object-cover w-full" />` : ""}
-          `;
-          container.appendChild(card);
+          container.appendChild(renderPostCard(post, db));
         });
       });
     };
 
     // Edit profile modal
     const modal = document.getElementById("editProfileModal");
-    const editBtn = document.getElementById("editProfileBtn");
     const cancelBtn = document.getElementById("cancelEditBtn");
     const editForm = document.getElementById("editProfileForm");
 
-    editBtn.addEventListener("click", async () => {
-      const profileRef = doc(db, "profiles", user.uid);
+    async function openEditModal() {
+      const profileRef = doc(db, "profiles", me.uid);
       const profileSnap = await getDoc(profileRef);
-
       if (profileSnap.exists()) {
         const profile = profileSnap.data();
         document.getElementById("editName").value = profile.displayName || "";
         document.getElementById("editBio").value = profile.bio || "";
       }
-
       modal.classList.remove("hidden");
-    });
+    }
 
     cancelBtn.addEventListener("click", () => {
       modal.classList.add("hidden");
@@ -268,12 +296,12 @@
       const displayName = document.getElementById("editName").value.trim();
       const bio = document.getElementById("editBio").value.trim();
 
-      const profileRef = doc(db, "profiles", user.uid);
+      const profileRef = doc(db, "profiles", me.uid);
       await setDoc(profileRef, {
         displayName,
         bio,
-        email: user.email,
-        uid: user.uid,
+        email: me.email,
+        uid: me.uid,
         updatedAt: new Date()
       }, { merge: true });
 

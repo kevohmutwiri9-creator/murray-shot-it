@@ -50,6 +50,55 @@ export async function createNotificationForComment(firebaseApp, { postId, actorU
   });
 }
 
+export async function createNotificationForReaction(firebaseApp, { postId, actorUid, authorUid, actorEmail, reactionId }) {
+  const db = getDbService(firebaseApp);
+  if (!authorUid || authorUid === actorUid) return;
+  const labels = { like: "liked", love: "loved", haha: "laughed at", wow: "reacted wow to", sad: "reacted sad to", angry: "reacted angry to" };
+  const verb = labels[reactionId] || "reacted to";
+
+  await addDoc(collection(db, "notifications"), {
+    toUid: authorUid,
+    type: "reaction",
+    actorUid,
+    actorEmail: actorEmail || null,
+    postId,
+    message: `${actorLabel(actorEmail)} ${verb} your post`,
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+}
+
+export async function createNotificationForFollow(firebaseApp, { toUid, actorUid, actorEmail }) {
+  const db = getDbService(firebaseApp);
+  if (!toUid || toUid === actorUid) return;
+
+  await addDoc(collection(db, "notifications"), {
+    toUid,
+    type: "follow",
+    actorUid,
+    actorEmail: actorEmail || null,
+    message: `${actorLabel(actorEmail)} started following you`,
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+}
+
+export async function createNotificationForMessage(firebaseApp, { toUid, actorUid, actorEmail, conversationId }) {
+  const db = getDbService(firebaseApp);
+  if (!toUid || toUid === actorUid) return;
+
+  await addDoc(collection(db, "notifications"), {
+    toUid,
+    type: "message",
+    actorUid,
+    actorEmail: actorEmail || null,
+    conversationId,
+    message: `${actorLabel(actorEmail)} sent you a message`,
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+}
+
 export async function createNotificationForShare(firebaseApp, { postId, actorUid, authorUid, actorEmail }) {
   const db = getDbService(firebaseApp);
   if (!authorUid || authorUid === actorUid) return;
@@ -127,9 +176,18 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
         } else if (notif.type === "comment") {
           icon = "✎";
           color = "text-blue-500";
-        } else if (notif.type === "share") {
+        } else if (notif.type === "share" || notif.type === "repost") {
           icon = "↗";
           color = "text-green-500";
+        } else if (notif.type === "reaction") {
+          icon = "👍";
+          color = "text-rose-500";
+        } else if (notif.type === "follow") {
+          icon = "👤";
+          color = "text-purple-500";
+        } else if (notif.type === "message") {
+          icon = "💬";
+          color = "text-blue-500";
         }
 
         const timeStr = notif.createdAt?.toDate?.()
@@ -154,6 +212,10 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
           panelEl?.classList.add("hidden");
           if (notif.postId) {
             window.location.href = `/index.html?post=${notif.postId}`;
+          } else if (notif.type === "follow" && notif.actorUid) {
+            window.location.href = `/mini-fb/profile.html?uid=${notif.actorUid}`;
+          } else if (notif.type === "message" && notif.actorUid) {
+            window.location.href = `/mini-fb/messages.html?uid=${notif.actorUid}`;
           }
         });
 

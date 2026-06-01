@@ -271,7 +271,7 @@
           </div>
           <div class="flex gap-2">
             <button type="button" class="follow-btn px-4 py-2 rounded-xl font-semibold transition ${following ? "border border-gray-200 dark:border-gray-600" : "bg-accent text-white hover:bg-accent/90"}">${following ? "Following" : "Follow"}</button>
-            <a href="profile.html" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+            <a href="/mini-fb/profile.html?uid=${profile.id}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
           </div>
         `;
 
@@ -283,7 +283,7 @@
               await unfollowUser(db, user.uid, profile.id);
               showToast("Unfollowed.", "info");
             } else {
-              await followUser(db, user.uid, profile.id);
+              await followUser(db, user.uid, profile.id, firebase);
               showToast("Following!", "success");
             }
             await performSearch();

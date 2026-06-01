@@ -1,13 +1,23 @@
 // Follow system for SnapVerse
 import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getCurrentUser } from "./auth.js";
+import { createNotificationForFollow } from "./notifications.js";
 
-export async function followUser(db, followerUid, followingUid) {
+export async function followUser(db, followerUid, followingUid, firebaseApp = null) {
   const followRef = doc(db, "followers", `${followerUid}_${followingUid}`);
   await setDoc(followRef, {
     followerUid,
     followingUid,
     createdAt: new Date()
   });
+  if (firebaseApp) {
+    const user = getCurrentUser();
+    await createNotificationForFollow(firebaseApp, {
+      toUid: followingUid,
+      actorUid: followerUid,
+      actorEmail: user?.email,
+    });
+  }
 }
 
 export async function unfollowUser(db, followerUid, followingUid) {
