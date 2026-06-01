@@ -311,7 +311,7 @@
     // Check if user is admin and hide admin button if not
     const userIsAdmin = await isAdmin(firebase, user.uid);
     if (!userIsAdmin) {
-      const adminLinks = document.querySelectorAll('a[href="mini-fb/admin.html"]');
+      const adminLinks = document.querySelectorAll('a[href="mini-fb/admin.html"], a[href="/mini-fb/admin.html"]');
       adminLinks.forEach(link => {
         link.style.display = 'none';
       });

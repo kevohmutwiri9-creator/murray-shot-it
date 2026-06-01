@@ -162,10 +162,10 @@
     // Check if user is admin and hide admin dashboard link if not
     const userIsAdmin = await isAdmin(firebase, user.uid);
     if (!userIsAdmin) {
-      const adminLink = document.querySelector('a[href="/mini-fb/admin.html"]');
-      if (adminLink) {
-        adminLink.style.display = 'none';
-      }
+      const adminLinks = document.querySelectorAll('a[href="/mini-fb/admin.html"], a[href="admin.html"]');
+      adminLinks.forEach(link => {
+        link.style.display = 'none';
+      });
     }
 
     // Load account info
