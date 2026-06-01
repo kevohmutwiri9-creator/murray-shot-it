@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>SnapVerse • Settings</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1a1a2e',
+            secondary: '#16213e',
+            accent: '#e94560',
+            light: '#f8f9fa',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+  <!-- Header -->
+  <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="/index.html" class="flex items-center space-x-2">
+          <img src="murray.png" alt="SnapVerse" class="w-8 h-8"/>
+          <span class="text-xl font-bold text-transparent bg-gradient-to-r from-accent to-purple-600 bg-clip-text">SnapVerse</span>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg id="sunIcon" class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Feed</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+    </div>
+
+    <div class="space-y-6">
+      <!-- Account Section -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Account</h2>
+        </div>
+        <div class="p-5">
+          <div id="accountInfo" class="mb-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Loading account info...</p>
+          </div>
+          <a href="/profile.html" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">
+            Edit Profile
+          </a>
+        </div>
+      </section>
+
+      <!-- Quick Actions Section -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Quick Actions</h2>
+        </div>
+        <div class="p-5 space-y-3">
+          <button id="addStoryBtn" class="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold hover:opacity-90 transition">
+            <span>+ Add Story</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </button>
+          <a href="/mini-fb/admin.html" class="block w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <span class="text-gray-900 dark:text-white font-medium">Admin Dashboard</span>
+            <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </a>
+          <a href="/mini-fb/search.html" class="block w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <span class="text-gray-900 dark:text-white font-medium">Search</span>
+            <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- Preferences Section -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Preferences</h2>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-gray-900 dark:text-white">Dark Mode</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Toggle dark theme</p>
+            </div>
+            <button id="darkModeToggleSetting" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-accent transition-colors">
+              <span id="darkModeToggleKnob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
+            </button>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-gray-900 dark:text-white">Notifications</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Enable push notifications</p>
+            </div>
+            <button id="notificationsToggle" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+              <span id="notificationsToggleKnob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Danger Zone Section -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-rose-200 dark:border-rose-900 overflow-hidden">
+        <div class="p-5 border-b border-rose-100 dark:border-rose-900">
+          <h2 class="text-xl font-bold text-rose-600 dark:text-rose-400">Danger Zone</h2>
+        </div>
+        <div class="p-5">
+          <button id="logoutBtn" class="w-full px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+            Logout
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { ensureAuth, getCurrentUser } from "./src/auth.js";
+    import { collection, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebase = initFirebase();
+    await ensureAuth(firebase);
+
+    const user = getCurrentUser();
+    const db = firebase.__db;
+
+    // Load account info
+    const loadAccountInfo = async () => {
+      const profileRef = doc(db, "profiles", user.uid);
+      const profileSnap = await getDoc(profileRef);
+
+      const accountInfo = document.getElementById("accountInfo");
+      if (profileSnap.exists()) {
+        const profile = profileSnap.data();
+        accountInfo.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
+              ${(profile.displayName || user.email).charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">${profile.displayName || user.email}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">${user.email}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        accountInfo.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
+              ${user.email.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">${user.email}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Complete your profile</p>
+            </div>
+          </div>
+        `;
+      }
+    };
+
+    loadAccountInfo();
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const darkModeToggleSetting = document.getElementById("darkModeToggleSetting");
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+    const darkModeToggleKnob = document.getElementById("darkModeToggleKnob");
+
+    const updateDarkModeUI = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      moonIcon.classList.toggle("hidden", !isDark);
+      sunIcon.classList.toggle("hidden", isDark);
+      darkModeToggleKnob.classList.toggle("translate-x-1", !isDark);
+      darkModeToggleKnob.classList.toggle("translate-x-6", isDark);
+    };
+
+    if (localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    }
+
+    updateDarkModeUI();
+
+    const toggleDarkMode = () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+      updateDarkModeUI();
+    };
+
+    darkModeToggle.addEventListener("click", toggleDarkMode);
+    darkModeToggleSetting.addEventListener("click", toggleDarkMode);
+
+    // Notifications toggle
+    const notificationsToggle = document.getElementById("notificationsToggle");
+    const notificationsToggleKnob = document.getElementById("notificationsToggleKnob");
+    let notificationsEnabled = localStorage.getItem("notificationsEnabled") === "true";
+
+    const updateNotificationsUI = () => {
+      notificationsToggleKnob.classList.toggle("translate-x-1", !notificationsEnabled);
+      notificationsToggleKnob.classList.toggle("translate-x-6", notificationsEnabled);
+      notificationsToggle.classList.toggle("bg-accent", notificationsEnabled);
+      notificationsToggle.classList.toggle("bg-gray-200", !notificationsEnabled);
+    };
+
+    updateNotificationsUI();
+
+    notificationsToggle.addEventListener("click", () => {
+      notificationsEnabled = !notificationsEnabled;
+      localStorage.setItem("notificationsEnabled", notificationsEnabled);
+      updateNotificationsUI();
+      
+      if (notificationsEnabled && "Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await firebase.auth.signOut();
+        window.location.href = "/login.html";
+      } catch (error) {
+        console.error("Logout failed:", error);
+        alert("Logout failed. Please try again.");
+      }
+    });
+
+    // Add story button
+    document.getElementById("addStoryBtn").addEventListener("click", () => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+          const { uploadMedia } = await import("./src/image-upload.js");
+          const result = await uploadMedia(file);
+          
+          const storiesCol = collection(db, "stories");
+          const { addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+          await addDoc(storiesCol, {
+            mediaUrl: result.url,
+            mediaType: result.mediaType,
+            authorUid: user.uid,
+            authorEmail: user.email || null,
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+          });
+
+          alert("Story added!");
+        } catch (error) {
+          alert("Failed to add story: " + error.message);
+        }
+      };
+      fileInput.click();
+    });
+  </script>
+</body>
+</html>

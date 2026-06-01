@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>SnapVerse • Feed</title>
   <link rel="manifest" href="mini-fb/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,10 +69,8 @@
             <a href="mini-fb/search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Search</a>
             <a href="mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Profile</a>
             <a href="mini-fb/admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Admin</a>
+            <a href="mini-fb/settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium ml-4">Settings</a>
           </div>
-          <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-primary text-white hover:bg-secondary transition">
-            Logout
-          </button>
         </div>
       </div>
     </div>
@@ -251,15 +249,6 @@
     if (!user) {
       window.location.href = "/login.html";
     }
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      try {
-        await firebase.auth.signOut();
-        window.location.href = "/login.html";
-      } catch (error) {
-        console.error("Logout failed:", error);
-        alert("Logout failed. Please try again.");
-      }
-    });
 
     // Store current user for feed.js
     window.currentFirebaseUser = user;

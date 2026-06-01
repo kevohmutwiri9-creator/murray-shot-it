@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>SnapVerse • Search</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,9 +50,7 @@
             </svg>
           </button>
           <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Feed</a>
-          <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-primary text-white hover:bg-secondary transition">
-            Logout
-          </button>
+          <a href="settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium">Settings</a>
         </div>
       </div>
     </div>
@@ -111,17 +109,6 @@
       document.documentElement.classList.toggle("dark");
       const isDark = document.documentElement.classList.contains("dark");
       localStorage.setItem("darkMode", isDark);
-    });
-
-    // Logout
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      try {
-        await firebase.__auth.signOut();
-        window.location.href = "/login.html";
-      } catch (error) {
-        console.error("Logout failed:", error);
-        alert("Logout failed. Please try again.");
-      }
     });
 
     // Search functionality
