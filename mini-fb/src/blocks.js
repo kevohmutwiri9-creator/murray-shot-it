@@ -34,8 +34,12 @@ export async function unblockUser(db, blockedUid) {
 
 export async function isBlocked(db, blockerUid, blockedUid) {
   if (!blockerUid || !blockedUid) return false;
-  const snap = await getDoc(doc(db, "blocks", blockDocId(blockerUid, blockedUid)));
-  return snap.exists();
+  try {
+    const snap = await getDoc(doc(db, "blocks", blockDocId(blockerUid, blockedUid)));
+    return snap.exists();
+  } catch {
+    return false;
+  }
 }
 
 export async function getBlockedUids(db, uid) {
