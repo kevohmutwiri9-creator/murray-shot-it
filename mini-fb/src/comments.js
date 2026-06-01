@@ -11,6 +11,7 @@ import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
 import { createNotificationForComment } from "./notifications.js";
 import { bumpPostStat } from "./post-stats.js";
+import { checkRateLimit, recordRateLimit } from "./rate-limit.js";
 
 export function commentsCol(db, postId) {
   return collection(db, "posts", postId, "comments");
@@ -20,6 +21,7 @@ export async function addComment(firebaseApp, post, text, parentCommentId = null
   const db = getDbService(firebaseApp);
   const user = getCurrentUser();
   if (!user) throw new Error("Not logged in.");
+  checkRateLimit("comment", user.uid);
 
   const t = String(text ?? "").trim();
   if (!t) throw new Error("Comment cannot be empty.");
@@ -35,6 +37,7 @@ export async function addComment(firebaseApp, post, text, parentCommentId = null
   });
 
   await bumpPostStat(db, postId, "commentCount", 1);
+  recordRateLimit("comment", user.uid);
 
   const authorUid = post.authorUid;
   if (authorUid && authorUid !== user.uid) {

@@ -38,3 +38,23 @@ export async function saveMentions(db, postId, mentions) {
 
   await Promise.all(batch);
 }
+
+export async function notifyMentionedUsers(firebaseApp, { postId, text, actorUid, actorEmail }) {
+  const { createNotificationForMention } = await import("./notifications.js");
+  const { uidForHandle } = await import("./profiles-cache.js");
+  const handles = extractMentions(text);
+  const notified = new Set();
+
+  for (const handle of handles) {
+    const toUid = uidForHandle(handle);
+    if (!toUid || toUid === actorUid || notified.has(toUid)) continue;
+    notified.add(toUid);
+    await createNotificationForMention(firebaseApp, {
+      toUid,
+      actorUid,
+      actorEmail,
+      postId,
+      handle,
+    });
+  }
+}

@@ -10,6 +10,8 @@ import { mountCommentsPanel } from "./comments-panel.js";
 import { isFollowing, followUser, unfollowUser } from "./follows.js";
 import { profileUrl } from "./profiles-cache.js";
 import { promptFlagReason, showToast, showReactionPicker, promptTextInput } from "./ui.js";
+import { getReactionSummary, formatReactionSummaryBar } from "./reaction-summary.js";
+import { deleteMyPost } from "./posts.js";
 
 const cardCommentsUnsubs = new Map();
 
@@ -48,24 +50,64 @@ async function flagPost(postId) {
   showToast("Post flagged for review.", "success");
 }
 
+function normalizeMediaList(post) {
+  if (post?.mediaUrls?.length) {
+    return post.mediaUrls.map((m) =>
+      typeof m === "string" ? { url: m, type: "image" } : { url: m.url, type: m.type || "image" }
+    );
+  }
+  if (post?.mediaUrl) return [{ url: post.mediaUrl, type: post.mediaType || "image" }];
+  return [];
+}
+
 function buildMediaNode(post) {
-  if (!post?.mediaUrl) return null;
+  const items = normalizeMediaList(post);
+  if (!items.length) return null;
+
   const wrap = createEl("div", "overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900");
-  if (post.mediaType === "video") {
-    const video = document.createElement("video");
-    video.className = "w-full max-h-[520px] bg-black object-contain";
-    video.controls = true;
-    video.playsInline = true;
-    video.src = post.mediaUrl;
-    wrap.appendChild(video);
+
+  if (items.length === 1) {
+    const m = items[0];
+    if (m.type === "video") {
+      const video = document.createElement("video");
+      video.className = "w-full max-h-[520px] bg-black object-contain";
+      video.controls = true;
+      video.playsInline = true;
+      video.src = m.url;
+      wrap.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.className = "w-full max-h-[520px] object-cover";
+      img.alt = post.title || "Post media";
+      img.loading = "lazy";
+      img.src = m.url;
+      wrap.appendChild(img);
+    }
     return wrap;
   }
-  const img = document.createElement("img");
-  img.className = "w-full max-h-[520px] object-cover";
-  img.alt = post.title || "Post media";
-  img.loading = "lazy";
-  img.src = post.mediaUrl;
-  wrap.appendChild(img);
+
+  const track = createEl("div", "flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1");
+  items.forEach((m, i) => {
+    const slide = createEl("div", "min-w-[85%] snap-center shrink-0");
+    if (m.type === "video") {
+      const video = document.createElement("video");
+      video.className = "w-full max-h-[400px] bg-black object-contain rounded-xl";
+      video.controls = true;
+      video.playsInline = true;
+      video.src = m.url;
+      slide.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.className = "w-full max-h-[400px] object-cover rounded-xl";
+      img.alt = `${post.title || "Post"} ${i + 1}`;
+      img.loading = "lazy";
+      img.src = m.url;
+      slide.appendChild(img);
+    }
+    track.appendChild(slide);
+  });
+  wrap.appendChild(track);
+  wrap.appendChild(createEl("p", "text-xs text-gray-500 px-2 py-1", `${items.length} photos`));
   return wrap;
 }
 
@@ -204,6 +246,10 @@ export function renderPostCard(post, db) {
   flagBtn.type = "button";
   flagBtn.textContent = "🚩";
 
+  const sendDmBtn = createEl("button", "inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm font-semibold hover:border-blue-500 transition");
+  sendDmBtn.type = "button";
+  sendDmBtn.textContent = "✉ Send";
+
   if (me && post.authorUid === me.uid) {
     const editBtn = createEl("button", "inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm font-semibold");
     editBtn.type = "button";
@@ -211,17 +257,47 @@ export function renderPostCard(post, db) {
     editBtn.dataset.editId = post.id;
     editBtn.dataset.editTitle = post.title || "";
     editBtn.dataset.editText = post.text || "";
-    actions.append(editBtn);
+
+    const deleteBtn = createEl("button", "inline-flex items-center gap-1 rounded-xl border border-rose-200 dark:border-rose-800 px-3 py-2 text-sm font-semibold text-rose-600 transition");
+    deleteBtn.type = "button";
+    deleteBtn.textContent = "🗑 Delete";
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm("Delete this post permanently?")) return;
+      try {
+        await deleteMyPost(window.__firebaseApp, post.id);
+        card.remove();
+        showToast("Post deleted.", "success");
+      } catch (err) {
+        showToast(err.message || "Delete failed.", "error");
+      }
+    });
+    actions.append(editBtn, deleteBtn);
+  } else if (me && post.authorUid) {
+    sendDmBtn.addEventListener("click", () => {
+      const link = encodeURIComponent(`${location.origin}/index.html?post=${post.id}`);
+      window.location.href = `/mini-fb/messages.html?uid=${encodeURIComponent(post.authorUid)}&sharePost=${link}`;
+    });
+    actions.append(sendDmBtn);
   }
 
-  const counts = createEl("div", "w-full flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2");
-  counts.innerHTML = `
+  const counts = createEl("div", "w-full flex flex-col gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2");
+  const reactionBar = createEl("p", "reactionSummaryBar text-sm font-medium text-gray-700 dark:text-gray-300 hidden");
+  const countRow = createEl("div", "flex flex-wrap gap-2");
+  countRow.innerHTML = `
     <button type="button" class="commentCountBtn rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer"><span class="likeCount">${post.likeCount ?? 0}</span> reactions</button>
     <button type="button" class="commentCountBtn rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer"><span class="commentCount">${post.commentCount ?? 0}</span> comments</button>
     <span class="rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1"><span class="shareCount">${post.shareCount ?? 0}</span> shares</span>
   `;
+  counts.append(reactionBar, countRow);
 
   actions.append(reactBtn, commentToggleBtn, shareBtn, repostBtn, saveBtn, flagBtn);
+
+  getReactionSummary(db, post.id).then((summary) => {
+    if (summary.total > 0) {
+      reactionBar.textContent = formatReactionSummaryBar(summary);
+      reactionBar.classList.remove("hidden");
+    }
+  });
 
   const commentsPanel = createEl("div", "commentsPanel hidden border-t border-gray-100 dark:border-gray-700 pt-4 mt-4");
 
@@ -256,6 +332,16 @@ export function renderPostCard(post, db) {
           myReaction = null;
         }
         updateCountsOnCard(card, post);
+        getReactionSummary(db, post.id).then((summary) => {
+          const bar = card.querySelector(".reactionSummaryBar");
+          if (!bar) return;
+          if (summary.total > 0) {
+            bar.textContent = formatReactionSummaryBar(summary);
+            bar.classList.remove("hidden");
+          } else {
+            bar.classList.add("hidden");
+          }
+        });
       } catch (err) {
         statusEl.textContent = err.message;
       }

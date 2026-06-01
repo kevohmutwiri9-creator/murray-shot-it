@@ -99,6 +99,22 @@ export async function createNotificationForMessage(firebaseApp, { toUid, actorUi
   });
 }
 
+export async function createNotificationForMention(firebaseApp, { toUid, actorUid, actorEmail, postId, handle }) {
+  const db = getDbService(firebaseApp);
+  if (!toUid || toUid === actorUid) return;
+
+  await addDoc(collection(db, "notifications"), {
+    toUid,
+    type: "mention",
+    actorUid,
+    actorEmail: actorEmail || null,
+    postId,
+    message: `${actorLabel(actorEmail)} mentioned you (@${handle})`,
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+}
+
 export async function createNotificationForShare(firebaseApp, { postId, actorUid, authorUid, actorEmail }) {
   const db = getDbService(firebaseApp);
   if (!authorUid || authorUid === actorUid) return;
@@ -188,6 +204,9 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
         } else if (notif.type === "message") {
           icon = "💬";
           color = "text-blue-500";
+        } else if (notif.type === "mention") {
+          icon = "@";
+          color = "text-accent";
         }
 
         const timeStr = notif.createdAt?.toDate?.()

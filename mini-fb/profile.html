@@ -169,11 +169,13 @@
     import { getCurrentUser } from "./src/auth.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
-    import { showToast } from "./src/ui.js";
+    import { showToast, promptFlagReason } from "./src/ui.js";
     import { loadProfilesCache } from "./src/profiles-cache.js";
     import { renderPostCard } from "./src/post-card.js";
     import { collection, query, orderBy, where, onSnapshot, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount } from "./src/follows.js";
+    import { blockUser, unblockUser, isBlocked } from "./src/blocks.js";
+    import { reportUser } from "./src/user-reports.js";
 
     const firebase = initFirebase();
     const me = await requireAuth(firebase);
@@ -239,7 +241,40 @@
         msgBtn.href = `/mini-fb/messages.html?uid=${encodeURIComponent(viewUid)}`;
         msgBtn.className = "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition font-semibold";
         msgBtn.textContent = "Message";
-        actions.append(followBtn, msgBtn);
+
+        let blocked = await isBlocked(db, me.uid, viewUid);
+        const blockBtn = document.createElement("button");
+        blockBtn.type = "button";
+        blockBtn.className = "px-4 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 font-semibold text-sm";
+        const styleBlock = () => {
+          blockBtn.textContent = blocked ? "Unblock" : "Block";
+        };
+        styleBlock();
+        blockBtn.addEventListener("click", async () => {
+          if (blocked) {
+            await unblockUser(db, viewUid);
+            blocked = false;
+            showToast("User unblocked.", "info");
+          } else {
+            await blockUser(db, viewUid);
+            blocked = true;
+            showToast("User blocked. Their posts are hidden from your feed.", "success");
+          }
+          styleBlock();
+        });
+
+        const reportBtn = document.createElement("button");
+        reportBtn.type = "button";
+        reportBtn.className = "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-semibold";
+        reportBtn.textContent = "Report";
+        reportBtn.addEventListener("click", async () => {
+          const reason = await promptFlagReason();
+          if (!reason) return;
+          await reportUser(db, viewUid, reason);
+          showToast("Report submitted.", "success");
+        });
+
+        actions.append(followBtn, msgBtn, blockBtn, reportBtn);
       }
 
       document.getElementById("postsSectionTitle").textContent = isOwnProfile ? "My Posts" : "Posts";

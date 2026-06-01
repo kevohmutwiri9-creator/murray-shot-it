@@ -74,4 +74,13 @@ export function initMobileMenu() {
 export function bootPage(firebaseApp) {
   initDarkMode();
   initMobileMenu();
+  startNavBadges(firebaseApp);
+}
+
+function startNavBadges(firebaseApp) {
+  const badge = document.getElementById("messagesBadge");
+  if (!badge || !getCurrentUser()) return;
+  import("./messages-unread.js").then(({ startMessagesBadge }) => {
+    startMessagesBadge(firebaseApp.__db, badge);
+  });
 }

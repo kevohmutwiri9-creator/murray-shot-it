@@ -1,9 +1,10 @@
-const CACHE_NAME = 'snapverse-v2';
+const CACHE_NAME = 'snapverse-v3';
 const urlsToCache = [
   '/',
   '/index.html',
   '/login.html',
   '/mini-fb/search.html',
+  '/mini-fb/explore.html',
   '/mini-fb/profile.html',
   '/mini-fb/admin.html',
   '/mini-fb/hashtag.html',
@@ -27,6 +28,25 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  const isAppShell =
+    url.pathname.endsWith('.html') ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('manifest.json');
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => response || fetch(event.request))
   );

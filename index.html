@@ -95,7 +95,8 @@
           </div>
           <div class="hidden sm:flex sm:items-center sm:gap-3">
             <a href="mini-fb/search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Search</a>
-            <a href="mini-fb/messages.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Messages</a>
+            <a href="mini-fb/explore.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Explore</a>
+            <a href="mini-fb/messages.html" class="relative text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Messages<span id="messagesBadge" class="hidden absolute -top-2 -right-3 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-accent text-white text-[10px] flex items-center justify-center">0</span></a>
             <a href="mini-fb/saved.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Saved</a>
             <a href="/mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
             <a href="mini-fb/admin.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Admin</a>
@@ -123,6 +124,7 @@
       </div>
       <div class="p-4 space-y-2">
         <a href="mini-fb/search.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Search</a>
+        <a href="mini-fb/explore.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Explore</a>
         <a href="mini-fb/messages.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Messages</a>
         <a href="mini-fb/saved.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Saved</a>
         <a href="/mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Profile</a>
@@ -147,13 +149,18 @@
       </div>
     </section>
 
-    <!-- Trending Topics -->
-    <section class="mb-8">
+    <!-- Trending & suggestions -->
+    <section class="mb-8 grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Trending Topics</h2>
-        <div id="trendingTopics" class="flex flex-wrap gap-2">
-          <!-- Trending hashtags render here -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Trending Topics</h2>
+          <a href="mini-fb/explore.html" class="text-sm text-accent font-medium">Explore →</a>
         </div>
+        <div id="trendingTopics" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">People you may know</h2>
+        <div id="friendSuggestions" class="space-y-1"></div>
       </div>
     </section>
 
@@ -199,15 +206,16 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Media (image/video)</label>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Media (up to 5 images/videos)</label>
             <input
               id="postFile"
               type="file"
               accept="image/*,video/*"
+              multiple
               class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
             />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Images up to 32MB. Short videos up to ~800KB.
+              Select multiple files for an album. Images up to 32MB; short videos up to ~800KB each.
             </p>
             <div id="postMediaPreview" class="hidden mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600"></div>
           </div>

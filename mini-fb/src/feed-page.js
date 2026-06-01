@@ -14,6 +14,8 @@ import {
   doc,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFriendSuggestions } from "./friend-suggestions.js";
+import { profileUrl } from "./profiles-cache.js";
 
 export async function bootFeedPage(firebase) {
   const user = await requireAuth(firebase);
@@ -100,6 +102,7 @@ export async function bootFeedPage(firebase) {
   });
 
   loadTrendingTopics(db);
+  loadFriendSuggestions(db, user.uid);
 
   // Edit post modal
   const editPostModal = document.getElementById("editPostModal");
@@ -160,5 +163,29 @@ async function loadTrendingTopics(db) {
   } catch {
     container.innerHTML =
       '<span class="text-gray-500 dark:text-gray-400 text-sm">Trending unavailable</span>';
+  }
+}
+
+async function loadFriendSuggestions(db, uid) {
+  const container = document.getElementById("friendSuggestions");
+  if (!container) return;
+  try {
+    const suggestions = await getFriendSuggestions(db, uid, 6);
+    container.innerHTML = "";
+    if (!suggestions.length) {
+      container.innerHTML = '<p class="text-sm text-gray-500">Follow people to get suggestions.</p>';
+      return;
+    }
+    suggestions.forEach((p) => {
+      const a = document.createElement("a");
+      a.href = profileUrl(p.uid);
+      a.className =
+        "flex items-center gap-2 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+      const label = p.displayName || p.email || "User";
+      a.innerHTML = `<span class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20 text-accent font-bold text-sm">${label.charAt(0).toUpperCase()}</span><span class="text-sm font-medium truncate">${label}</span>`;
+      container.appendChild(a);
+    });
+  } catch {
+    container.innerHTML = '<p class="text-sm text-gray-500">Suggestions unavailable</p>';
   }
 }

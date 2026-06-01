@@ -124,11 +124,42 @@
     const db = firebase.__db;
     bootPage(firebase);
 
-    // Search functionality
+    const RECENT_KEY = "sv_recent_searches";
+    function loadRecent() {
+      try {
+        return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    }
+    function saveRecent(term) {
+      const list = [term, ...loadRecent().filter((t) => t !== term)].slice(0, 8);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+    }
+
     const searchInput = document.getElementById("searchInput");
     const searchResults = document.getElementById("searchResults");
     const resultsTitle = document.getElementById("resultsTitle");
     let currentSearchType = "users";
+
+    function showRecentSearches() {
+      const recent = loadRecent();
+      if (!recent.length) return;
+      resultsTitle.textContent = "Recent searches";
+      searchResults.innerHTML = recent
+        .map(
+          (t) =>
+            `<button type="button" class="recent-term w-full text-left px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700" data-term="${t}">${t}</button>`
+        )
+        .join("");
+      searchResults.querySelectorAll(".recent-term").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          searchInput.value = btn.dataset.term;
+          performSearch();
+        });
+      });
+    }
+    showRecentSearches();
 
     document.getElementById("searchUsersBtn").addEventListener("click", () => {
       currentSearchType = "users";
@@ -176,7 +207,11 @@
 
     async function performSearch() {
       const query = searchInput.value.trim().toLowerCase();
-      if (!query) return;
+      if (!query) {
+        showRecentSearches();
+        return;
+      }
+      saveRecent(query);
 
       searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">Searching...</div>';
 

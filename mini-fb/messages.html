@@ -25,15 +25,11 @@
 
   <main class="max-w-5xl mx-auto p-4 grid lg:grid-cols-[300px_1fr] gap-4 min-h-[calc(100vh-4rem)]">
     <aside class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
-      <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+      <div class="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
         <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">New message</label>
-        <input
-          id="userSearch"
-          type="search"
-          placeholder="Search people..."
-          class="mt-2 w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm"
-        />
-        <div id="searchResults" class="mt-2 max-h-32 overflow-y-auto hidden"></div>
+        <input id="userSearch" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm" />
+        <div id="searchResults" class="max-h-32 overflow-y-auto hidden"></div>
+        <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">+ New group chat</button>
       </div>
       <div class="p-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm">Conversations</div>
       <div id="convList" class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
@@ -48,15 +44,10 @@
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
         <p class="text-sm text-gray-500 text-center py-8">Pick someone from the list or search to start chatting.</p>
       </div>
-      <form id="chatForm" class="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2 hidden">
-        <input
-          id="chatInput"
-          type="text"
-          maxlength="500"
-          required
-          placeholder="Type a message..."
-          class="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white"
-        />
+      <form id="chatForm" class="p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 hidden">
+        <input id="chatImage" type="file" accept="image/*" class="hidden" />
+        <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm shrink-0">📷</button>
+        <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="flex-1 min-w-[120px] rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white" />
         <button type="submit" class="px-4 py-2 rounded-xl bg-accent text-white font-semibold text-sm shrink-0">Send</button>
       </form>
     </section>
@@ -74,9 +65,15 @@
       searchProfilesForMessaging,
       getProfileDisplayName,
       escapeHtml,
+      markConversationRead,
+      createGroupConversation,
+      isGroupConversationId,
     } from "./src/messages.js";
     import { profileUrl } from "./src/profiles-cache.js";
+    import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
+    import { uploadMedia } from "./src/image-upload.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -86,28 +83,25 @@
     bootPage(firebase);
 
     const db = firebase.__db;
+    await loadProfilesCache(db);
+
+    const params = new URLSearchParams(location.search);
+    const urlUid = params.get("uid");
+    const urlConv = params.get("conv");
+    const sharePost = params.get("sharePost");
+
     const convList = document.getElementById("convList");
     const chatMessages = document.getElementById("chatMessages");
     const chatHeader = document.getElementById("chatHeader");
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
+    const chatImage = document.getElementById("chatImage");
     const userSearch = document.getElementById("userSearch");
-    const searchResults = document.getElementById("searchResults");
 
-    const urlUid = new URLSearchParams(location.search).get("uid");
-    let activeOtherUid = urlUid;
+    let activeTarget = urlConv || urlUid || null;
     let msgUnsub = null;
-    let convUnsub = null;
-    let currentChatUid = null;
     let didInitialOpen = false;
     const nameCache = new Map();
-
-    function maybeOpenFromUrl() {
-      if (urlUid && !didInitialOpen) {
-        didInitialOpen = true;
-        openChat(urlUid);
-      }
-    }
 
     async function displayName(uid) {
       if (nameCache.has(uid)) return nameCache.get(uid);
@@ -116,9 +110,9 @@
       return name;
     }
 
-    function setActiveConvButton(otherUid) {
-      convList.querySelectorAll("[data-other-uid]").forEach((btn) => {
-        const active = btn.dataset.otherUid === otherUid;
+    function setActiveConv(convId, otherUid) {
+      convList.querySelectorAll("[data-conv-id]").forEach((btn) => {
+        const active = btn.dataset.convId === convId;
         btn.classList.toggle("bg-accent/10", active);
         btn.classList.toggle("border-l-4", active);
         btn.classList.toggle("border-accent", active);
@@ -128,35 +122,63 @@
     function renderMessages(snap) {
       chatMessages.innerHTML = "";
       if (snap.empty) {
-        chatMessages.innerHTML =
-          '<p class="text-sm text-gray-500 text-center py-8">No messages yet. Say hello!</p>';
+        chatMessages.innerHTML = '<p class="text-sm text-gray-500 text-center py-8">No messages yet. Say hello!</p>';
         return;
       }
       snap.forEach((d) => {
         const m = d.data();
         const mine = m.senderUid === user.uid;
-        const bubble = document.createElement("div");
-        bubble.className = mine ? "flex justify-end" : "flex justify-start";
+        const wrap = document.createElement("div");
+        wrap.className = mine ? "flex flex-col items-end" : "flex flex-col items-start";
         const inner = document.createElement("div");
-        inner.className = `max-w-[85%] rounded-2xl px-4 py-2 text-sm break-words ${
+        inner.className = `max-w-[85%] rounded-2xl px-4 py-2 text-sm break-words space-y-2 ${
           mine ? "bg-accent text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
         }`;
-        inner.textContent = m.text || "";
-        bubble.appendChild(inner);
-        chatMessages.appendChild(bubble);
+        if (m.text) {
+          const p = document.createElement("p");
+          p.textContent = m.text;
+          inner.appendChild(p);
+        }
+        if (m.imageUrl) {
+          const img = document.createElement("img");
+          img.src = m.imageUrl;
+          img.alt = "Image";
+          img.className = "max-w-full rounded-xl max-h-48 object-cover";
+          inner.appendChild(img);
+        }
+        if (m.postLink) {
+          const a = document.createElement("a");
+          a.href = m.postLink;
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.className = mine ? "underline text-white/90" : "text-accent underline";
+          a.textContent = "View shared post";
+          inner.appendChild(a);
+        }
+        wrap.appendChild(inner);
+        if (mine) {
+          const meta = document.createElement("span");
+          meta.className = "text-[10px] text-gray-400 mt-0.5";
+          meta.textContent = m.read ? "Seen" : "Sent";
+          wrap.appendChild(meta);
+        }
+        chatMessages.appendChild(wrap);
       });
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    async function openChat(otherUid) {
-      if (!otherUid) return;
-      if (currentChatUid === otherUid && msgUnsub) {
-        setActiveConvButton(otherUid);
+    async function openConversation(convId, otherUid = null) {
+      if (!convId) return;
+      if (activeTarget === convId && msgUnsub) {
+        setActiveConv(convId, otherUid);
         return;
       }
-      activeOtherUid = otherUid;
-      currentChatUid = otherUid;
-      history.replaceState(null, "", `?uid=${encodeURIComponent(otherUid)}`);
+      activeTarget = isGroupConversationId(convId) ? convId : otherUid || activeTarget;
+      history.replaceState(
+        null,
+        "",
+        isGroupConversationId(convId) ? `?conv=${encodeURIComponent(convId)}` : `?uid=${encodeURIComponent(otherUid || activeTarget)}`
+      );
 
       if (msgUnsub) {
         msgUnsub();
@@ -164,93 +186,113 @@
       }
 
       chatForm.classList.remove("hidden");
-      setActiveConvButton(otherUid);
+      setActiveConv(convId, otherUid);
+      await markConversationRead(db, convId);
 
-      const name = await displayName(otherUid);
-      chatHeader.innerHTML = `
-        <a href="${profileUrl(otherUid)}" class="font-semibold hover:text-accent transition">${escapeHtml(name)}</a>
-        <a href="${profileUrl(otherUid)}" class="text-xs text-accent font-medium shrink-0">View profile</a>
-      `;
+      const convSnap = await getDoc(doc(db, "conversations", convId));
+      const convData = convSnap.data() || {};
 
-      const convId = conversationId(user.uid, otherUid);
-      await getOrCreateConversation(db, otherUid);
+      if (convData.type === "group" || isGroupConversationId(convId)) {
+        chatHeader.innerHTML = `<span class="font-semibold">${escapeHtml(convData.title || "Group chat")}</span>`;
+      } else {
+        const uid = otherUid || (convData.participants || []).find((p) => p !== user.uid);
+        const name = await displayName(uid);
+        chatHeader.innerHTML = `
+          <a href="${profileUrl(uid)}" class="font-semibold hover:text-accent transition">${escapeHtml(name)}</a>
+          <a href="${profileUrl(uid)}" class="text-xs text-accent font-medium shrink-0">View profile</a>
+        `;
+      }
 
-      msgUnsub = listenMessages(
-        db,
-        convId,
-        renderMessages,
-        (err) => {
-          chatMessages.innerHTML = `<p class="text-sm text-rose-500 p-4">${escapeHtml(err.message || "Could not load messages.")}</p>`;
-        }
-      );
+      if (sharePost && !chatInput.value) {
+        chatInput.value = `Check this out: ${decodeURIComponent(sharePost)}`;
+      }
 
+      msgUnsub = listenMessages(db, convId, renderMessages, (err) => {
+        chatMessages.innerHTML = `<p class="text-sm text-rose-500 p-4">${escapeHtml(err.message || "Could not load messages.")}</p>`;
+      });
       chatInput.focus();
+    }
+
+    async function openDm(otherUid) {
+      const convId = await getOrCreateConversation(db, otherUid);
+      await openConversation(convId, otherUid);
+    }
+
+    function maybeOpenFromUrl() {
+      if (didInitialOpen) return;
+      didInitialOpen = true;
+      if (urlConv) openConversation(urlConv);
+      else if (urlUid) openDm(urlUid);
     }
 
     function renderConversationList(snap) {
       convList.innerHTML = "";
       if (snap.empty) {
-        convList.innerHTML =
-          '<p class="p-4 text-sm text-gray-500">No conversations yet. Search above or message someone from their profile.</p>';
+        convList.innerHTML = '<p class="p-4 text-sm text-gray-500">No conversations yet.</p>';
         maybeOpenFromUrl();
         return;
       }
 
       snap.docs.forEach((d) => {
         const data = d.data();
-        const other = (data.participants || []).find((p) => p !== user.uid);
-        if (!other) return;
+        const convId = d.id;
+        const unread = data.unreadCounts?.[user.uid] || 0;
+        const isGroup = data.type === "group" || isGroupConversationId(convId);
 
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.dataset.otherUid = other;
+        btn.dataset.convId = convId;
         btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent";
 
-        displayName(other).then((name) => {
+        const labelPromise = isGroup
+          ? Promise.resolve(data.title || "Group chat")
+          : displayName((data.participants || []).find((p) => p !== user.uid));
+
+        labelPromise.then((name) => {
           const preview = data.lastMessage || "Start chatting";
           const you = data.lastSenderUid === user.uid ? "You: " : "";
+          const badge = unread > 0 ? `<span class="ml-auto bg-accent text-white text-xs px-2 py-0.5 rounded-full">${unread}</span>` : "";
           btn.innerHTML = `
-            <p class="font-semibold text-sm text-gray-900 dark:text-white">${escapeHtml(name)}</p>
-            <p class="text-xs text-gray-500 truncate">${escapeHtml(you + preview)}</p>
+            <div class="flex items-center gap-2">
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">${isGroup ? "👥 " : ""}${escapeHtml(name)}</p>
+                <p class="text-xs text-gray-500 truncate">${escapeHtml(you + preview)}</p>
+              </div>
+              ${badge}
+            </div>
           `;
         });
 
-        btn.addEventListener("click", () => openChat(other));
+        btn.addEventListener("click", () => {
+          if (isGroup) openConversation(convId);
+          else {
+            const other = (data.participants || []).find((p) => p !== user.uid);
+            openConversation(convId, other);
+          }
+        });
         convList.appendChild(btn);
       });
-
       maybeOpenFromUrl();
     }
 
-    convUnsub = listenMyConversations(
-      db,
-      renderConversationList,
-      (err) => {
-        const needsIndex = String(err?.message || "").includes("index");
-        convList.innerHTML = needsIndex
-          ? '<p class="p-4 text-sm text-rose-500">Firestore index required. Run deploy-firestore.ps1 or create index: conversations → participants (array) + updatedAt (desc).</p>'
-          : `<p class="p-4 text-sm text-rose-500">${escapeHtml(err.message || "Could not load conversations.")}</p>`;
-        maybeOpenFromUrl();
-      }
-    );
+    listenMyConversations(db, renderConversationList, (err) => {
+      convList.innerHTML = `<p class="p-4 text-sm text-rose-500">${escapeHtml(err.message || "Could not load conversations.")}</p>`;
+      maybeOpenFromUrl();
+    });
 
     let searchTimer;
     userSearch.addEventListener("input", () => {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(async () => {
         const term = userSearch.value.trim();
+        const searchResults = document.getElementById("searchResults");
         if (!term) {
           searchResults.classList.add("hidden");
-          searchResults.innerHTML = "";
           return;
         }
         const profiles = await searchProfilesForMessaging(db, term);
         searchResults.classList.remove("hidden");
         searchResults.innerHTML = "";
-        if (!profiles.length) {
-          searchResults.innerHTML = '<p class="text-xs text-gray-500 p-2">No users found</p>';
-          return;
-        }
         profiles.forEach((p) => {
           const btn = document.createElement("button");
           btn.type = "button";
@@ -259,30 +301,70 @@
           btn.addEventListener("click", () => {
             userSearch.value = "";
             searchResults.classList.add("hidden");
-            openChat(p.uid);
+            openDm(p.uid);
           });
           searchResults.appendChild(btn);
         });
       }, 300);
     });
 
+    document.getElementById("newGroupBtn").addEventListener("click", async () => {
+      const title = prompt("Group name", "Friends");
+      if (!title) return;
+      const handles = prompt("Add people by @handle, comma-separated (e.g. alex, sam)");
+      if (!handles) return;
+      const uids = handles
+        .split(",")
+        .map((h) => uidForHandle(h.trim().replace(/^@/, "")))
+        .filter(Boolean);
+      if (uids.length < 2) {
+        showToast("Add at least 2 valid @handles from their profiles.", "error");
+        return;
+      }
+      try {
+        const id = await createGroupConversation(db, uids, title);
+        showToast("Group created!", "success");
+        openConversation(id);
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    });
+
+    document.getElementById("attachImageBtn").addEventListener("click", () => chatImage.click());
+
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!activeOtherUid) {
+      if (!activeTarget) {
         showToast("Select a conversation first.", "error");
         return;
       }
-      const text = chatInput.value;
-      if (!text.trim()) return;
+      const text = chatInput.value.trim();
+      let imageUrl = null;
+      if (chatImage.files?.[0]) {
+        const up = await uploadMedia(chatImage.files[0]);
+        imageUrl = up.url;
+        chatImage.value = "";
+      }
+      if (!text && !imageUrl) return;
+
+      const payload = { text };
+      if (imageUrl) payload.imageUrl = imageUrl;
+      if (sharePost && text.includes(sharePost)) payload.postLink = decodeURIComponent(sharePost);
+
       try {
         chatForm.querySelector("button[type=submit]").disabled = true;
-        await sendMessage(firebase, activeOtherUid, text);
+        let target = activeTarget;
+        if (!isGroupConversationId(target)) {
+          const convId = await getOrCreateConversation(db, target);
+          await sendMessage(firebase, target, payload);
+        } else {
+          await sendMessage(firebase, target, payload);
+        }
         chatInput.value = "";
       } catch (err) {
         showToast(err.message || "Send failed.", "error");
       } finally {
         chatForm.querySelector("button[type=submit]").disabled = false;
-        chatInput.focus();
       }
     });
   </script>

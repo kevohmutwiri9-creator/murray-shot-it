@@ -163,6 +163,14 @@
               <p id="totalComments" class="text-2xl font-bold text-slate-900 dark:text-white">0</p>
               <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Comments</p>
             </div>
+            <div class="rounded-2xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 p-4 text-center">
+              <p id="pendingPostFlags" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Post flags</p>
+            </div>
+            <div class="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-center">
+              <p id="pendingUserFlags" class="text-2xl font-bold text-amber-600 dark:text-amber-400">0</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">User reports</p>
+            </div>
           </div>
         </div>
       </section>
@@ -350,10 +358,17 @@
         // Load total likes (sum of likes across all posts)
         let totalLikes = 0;
         postsSnap.forEach((docSnap) => {
-          const likes = docSnap.data().likes || 0;
-          totalLikes += likes;
+          totalLikes += docSnap.data().likeCount || 0;
         });
         document.getElementById("totalLikes").textContent = totalLikes;
+
+        const flagsSnap = await getDocs(collection(db, "flags"));
+        const pendingPosts = flagsSnap.docs.filter((d) => (d.data().status || "pending") === "pending").length;
+        document.getElementById("pendingPostFlags").textContent = pendingPosts;
+
+        const userFlagsSnap = await getDocs(collection(db, "userFlags"));
+        const pendingUsers = userFlagsSnap.docs.filter((d) => (d.data().status || "pending") === "pending").length;
+        document.getElementById("pendingUserFlags").textContent = pendingUsers;
 
         // Load total comments
         let totalComments = 0;

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapVerse • Explore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { accent: '#e94560' } } } } };</script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans min-h-screen">
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <a href="/index.html" class="font-bold text-accent">← Feed</a>
+      <h1 class="font-bold">Explore</h1>
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm">🌙</button>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto p-4 space-y-6">
+    <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+      <h2 class="text-lg font-bold mb-3">Trending hashtags</h2>
+      <div id="trending" class="flex flex-wrap gap-2"></div>
+    </section>
+    <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+      <h2 class="text-lg font-bold mb-3">People you may know</h2>
+      <div id="suggestions" class="space-y-2"></div>
+    </section>
+    <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+      <h2 class="text-lg font-bold mb-3">Popular posts</h2>
+      <div id="popularPosts" class="space-y-4"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { requireAuth, bootPage } from "./src/page-boot.js";
+    import { getFriendSuggestions } from "./src/friend-suggestions.js";
+    import { profileUrl } from "./src/profiles-cache.js";
+    import { renderPostCard } from "./src/post-card.js";
+    import { isPostVisible } from "./src/scheduled-posts.js";
+    import { filterBlockedPosts, getBlockedUids } from "./src/blocks.js";
+    import { initDarkMode } from "./src/ui.js";
+    import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebase = initFirebase();
+    const user = await requireAuth(firebase);
+    if (!user) throw new Error("auth");
+    initDarkMode("darkModeToggle");
+    bootPage(firebase);
+    window.__firebaseApp = firebase;
+    window.currentFirebaseUser = user;
+
+    const db = firebase.__db;
+    const blocked = await getBlockedUids(db, user.uid);
+
+    const tagsEl = document.getElementById("trending");
+    const tagSnap = await getDocs(collection(db, "hashtags"));
+    const tags = [];
+    tagSnap.forEach((d) => tags.push({ id: d.id, ...d.data() }));
+    tags.sort((a, b) => (b.count || 0) - (a.count || 0));
+    tags.slice(0, 15).forEach((t) => {
+      const a = document.createElement("a");
+      a.href = `hashtag.html?tag=${encodeURIComponent(t.id)}`;
+      a.className = "px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium";
+      a.textContent = `#${t.id}`;
+      tagsEl.appendChild(a);
+    });
+    if (!tags.length) tagsEl.innerHTML = '<p class="text-sm text-gray-500">No hashtags yet.</p>';
+
+    const sugEl = document.getElementById("suggestions");
+    const suggestions = await getFriendSuggestions(db, user.uid, 10);
+    suggestions.forEach((p) => {
+      const a = document.createElement("a");
+      a.href = profileUrl(p.uid);
+      a.className = "block p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 font-medium";
+      a.textContent = p.displayName || p.email || "User";
+      sugEl.appendChild(a);
+    });
+    if (!suggestions.length) sugEl.innerHTML = '<p class="text-sm text-gray-500">Follow more people for suggestions.</p>';
+
+    const postsEl = document.getElementById("popularPosts");
+    const q = query(collection(db, "posts"), orderBy("likeCount", "desc"), limit(20));
+    let posts = [];
+    try {
+      const snap = await getDocs(q);
+      snap.forEach((d) => {
+        const p = { id: d.id, ...d.data() };
+        if (isPostVisible(p)) posts.push(p);
+      });
+    } catch {
+      const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30)));
+      snap.forEach((d) => {
+        const p = { id: d.id, ...d.data() };
+        if (isPostVisible(p)) posts.push(p);
+      });
+      posts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+    }
+    posts = filterBlockedPosts(posts, blocked).slice(0, 8);
+    posts.forEach((p) => postsEl.appendChild(renderPostCard(p, db)));
+    if (!posts.length) postsEl.innerHTML = '<p class="text-sm text-gray-500">No posts yet.</p>';
+  </script>
+</body>
+</html>

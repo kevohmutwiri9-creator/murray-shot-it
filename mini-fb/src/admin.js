@@ -14,7 +14,8 @@ import { getDbService } from "./firebase-config.js";
 import { getCurrentUser, isAdmin } from "./auth.js";
 import { uploadMedia } from "./image-upload.js";
 import { extractHashtags, saveHashtags } from "./hashtags.js";
-import { extractMentions, saveMentions } from "./mentions.js";
+import { extractMentions, saveMentions, notifyMentionedUsers } from "./mentions.js";
+import { checkRateLimit, recordRateLimit } from "./rate-limit.js";
 import { INITIAL_POST_STATS } from "./post-stats.js";
 import { showToast } from "./ui.js";
 
@@ -162,6 +163,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
     try {
       const user = getCurrentUser();
       if (!user) throw new Error("Not logged in.");
+      checkRateLimit("post", user.uid);
 
       const title = titleEl.value.trim();
       const text = textEl.value.trim();
@@ -179,12 +181,17 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
 
       let mediaUrl = null;
       let mediaType = null;
+      let mediaUrls = [];
+      const files = fileEl?.files?.length ? [...fileEl.files] : file ? [file] : [];
 
-      if (file) {
-        statusEl.textContent = "Uploading image...";
-        const uploadResult = await uploadMedia(file);
-        mediaUrl = uploadResult.url;
-        mediaType = uploadResult.mediaType;
+      for (let i = 0; i < Math.min(files.length, 5); i++) {
+        statusEl.textContent = `Uploading media ${i + 1}/${Math.min(files.length, 5)}...`;
+        const uploadResult = await uploadMedia(files[i]);
+        mediaUrls.push({ url: uploadResult.url, type: uploadResult.mediaType });
+      }
+      if (mediaUrls[0]) {
+        mediaUrl = mediaUrls[0].url;
+        mediaType = mediaUrls[0].type;
       }
 
       const db = getDbService(firebaseApp);
@@ -196,6 +203,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
         text,
         mediaUrl,
         mediaType,
+        mediaUrls: mediaUrls.length ? mediaUrls : null,
         authorUid: user.uid,
         authorEmail: user.email || null,
         createdAt: serverTimestamp(),
@@ -213,6 +221,15 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       // Extract and save mentions
       const mentions = extractMentions(text);
       await saveMentions(db, postRef.id, mentions);
+      if (!scheduledTime) {
+        await notifyMentionedUsers(firebaseApp, {
+          postId: postRef.id,
+          text,
+          actorUid: user.uid,
+          actorEmail: user.email,
+        });
+      }
+      recordRateLimit("post", user.uid);
 
       statusEl.textContent = scheduledTime ? "Post scheduled successfully." : "Post published successfully.";
       showToast(statusEl.textContent, "success");
