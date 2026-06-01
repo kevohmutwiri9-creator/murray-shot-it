@@ -281,9 +281,11 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { ensureAuth, getCurrentUser, isAdmin } from "./src/auth.js";
+    import { getCurrentUser, isAdmin } from "./src/auth.js";
+    import { requireAuth, bootPage } from "./src/page-boot.js";
+    import { showToast } from "./src/ui.js";
     import { renderAdminPosts, adminBindCreatePost, adminDeletePost } from "./src/admin.js";
-    import { getDocs, collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getDocs, collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
 
@@ -291,15 +293,11 @@
     const adminCreateStatus = document.getElementById("adminCreateStatus");
 
     const bootstrap = async () => {
-      try {
-        await ensureAuth(firebase);
-      } catch {
-        adminStatus.textContent = "Please sign in first.";
-        window.location.href = "/login.html";
-        return;
-      }
+      const user = await requireAuth(firebase);
+      if (!user) return;
 
-      const user = getCurrentUser();
+      bootPage(firebase);
+
       const admin = await isAdmin(firebase, user.uid);
 
       if (!admin) {
@@ -428,11 +426,12 @@
 
             if (action === "resolve") {
               await updateDoc(doc(db, "flags", flagId), { status: "resolved" });
-              alert("Flag resolved.");
+              showToast("Flag resolved.", "success");
             } else if (action === "delete") {
               if (confirm("Delete this post?")) {
                 await adminDeletePost(firebase, postId);
                 await updateDoc(doc(db, "flags", flagId), { status: "post_deleted" });
+                showToast("Post deleted.", "success");
               }
             }
           });
@@ -483,12 +482,12 @@
                   bannedAt: new Date(),
                   bannedBy: user.email || user.uid
                 });
-                alert("User banned.");
+                showToast("User banned.", "success");
               }
             } else if (action === "unban") {
               if (confirm("Unban this user?")) {
                 await deleteDoc(doc(db, "banned", uid));
-                alert("User unbanned.");
+                showToast("User unbanned.", "success");
               }
             }
           });

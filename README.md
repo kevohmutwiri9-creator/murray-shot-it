@@ -4,59 +4,75 @@ A realtime social feed built with Firebase (Auth + Firestore), vanilla HTML/JS m
 
 ## Features
 
-- Email/password auth
-- Create posts with images, short videos, hashtags, and mentions
-- Schedule posts for future publishing (auto-published every minute on the feed)
-- Stories (24h) with fullscreen viewer and expired-story cleanup
-- Likes, comments, shares with denormalized counts on post documents
-- Notifications (filtered per user, unread badge, tap to open post)
-- Feed modes: **All** and **Following**
-- Post deep links (`/index.html?post=POST_ID`), copy link, social share
-- Flag posts for moderation
-- Admin dashboard (`mini-fb/admin.html`) gated by `admins/{uid}` in Firestore
-- Dark mode, PWA manifest, service worker (offline shell)
+- Email/password auth with auto-created profiles
+- Posts (images, short video, hashtags, mentions, scheduling)
+- Stories (24h viewer, auto-cleanup)
+- Likes, comments, shares with denormalized counts
+- Notifications (per-user query, unread badge, deep links)
+- Feed: **All** / **Following**
+- Admin dashboard, flags, user bans
+- Dark mode, PWA manifest, service worker
 
-## Quick start
-
-1. Open the project folder with a static server (or deploy to Netlify/Vercel/Firebase Hosting).
-2. Configure Firebase in `mini-fb/src/firebase-config.js`.
-3. Open `/login.html`, create an account, then use `/index.html`.
-
-For local development:
+## Quick start (local)
 
 ```bash
 npx serve .
 ```
 
-## Firestore index (required for notifications)
+Open `http://localhost:3000/login.html`, create an account, then use `/index.html`.
 
-Create a composite index in the Firebase console:
+## Deploy to GitHub Pages
 
-- Collection: `notifications`
-- Fields: `toUid` (Ascending), `createdAt` (Descending)
+1. Push to `main` — the workflow in `.github/workflows/pages.yml` deploys automatically.
+2. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. After deploy, your site URL is shown under **Settings → Pages** (e.g. `https://kevohmutwiri9-creator.github.io/murray-shot-it/`).
 
-Or deploy `firestore.indexes.json` if you use the Firebase CLI.
+### Firebase after Pages deploy
 
-## Admin setup
+In [Firebase Console](https://console.firebase.google.com) → **Authentication → Settings → Authorized domains**, add:
 
-Create a document `admins/{your-user-uid}` in Firestore (any fields) to grant admin access.
+- `kevohmutwiri9-creator.github.io` (or your Pages hostname)
+
+## Deploy Firestore rules & indexes
+
+Install [Firebase CLI](https://firebase.google.com/docs/cli), then:
+
+```bash
+firebase login
+firebase use snapverse-32683
+firebase deploy --only firestore
+```
+
+This applies `firestore.rules` and `firestore.indexes.json`.
+
+### Admin access
+
+Create document `admins/{your-uid}` in Firestore (any fields).
+
+## Deploy to Firebase Hosting (alternative)
+
+```bash
+firebase deploy --only hosting
+```
+
+Uses `firebase.json` — serves the repo root as static files.
 
 ## Project layout
 
 ```
-index.html          — main feed
-login.html          — auth
-mini-fb/
-  src/              — JS modules (feed, auth, ui, stories, …)
-  admin.html        — moderation
-  profile.html      — user profile
-  search.html       — find users
-  sw.js             — service worker
+index.html              — main feed
+login.html              — auth
+firestore.rules         — security rules
+firestore.indexes.json  — composite indexes
+firebase.json           — hosting + firestore config
+mini-fb/src/            — JS modules
 ```
 
-## Security
+## Security notes
 
-Client-side admin link hiding is not security. Enforce access with **Firestore Security Rules** so only admins can delete posts or read sensitive collections.
+- Rules in `firestore.rules` enforce auth, bans, admin-only moderation, and per-user notifications.
+- Client-side admin link hiding is **not** security — rules are required.
+- Rotate ImgBB API key if exposed; consider a backend proxy for uploads in production.
 
 ## License
 

@@ -150,26 +150,20 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { ensureAuth, getCurrentUser, isAdmin } from "./src/auth.js";
-    import { collection, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getCurrentUser } from "./src/auth.js";
+    import { requireAuth, hideAdminNavIfNeeded, bootPage } from "./src/page-boot.js";
+    import { addStoryFromFile } from "./src/stories.js";
+    import { showToast } from "./src/ui.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebase = initFirebase();
-    await ensureAuth(firebase);
+    const user = await requireAuth(firebase);
+    if (!user) throw new Error("Not signed in");
 
-    const user = getCurrentUser();
     const db = firebase.__db;
-
-    // Check if user is admin and hide admin dashboard link if not
-    const userIsAdmin = await isAdmin(firebase, user.uid);
-    console.log("User is admin:", userIsAdmin);
-    if (!userIsAdmin) {
-      const adminLinks = document.querySelectorAll('a[href*="admin.html"]');
-      console.log("Found admin links:", adminLinks.length);
-      adminLinks.forEach(link => {
-        link.style.display = 'none';
-        console.log("Hiding admin link:", link.href);
-      });
-    }
+    await hideAdminNavIfNeeded(firebase, user);
+    bootPage(firebase);
 
     // Load account info
     const loadAccountInfo = async () => {
@@ -266,44 +260,26 @@
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       try {
-        const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-        const auth = getAuth(firebase);
-        await auth.signOut();
+        await signOut(getAuth(firebase));
         window.location.href = "/login.html";
-      } catch (error) {
-        console.error("Logout failed:", error);
-        alert("Logout failed. Please try again.");
+      } catch {
+        showToast("Logout failed. Please try again.", "error");
       }
     });
 
-    // Add story button
-    document.getElementById("addStoryBtn").addEventListener("click", () => {
+    document.getElementById("addStoryBtn")?.addEventListener("click", () => {
       const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.accept = "image/*,video/*";
       fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
+        const file = e.target.files?.[0];
         if (!file) return;
-
         try {
-          const { uploadMedia } = await import("./src/image-upload.js");
-          const result = await uploadMedia(file);
-          
-          const storiesCol = collection(db, "stories");
-          const { addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-          await addDoc(storiesCol, {
-            mediaUrl: result.url,
-            mediaType: result.mediaType,
-            authorUid: user.uid,
-            authorEmail: user.email || null,
-            createdAt: serverTimestamp(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-          });
-
-          alert("Story added successfully!");
+          showToast("Uploading story...", "info");
+          await addStoryFromFile(db, file);
+          showToast("Story added!", "success");
         } catch (error) {
-          console.error("Failed to add story:", error);
-          alert("Failed to add story: " + error.message);
+          showToast(error.message || "Failed to add story.", "error");
         }
       };
       fileInput.click();

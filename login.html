@@ -148,6 +148,8 @@
   <script type="module">
     import { initFirebase } from "./mini-fb/src/firebase-config.js";
     import { ensureAuth, login, createAccount, getCurrentUser } from "./mini-fb/src/auth.js";
+    import { ensureProfile } from "./mini-fb/src/page-boot.js";
+    import { showToast } from "./mini-fb/src/ui.js";
 
     const firebase = initFirebase();
 
@@ -175,6 +177,7 @@
       showStatus("Signing in...");
       try {
         await login(firebase, emailEl.value, passwordEl.value);
+        await ensureProfile(firebase, getCurrentUser());
         showStatus("Signed in successfully.");
         goToFeed();
       } catch (err) {
@@ -189,7 +192,10 @@
       showStatus("Creating account...");
       try {
         await createAccount(firebase, emailEl.value, passwordEl.value);
-        showStatus("Account created. You can now sign in.");
+        await ensureProfile(firebase, getCurrentUser());
+        showStatus("Account created. Redirecting...");
+        showToast("Welcome to SnapVerse!", "success");
+        goToFeed();
       } catch (err) {
         showStatus(err?.message || "Account creation failed.", true);
       } finally {

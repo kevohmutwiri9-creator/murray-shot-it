@@ -20,7 +20,24 @@ function parseExpiresAt(story) {
   return new Date(story.expiresAt);
 }
 
-export function startStories(db, { containerEl, addBtnEl, firebaseApp }) {
+export async function addStoryFromFile(db, file) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to add a story.");
+
+  const result = await uploadMedia(file);
+  const expiresAt = Timestamp.fromMillis(Date.now() + STORY_TTL_MS);
+
+  await addDoc(collection(db, "stories"), {
+    mediaUrl: result.url,
+    mediaType: result.mediaType,
+    authorUid: user.uid,
+    authorEmail: user.email || null,
+    createdAt: serverTimestamp(),
+    expiresAt,
+  });
+}
+
+export function startStories(db, { containerEl, addBtnEl }) {
   const storiesCol = collection(db, "stories");
   const q = query(storiesCol, orderBy("createdAt", "desc"));
 
@@ -82,26 +99,9 @@ export function startStories(db, { containerEl, addBtnEl, firebaseApp }) {
     fileInput.onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const user = getCurrentUser();
-      if (!user) {
-        showToast("Sign in to add a story.", "error");
-        return;
-      }
-
       try {
         showToast("Uploading story...", "info");
-        const result = await uploadMedia(file);
-        const expiresAt = Timestamp.fromMillis(Date.now() + STORY_TTL_MS);
-
-        await addDoc(collection(db, "stories"), {
-          mediaUrl: result.url,
-          mediaType: result.mediaType,
-          authorUid: user.uid,
-          authorEmail: user.email || null,
-          createdAt: serverTimestamp(),
-          expiresAt,
-        });
-
+        await addStoryFromFile(db, file);
         showToast("Story added!", "success");
       } catch (error) {
         showToast(error.message || "Failed to add story.", "error");

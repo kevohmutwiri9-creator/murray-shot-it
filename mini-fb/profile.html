@@ -166,50 +166,19 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { ensureAuth, getCurrentUser } from "./src/auth.js";
+    import { getCurrentUser } from "./src/auth.js";
+    import { requireAuth, bootPage } from "./src/page-boot.js";
+    import { isPostVisible } from "./src/scheduled-posts.js";
+    import { showToast } from "./src/ui.js";
     import { collection, query, orderBy, where, onSnapshot, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount } from "./src/follows.js";
 
     const firebase = initFirebase();
-    await ensureAuth(firebase);
+    const user = await requireAuth(firebase);
+    if (!user) throw new Error("Not signed in");
 
-    const user = getCurrentUser();
     const db = firebase.__db;
-
-    // Dark mode toggle
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    const moonIcon = document.getElementById("moonIcon");
-    const sunIcon = document.getElementById("sunIcon");
-
-    if (localStorage.getItem("darkMode") === "true" ||
-        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.classList.add("dark");
-    }
-
-    darkModeToggle.addEventListener("click", () => {
-      document.documentElement.classList.toggle("dark");
-      const isDark = document.documentElement.classList.contains("dark");
-      localStorage.setItem("darkMode", isDark);
-    });
-
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const closeMobileMenu = document.getElementById("closeMobileMenu");
-    const mobileMenu = document.getElementById("mobileMenu");
-
-    mobileMenuBtn.addEventListener("click", () => {
-      mobileMenu.classList.remove("hidden");
-    });
-
-    closeMobileMenu.addEventListener("click", () => {
-      mobileMenu.classList.add("hidden");
-    });
-
-    mobileMenu.addEventListener("click", (e) => {
-      if (e.target === mobileMenu) {
-        mobileMenu.classList.add("hidden");
-      }
-    });
+    bootPage(firebase);
 
     // Load profile
     const loadProfile = async () => {
@@ -242,7 +211,10 @@
 
       onSnapshot(q, (snapshot) => {
         const posts = [];
-        snapshot.forEach((docSnap) => posts.push({ id: docSnap.id, ...docSnap.data() }));
+        snapshot.forEach((docSnap) => {
+          const post = { id: docSnap.id, ...docSnap.data() };
+          if (isPostVisible(post)) posts.push(post);
+        });
 
         const container = document.getElementById("userPosts");
         const emptyEl = document.getElementById("noPosts");

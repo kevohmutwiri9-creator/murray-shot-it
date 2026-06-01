@@ -1,18 +1,17 @@
 # SnapVerse — roadmap
 
 ## Done
-- [x] Firebase auth, feed, posts, media upload (imgbb)
-- [x] Likes, comments, shares + denormalized counts
-- [x] Notifications with messages and unread state
-- [x] Scheduled posts (auto-publish)
-- [x] Stories with viewer and expiry cleanup
-- [x] Following feed filter
-- [x] Post deep links, copy link, flag modal, toasts
-- [x] Character counters and media preview on composer
+- [x] Core feed, auth, posts, media, engagement
+- [x] Notifications, stories, scheduled posts, following filter
+- [x] Firestore security rules (`firestore.rules`)
+- [x] GitHub Pages workflow + Firebase hosting config
+- [x] Profile auto-create, ban enforcement, shared page boot
+- [x] Toasts on admin/settings; search follow buttons
 
 ## Next
-- [ ] Firestore security rules (production)
-- [ ] Firebase Storage or Cloudinary for larger videos
+- [ ] Deploy rules: `firebase deploy --only firestore`
+- [ ] Enable GitHub Pages (Actions) + add domain to Firebase Auth
+- [ ] Firebase Storage or Cloudinary for videos > 800KB
 - [ ] Cloud Function for scheduled publish (server-side)
-- [ ] Comment threads UI (replies already supported in schema)
-- [ ] Shared layout partial to reduce duplicated nav across pages
+- [ ] Comment threads UI
+- [ ] Shared HTML nav partial / build step

@@ -1,11 +1,12 @@
 import { getDbService } from "./firebase-config.js";
-import { ensureAuth, getCurrentUser, isAdmin } from "./auth.js";
+import { getCurrentUser } from "./auth.js";
+import { requireAuth, hideAdminNavIfNeeded, bootPage } from "./page-boot.js";
 import { startFeed } from "./feed.js";
 import { bindCreatePost } from "./admin.js";
 import { publishDueScheduledPosts } from "./scheduled-posts.js";
 import { startStories } from "./stories.js";
 import { startNotifications } from "./notifications.js";
-import { initDarkMode, bindCharCounter, bindMediaPreview, closeModal, showToast } from "./ui.js";
+import { bindCharCounter, bindMediaPreview, closeModal, showToast } from "./ui.js";
 import {
   collection,
   getDocs,
@@ -14,40 +15,18 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 export async function bootFeedPage(firebase) {
-  await ensureAuth(firebase).catch(() => {});
-
-  const user = getCurrentUser();
-  if (!user) {
-    window.location.href = "/login.html";
-    return;
-  }
+  const user = await requireAuth(firebase);
+  if (!user) return;
 
   document.getElementById("auth-loading")?.classList.add("hidden");
 
-  const userIsAdmin = await isAdmin(firebase, user.uid);
-  if (!userIsAdmin) {
-    document.querySelectorAll('a[href*="admin.html"]').forEach((link) => {
-      link.style.display = "none";
-    });
-  }
+  await hideAdminNavIfNeeded(firebase, user);
+  bootPage(firebase);
 
   window.currentFirebaseUser = user;
   window.__firebaseApp = firebase;
 
   const db = getDbService(firebase);
-
-  // Mobile menu
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const closeMobileMenu = document.getElementById("closeMobileMenu");
-  const mobileMenu = document.getElementById("mobileMenu");
-
-  mobileMenuBtn?.addEventListener("click", () => mobileMenu?.classList.remove("hidden"));
-  closeMobileMenu?.addEventListener("click", () => mobileMenu?.classList.add("hidden"));
-  mobileMenu?.addEventListener("click", (e) => {
-    if (e.target === mobileMenu) mobileMenu.classList.add("hidden");
-  });
-
-  initDarkMode();
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/mini-fb/sw.js").catch(() => {});
@@ -113,7 +92,6 @@ export async function bootFeedPage(firebase) {
   startStories(db, {
     containerEl: document.getElementById("storiesContainer"),
     addBtnEl: document.getElementById("addStoryBtn"),
-    firebaseApp: firebase,
   });
 
   loadTrendingTopics(db);
