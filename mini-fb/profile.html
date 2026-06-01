@@ -236,7 +236,7 @@
           styleFollowBtn();
         });
         const msgBtn = document.createElement("a");
-        msgBtn.href = `messages.html?uid=${viewUid}`;
+        msgBtn.href = `/mini-fb/messages.html?uid=${encodeURIComponent(viewUid)}`;
         msgBtn.className = "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition font-semibold";
         msgBtn.textContent = "Message";
         actions.append(followBtn, msgBtn);
