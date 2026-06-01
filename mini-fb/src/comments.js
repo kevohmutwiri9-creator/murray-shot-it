@@ -10,6 +10,7 @@ import {
 import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
 import { createNotificationForComment } from "./notifications.js";
+import { bumpPostStat } from "./post-stats.js";
 
 export function commentsCol(db, postId) {
   return collection(db, "posts", postId, "comments");
@@ -33,13 +34,17 @@ export async function addComment(firebaseApp, post, text, parentCommentId = null
     createdAt: serverTimestamp(),
   });
 
-  // notify post author
+  await bumpPostStat(db, postId, "commentCount", 1);
+
   const authorUid = post.authorUid;
-  await createNotificationForComment(firebaseApp, {
-    postId,
-    actorUid: user.uid,
-    authorUid,
-  });
+  if (authorUid && authorUid !== user.uid) {
+    await createNotificationForComment(firebaseApp, {
+      postId,
+      actorUid: user.uid,
+      authorUid,
+      actorEmail: user.email,
+    });
+  }
 }
 
 export function bindCommentsCount(firebaseApp, { post, countEl }) {

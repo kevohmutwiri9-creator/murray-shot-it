@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SnapVerse • Feed</title>
   <link rel="manifest" href="mini-fb/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -164,7 +164,10 @@
         <form id="createPostForm" class="p-5 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Title</label>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-sm font-semibold text-gray-700 dark:text-gray-300" for="postTitle">Title</label>
+                <span id="postTitleCount" class="text-xs text-gray-500">0/80</span>
+              </div>
               <input
                 id="postTitle"
                 type="text"
@@ -176,15 +179,18 @@
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Text</label>
-              <input
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-sm font-semibold text-gray-700 dark:text-gray-300" for="postText">Text</label>
+                <span id="postTextCount" class="text-xs text-gray-500">0/140</span>
+              </div>
+              <textarea
                 id="postText"
-                type="text"
                 required
                 maxlength="140"
-                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white"
-                placeholder="Short description"
-              />
+                rows="2"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white resize-none"
+                placeholder="Short description — use #hashtags and @mentions"
+              ></textarea>
             </div>
           </div>
 
@@ -197,8 +203,9 @@
               class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
             />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Recommended: JPG/PNG for images (max 32MB). Videos supported (small files only).
+              Images up to 32MB. Short videos up to ~800KB.
             </p>
+            <div id="postMediaPreview" class="hidden mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600"></div>
           </div>
 
           <div>
@@ -230,9 +237,15 @@
 
     <!-- Feed -->
     <section>
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feed</h2>
-        <div class="text-sm text-gray-500 dark:text-gray-400" id="feedCount"></div>
+        <div class="flex items-center gap-2">
+          <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-white dark:bg-gray-800">
+            <button type="button" id="feedFilterAll" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">All</button>
+            <button type="button" id="feedFilterFollowing" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Following</button>
+          </div>
+          <div class="text-sm text-gray-500 dark:text-gray-400" id="feedCount"></div>
+        </div>
       </div>
 
       <div id="feed" class="space-y-4">
@@ -241,6 +254,12 @@
 
       <div id="feedEmpty" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
         No posts yet. Create the first one above.
+      </div>
+
+      <div class="mt-6 text-center">
+        <button type="button" id="loadMoreFeed" class="hidden px-6 py-2 rounded-xl border border-gray-200 dark:border-gray-600 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+          Load more posts
+        </button>
       </div>
     </section>
 
@@ -288,336 +307,10 @@
   <!-- Scripts -->
   <script type="module">
     import { initFirebase } from "./mini-fb/src/firebase-config.js";
-    import { ensureAuth, getCurrentUser, isAdmin } from "./mini-fb/src/auth.js";
-    import { startFeed } from "./mini-fb/src/feed.js";
-    import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { bindCreatePost } from "./mini-fb/src/admin.js";
+    import { bootFeedPage } from "./mini-fb/src/feed-page.js";
 
-    // Boot
     const firebase = initFirebase();
-    await ensureAuth(firebase);
-
-    const user = getCurrentUser();
-    if (!user) {
-      window.location.href = "/login.html";
-    }
-
-    // Hide loading screen after auth check
-    const authLoading = document.getElementById("auth-loading");
-    if (authLoading) {
-      authLoading.classList.add("hidden");
-    }
-
-    // Check if user is admin and hide admin button if not
-    const userIsAdmin = await isAdmin(firebase, user.uid);
-    console.log("User is admin:", userIsAdmin);
-    if (!userIsAdmin) {
-      const adminLinks = document.querySelectorAll('a[href*="admin.html"]');
-      console.log("Found admin links:", adminLinks.length);
-      adminLinks.forEach(link => {
-        link.style.display = 'none';
-        console.log("Hiding admin link:", link.href);
-      });
-    }
-
-    // Store current user for feed.js
-    window.currentFirebaseUser = user;
-
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const closeMobileMenu = document.getElementById("closeMobileMenu");
-    const mobileMenu = document.getElementById("mobileMenu");
-
-    mobileMenuBtn.addEventListener("click", () => {
-      mobileMenu.classList.remove("hidden");
-    });
-
-    closeMobileMenu.addEventListener("click", () => {
-      mobileMenu.classList.add("hidden");
-    });
-
-    mobileMenu.addEventListener("click", (e) => {
-      if (e.target === mobileMenu) {
-        mobileMenu.classList.add("hidden");
-      }
-    });
-
-    startFeed(firebase);
-
-    bindCreatePost(firebase, {
-      titleEl: document.getElementById("postTitle"),
-      textEl: document.getElementById("postText"),
-      fileEl: document.getElementById("postFile"),
-      scheduleEl: document.getElementById("postSchedule"),
-      formEl: document.getElementById("createPostForm"),
-      btnEl: document.getElementById("createPostBtn"),
-      statusEl: document.getElementById("createPostStatus"),
-    });
-
-    // Dark mode toggle
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    const moonIcon = document.getElementById("moonIcon");
-    const sunIcon = document.getElementById("sunIcon");
-
-    // Register service worker for offline support
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/mini-fb/sw.js').then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
-      }).catch((error) => {
-        console.error('Service Worker registration failed:', error);
-      });
-    }
-
-    // Check for saved preference or system preference
-    if (localStorage.getItem("darkMode") === "true" ||
-        (!localStorage.getItem("darkMode") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.classList.add("dark");
-    }
-
-    darkModeToggle.addEventListener("click", () => {
-      document.documentElement.classList.toggle("dark");
-      const isDark = document.documentElement.classList.contains("dark");
-      localStorage.setItem("darkMode", isDark);
-    });
-
-    // Notifications
-    const notificationsBtn = document.getElementById("notificationsBtn");
-    const notificationsPanel = document.getElementById("notificationsPanel");
-    const notificationsList = document.getElementById("notificationsList");
-    const notificationBadge = document.getElementById("notificationBadge");
-
-    let notificationsPanelOpen = false;
-
-    notificationsBtn.addEventListener("click", () => {
-      notificationsPanelOpen = !notificationsPanelOpen;
-      notificationsPanel.classList.toggle("hidden", !notificationsPanelOpen);
-    });
-
-    // Close notifications panel when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!notificationsBtn.contains(e.target) && !notificationsPanel.contains(e.target)) {
-        notificationsPanelOpen = false;
-        notificationsPanel.classList.add("hidden");
-      }
-    });
-
-    // Load notifications
-    const loadNotifications = () => {
-      const user = getCurrentUser();
-      if (!user) return;
-
-      const db = firebase.__db;
-      const notificationsCol = collection(db, "notifications");
-      const q = query(notificationsCol, orderBy("createdAt", "desc"));
-
-      onSnapshot(q, (snapshot) => {
-        const notifications = [];
-        snapshot.forEach((docSnap) => {
-          const notif = docSnap.data();
-          if (notif.toUid === user.uid) {
-            notifications.push({ id: docSnap.id, ...notif });
-          }
-        });
-
-        notificationBadge.textContent = notifications.length;
-        notificationBadge.classList.toggle("hidden", notifications.length === 0);
-
-        notificationsList.innerHTML = "";
-        if (notifications.length === 0) {
-          notificationsList.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
-        } else {
-          notifications.forEach((notif) => {
-            const item = document.createElement("div");
-            item.className = "p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition";
-            
-            let icon = "";
-            let color = "";
-            if (notif.type === "like") {
-              icon = "♥";
-              color = "text-rose-500";
-            } else if (notif.type === "comment") {
-              icon = "✎";
-              color = "text-blue-500";
-            } else if (notif.type === "share") {
-              icon = "↗";
-              color = "text-green-500";
-            }
-
-            item.innerHTML = `
-              <div class="flex items-start gap-3">
-                <span class="text-lg ${color}">${icon}</span>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm text-gray-900 dark:text-white">${notif.message || "New notification"}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${notif.createdAt?.toDate?.() ? notif.createdAt.toDate().toLocaleString() : "Just now"}</p>
-                </div>
-              </div>
-            `;
-            notificationsList.appendChild(item);
-          });
-        }
-      });
-    };
-
-    loadNotifications();
-
-    // Load trending topics
-    const loadTrendingTopics = async () => {
-      const hashtagsCol = collection(db, "hashtags");
-      const snapshot = await getDocs(hashtagsCol);
-
-      const trending = [];
-      snapshot.forEach((docSnap) => {
-        trending.push({ id: docSnap.id, ...docSnap.data() });
-      });
-
-      // Sort by count and take top 10
-      trending.sort((a, b) => (b.count || 0) - (a.count || 0));
-      const topTrending = trending.slice(0, 10);
-
-      const container = document.getElementById("trendingTopics");
-      container.innerHTML = "";
-
-      if (topTrending.length === 0) {
-        container.innerHTML = '<span class="text-gray-500 dark:text-gray-400 text-sm">No trending topics yet</span>';
-      } else {
-        topTrending.forEach((hashtag) => {
-          const tag = document.createElement("a");
-          tag.href = `mini-fb/hashtag.html?tag=${hashtag.id}`;
-          tag.className = "inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition";
-          tag.textContent = `#${hashtag.id}`;
-          container.appendChild(tag);
-        });
-      }
-    };
-
-    loadTrendingTopics();
-
-    // Load stories
-    const loadStories = () => {
-      const storiesCol = collection(db, "stories");
-      const q = query(storiesCol, orderBy("createdAt", "desc"));
-
-      onSnapshot(q, (snapshot) => {
-        const container = document.getElementById("storiesContainer");
-        container.innerHTML = "";
-
-        const now = new Date();
-        const stories = [];
-
-        snapshot.forEach((docSnap) => {
-          const story = docSnap.data();
-          const expiresAt = new Date(story.expiresAt);
-          if (expiresAt > now) {
-            stories.push({ id: docSnap.id, ...story });
-          }
-        });
-
-        if (stories.length === 0) {
-          container.innerHTML = '<span class="text-gray-500 dark:text-gray-400 text-sm">No stories yet</span>';
-        } else {
-          stories.forEach((story) => {
-            const storyEl = document.createElement("div");
-            storyEl.className = "flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-accent to-purple-600 cursor-pointer relative overflow-hidden";
-            
-            if (story.mediaUrl) {
-              const img = document.createElement("img");
-              img.src = story.mediaUrl;
-              img.alt = "Story";
-              img.className = "w-full h-full object-cover";
-              storyEl.appendChild(img);
-            }
-            
-            const overlay = document.createElement("div");
-            overlay.className = "absolute inset-0 bg-black/30";
-            storyEl.appendChild(overlay);
-            
-            const label = document.createElement("div");
-            label.className = "absolute bottom-1 left-1 text-white text-xs font-semibold truncate w-18";
-            label.textContent = story.authorEmail?.split("@")[0] || "User";
-            storyEl.appendChild(label);
-            
-            storyEl.addEventListener("click", () => {
-              alert("Story viewer coming soon!");
-            });
-            container.appendChild(storyEl);
-          });
-        }
-      });
-    };
-
-    loadStories();
-
-    // Add story button
-    document.getElementById("addStoryBtn").addEventListener("click", () => {
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = "image/*";
-      fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        try {
-          const { uploadMedia } = await import("./mini-fb/src/image-upload.js");
-          const result = await uploadMedia(file);
-          
-          const storiesCol = collection(db, "stories");
-          await addDoc(storiesCol, {
-            mediaUrl: result.url,
-            mediaType: result.mediaType,
-            authorUid: user.uid,
-            authorEmail: user.email || null,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-          });
-
-          alert("Story added!");
-        } catch (error) {
-          alert("Failed to add story: " + error.message);
-        }
-      };
-      fileInput.click();
-    });
-
-    // Edit post functionality
-    const editPostModal = document.getElementById("editPostModal");
-    const editPostForm = document.getElementById("editPostForm");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
-
-    // Handle edit button clicks from feed
-    document.addEventListener("click", (e) => {
-      const editBtn = e.target.closest("[data-edit-id]");
-      if (editBtn) {
-        const postId = editBtn.dataset.editId;
-        const title = editBtn.dataset.editTitle;
-        const text = editBtn.dataset.editText;
-
-        document.getElementById("editPostId").value = postId;
-        document.getElementById("editPostTitle").value = title;
-        document.getElementById("editPostText").value = text;
-        editPostModal.classList.remove("hidden");
-      }
-    });
-
-    cancelEditBtn.addEventListener("click", () => {
-      editPostModal.classList.add("hidden");
-    });
-
-    editPostForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const postId = document.getElementById("editPostId").value;
-      const title = document.getElementById("editPostTitle").value.trim();
-      const text = document.getElementById("editPostText").value.trim();
-
-      const db = firebase.__db;
-      const postRef = doc(db, "posts", postId);
-      await updateDoc(postRef, {
-        title,
-        text,
-        updatedAt: new Date()
-      });
-
-      editPostModal.classList.add("hidden");
-    });
+    await bootFeedPage(firebase);
   </script>
 </body>
 </html>

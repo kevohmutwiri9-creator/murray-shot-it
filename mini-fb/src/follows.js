@@ -1,5 +1,5 @@
 // Follow system for SnapVerse
-import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 export async function followUser(db, followerUid, followingUid) {
   const followRef = doc(db, "followers", `${followerUid}_${followingUid}`);
@@ -39,4 +39,10 @@ export function getFollowingCount(db, uid) {
       resolve(snapshot.size);
     });
   });
+}
+
+export async function getFollowingUids(db, followerUid) {
+  const q = query(collection(db, "followers"), where("followerUid", "==", followerUid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data().followingUid).filter(Boolean);
 }

@@ -1,46 +1,44 @@
-const CACHE_NAME = 'snapverse-v1';
+const CACHE_NAME = 'snapverse-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/login.html',
-  '/admin.html',
-  '/profile.html',
-  '/hashtag.html',
-  '/search.html',
-  '/manifest.json',
-  '/murray.png'
+  '/mini-fb/search.html',
+  '/mini-fb/profile.html',
+  '/mini-fb/admin.html',
+  '/mini-fb/hashtag.html',
+  '/mini-fb/settings.html',
+  '/mini-fb/manifest.json',
+  '/mini-fb/murray.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(urlsToCache).catch(() => {
+        /* partial cache ok when offline */
+      })
+    )
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
+    caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
 
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
+          if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
         })
-      );
-    })
+      )
+    )
   );
+  self.clients.claim();
 });

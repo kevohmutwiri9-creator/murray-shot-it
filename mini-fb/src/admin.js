@@ -15,6 +15,8 @@ import { getCurrentUser, isAdmin } from "./auth.js";
 import { uploadMedia } from "./image-upload.js";
 import { extractHashtags, saveHashtags } from "./hashtags.js";
 import { extractMentions, saveMentions } from "./mentions.js";
+import { INITIAL_POST_STATS } from "./post-stats.js";
+import { showToast } from "./ui.js";
 
 function createEl(tag, className, text) {
   const el = document.createElement(tag);
@@ -197,6 +199,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
         createdAt: serverTimestamp(),
         scheduledFor: scheduledTime ? scheduledTime.toISOString() : null,
         status: scheduledTime ? "scheduled" : "published",
+        ...INITIAL_POST_STATS,
       });
 
       // Extract and save hashtags
@@ -208,12 +211,15 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       await saveMentions(db, postRef.id, mentions);
 
       statusEl.textContent = scheduledTime ? "Post scheduled successfully." : "Post published successfully.";
+      showToast(statusEl.textContent, "success");
       titleEl.value = "";
       textEl.value = "";
       fileEl.value = "";
       if (scheduleEl) scheduleEl.value = "";
     } catch (err) {
-      statusEl.textContent = err?.message || "Failed to publish post.";
+      const msg = err?.message || "Failed to publish post.";
+      statusEl.textContent = msg;
+      showToast(msg, "error");
     } finally {
       btnEl.disabled = false;
     }

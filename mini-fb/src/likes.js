@@ -8,6 +8,7 @@ import {
 import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
 import { createNotificationForLike } from "./notifications.js";
+import { bumpPostStat } from "./post-stats.js";
 
 export function likeSubcol(db, postId) {
   return collection(db, "posts", postId, "likes");
@@ -30,15 +31,21 @@ export async function toggleLike(firebaseApp, post) {
 
   if (existing.exists()) {
     await deleteDoc(likeDocRef);
+    await bumpPostStat(db, postId, "likeCount", -1);
     return { liked: false };
-  } else {
-    // create a marker doc
-    await setDoc(likeDocRef, { createdAt: new Date() });
-    if (authorUid && authorUid !== actorUid) {
-      await createNotificationForLike(firebaseApp, { postId, actorUid, authorUid });
-    }
-    return { liked: true };
   }
+
+  await setDoc(likeDocRef, { createdAt: new Date() });
+  await bumpPostStat(db, postId, "likeCount", 1);
+  if (authorUid && authorUid !== actorUid) {
+    await createNotificationForLike(firebaseApp, {
+      postId,
+      actorUid,
+      authorUid,
+      actorEmail: user.email,
+    });
+  }
+  return { liked: true };
 }
 
 export function isLikedByMe(likesArray, myUid) {

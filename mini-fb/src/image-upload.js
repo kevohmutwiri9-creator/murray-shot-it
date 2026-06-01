@@ -94,16 +94,15 @@ export async function uploadImageToImgbb(file) {
   }
 }
 
+const MAX_VIDEO_BYTES = 800 * 1024; // ~800KB — safe for Firestore-adjacent storage patterns
+
 export async function uploadVideoToAlternative(file) {
-  // For videos, we'll use a different approach
-  // Since most free services have limitations, we'll use a simple approach
-  // In production, you could use services like:
-  // - Cloudinary (free tier)
-  // - Streamable
-  // - Or self-hosted solution
-  
-  // For now, we'll use a temporary solution: convert video to base64 and store as data URL
-  // This is not recommended for production due to size limits
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error(
+      `Video is too large (${Math.round(file.size / 1024)}KB). Max ${Math.round(MAX_VIDEO_BYTES / 1024)}KB for short clips, or use an image.`
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

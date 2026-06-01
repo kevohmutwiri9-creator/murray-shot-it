@@ -10,6 +10,7 @@ import {
 import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
 import { createNotificationForShare } from "./notifications.js";
+import { bumpPostStat } from "./post-stats.js";
 
 export function sharesCol(db, postId) {
   return collection(db, "posts", postId, "shares");
@@ -30,12 +31,21 @@ export async function toggleShare(firebaseApp, post) {
 
   if (existing.exists()) {
     await deleteDoc(shareDocRef);
+    await bumpPostStat(db, postId, "shareCount", -1);
     return { shared: false };
   }
 
   await setDoc(shareDocRef, { createdAt: serverTimestamp() });
+  await bumpPostStat(db, postId, "shareCount", 1);
 
-  await createNotificationForShare(firebaseApp, { postId, actorUid, authorUid });
+  if (authorUid && authorUid !== actorUid) {
+    await createNotificationForShare(firebaseApp, {
+      postId,
+      actorUid,
+      authorUid,
+      actorEmail: user.email,
+    });
+  }
 
   return { shared: true };
 }

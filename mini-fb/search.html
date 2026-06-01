@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SnapVerse • Search</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -111,7 +111,10 @@
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
     import { ensureAuth, getCurrentUser } from "./src/auth.js";
-    import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { followUser, unfollowUser, isFollowing } from "./src/follows.js";
+    import { isPostVisible } from "./src/scheduled-posts.js";
+    import { showToast } from "./src/ui.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     await ensureAuth(firebase);
@@ -251,7 +254,7 @@
         const post = docSnap.data();
         const title = (post.title || "").toLowerCase();
         const text = (post.text || "").toLowerCase();
-        if (title.includes(query) || text.includes(query)) {
+        if ((title.includes(query) || text.includes(query)) && isPostVisible(post)) {
           results.push({ id: docSnap.id, ...post });
         }
       });
@@ -275,29 +278,55 @@
       displayHashtagResults(results);
     }
 
-    function displayUserResults(results) {
+    async function displayUserResults(results) {
       if (results.length === 0) {
         searchResults.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-12">No users found</div>';
         return;
       }
 
       searchResults.innerHTML = "";
-      results.forEach((profile) => {
+      for (const profile of results) {
+        if (profile.id === user?.uid) continue;
+
         const card = document.createElement("div");
-        card.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4";
+        card.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4 flex-wrap";
+
+        const following = user ? await isFollowing(db, user.uid, profile.id) : false;
+
         card.innerHTML = `
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
             ${(profile.displayName || profile.email || "U").charAt(0).toUpperCase()}
           </div>
-          <div class="flex-1">
+          <div class="flex-1 min-w-[140px]">
             <h3 class="font-bold text-gray-900 dark:text-white">${profile.displayName || profile.email}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">${profile.email}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">${profile.email || ""}</p>
             ${profile.bio ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${profile.bio}</p>` : ""}
           </div>
-          <a href="profile.html" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+          <div class="flex gap-2">
+            <button type="button" class="follow-btn px-4 py-2 rounded-xl font-semibold transition ${following ? "border border-gray-200 dark:border-gray-600" : "bg-accent text-white hover:bg-accent/90"}">${following ? "Following" : "Follow"}</button>
+            <a href="profile.html" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+          </div>
         `;
+
+        const followBtn = card.querySelector(".follow-btn");
+        followBtn.addEventListener("click", async () => {
+          if (!user) return;
+          try {
+            if (following) {
+              await unfollowUser(db, user.uid, profile.id);
+              showToast("Unfollowed.", "info");
+            } else {
+              await followUser(db, user.uid, profile.id);
+              showToast("Following!", "success");
+            }
+            await performSearch();
+          } catch (err) {
+            showToast(err.message || "Could not update follow.", "error");
+          }
+        });
+
         searchResults.appendChild(card);
-      });
+      }
     }
 
     function displayPostResults(results) {
@@ -314,6 +343,7 @@
           <h3 class="font-bold text-gray-900 dark:text-white">${post.title || "Untitled"}</h3>
           <p class="text-gray-700 dark:text-gray-300 mt-1">${post.text || ""}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">By ${post.authorEmail || "Unknown"}</p>
+          <a href="/index.html?post=${post.id}" class="inline-block mt-3 text-sm font-semibold text-accent hover:underline">Open in feed</a>
         `;
         searchResults.appendChild(card);
       });
