@@ -81,6 +81,7 @@ export async function bootFeedPage(firebase) {
     fileEl: document.getElementById("postFile"),
     scheduleEl: document.getElementById("postSchedule"),
     visibilityEl: document.getElementById("postVisibility"),
+    kindEl: document.getElementById("postKind"),
     formEl: document.getElementById("createPostForm"),
     btnEl: document.getElementById("createPostBtn"),
     statusEl: document.getElementById("createPostStatus"),

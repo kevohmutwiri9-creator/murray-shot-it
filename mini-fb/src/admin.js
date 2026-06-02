@@ -154,7 +154,7 @@ export function renderAdminPosts(firebaseApp, { containerEl, emptyEl, onDelete }
  * Any logged-in user can publish.
  * Admin gating is handled only on admin.html moderation actions (delete).
  */
-export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleEl, visibilityEl, formEl, btnEl, statusEl }) {
+export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleEl, visibilityEl, kindEl, formEl, btnEl, statusEl }) {
   formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
     btnEl.disabled = true;
@@ -169,6 +169,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       const text = textEl.value.trim();
       const file = fileEl.files?.[0];
       const scheduledTime = scheduleEl?.value ? new Date(scheduleEl.value) : null;
+      const postKind = kindEl?.value === "reel" ? "reel" : "post";
 
       if (!title) throw new Error("Title is required.");
       if (!text) throw new Error("Text is required.");
@@ -183,6 +184,10 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       let mediaType = null;
       let mediaUrls = [];
       const files = fileEl?.files?.length ? [...fileEl.files] : file ? [file] : [];
+      if (postKind === "reel") {
+        if (files.length !== 1) throw new Error("Reels require exactly 1 video file.");
+        if (!files[0].type.startsWith("video/")) throw new Error("Reels must be uploaded as video.");
+      }
 
       for (let i = 0; i < Math.min(files.length, 5); i++) {
         statusEl.textContent = `Uploading media ${i + 1}/${Math.min(files.length, 5)}...`;
@@ -210,7 +215,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
         scheduledFor: scheduledTime ? scheduledTime.toISOString() : null,
         status: scheduledTime ? "scheduled" : "published",
         visibility,
-        type: "post",
+        type: postKind,
         ...INITIAL_POST_STATS,
       });
 
@@ -231,7 +236,9 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       }
       recordRateLimit("post", user.uid);
 
-      statusEl.textContent = scheduledTime ? "Post scheduled successfully." : "Post published successfully.";
+      statusEl.textContent = scheduledTime
+        ? `${postKind === "reel" ? "Reel" : "Post"} scheduled successfully.`
+        : `${postKind === "reel" ? "Reel" : "Post"} published successfully.`;
       showToast(statusEl.textContent, "success");
       titleEl.value = "";
       textEl.value = "";

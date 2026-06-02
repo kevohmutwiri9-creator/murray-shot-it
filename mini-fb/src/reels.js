@@ -14,7 +14,8 @@ function authorLabel(item) {
 function createReelCard(item) {
   const card = document.createElement("article");
   card.className =
-    "rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden";
+    "reel-card rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden snap-start";
+  card.id = `reel-${item.id}`;
 
   const video = document.createElement("video");
   video.src = item.mediaUrl;
@@ -22,16 +23,49 @@ function createReelCard(item) {
   video.controls = true;
   video.playsInline = true;
   video.preload = "metadata";
+  video.loop = true;
+  video.muted = true;
+  video.dataset.reelVideo = "1";
   card.appendChild(video);
 
   const footer = document.createElement("div");
   footer.className = "p-3 space-y-1";
-  footer.innerHTML = `
-    <a href="${profileUrl(item.authorUid)}" class="text-sm font-semibold hover:text-accent transition">${authorLabel(item)}</a>
-    <p class="text-sm text-gray-700 dark:text-gray-300">${item.text || item.title || ""}</p>
+  const author = document.createElement("a");
+  author.href = profileUrl(item.authorUid);
+  author.className = "text-sm font-semibold hover:text-accent transition";
+  author.textContent = authorLabel(item);
+  const caption = document.createElement("p");
+  caption.className = "text-sm text-gray-700 dark:text-gray-300";
+  caption.textContent = item.text || item.title || "";
+  const actions = document.createElement("div");
+  actions.className = "flex gap-2 pt-1";
+  actions.innerHTML = `
+    <a href="/index.html?post=${encodeURIComponent(item.id)}&comments=1" class="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">Comments</a>
+    <a href="${profileUrl(item.authorUid)}" class="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">Creator</a>
   `;
+  footer.append(author, caption, actions);
   card.appendChild(footer);
   return card;
+}
+
+function setupAutoplay(containerEl) {
+  const videos = [...containerEl.querySelectorAll("video[data-reel-video='1']")];
+  if (!videos.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const v = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+      });
+    },
+    { threshold: [0.1, 0.7, 0.95] }
+  );
+  videos.forEach((v) => observer.observe(v));
 }
 
 export function startReelsPage(db, containerEl) {
@@ -43,7 +77,7 @@ export function startReelsPage(db, containerEl) {
   return onSnapshot(q, (snapshot) => {
     const reels = snapshot.docs
       .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((p) => p.mediaType === "video" && p.mediaUrl);
+      .filter((p) => (p.type === "reel" || p.mediaType === "video") && p.mediaUrl);
 
     containerEl.innerHTML = "";
     if (!reels.length) {
@@ -53,6 +87,13 @@ export function startReelsPage(db, containerEl) {
     }
 
     reels.forEach((item) => containerEl.appendChild(createReelCard(item)));
+    setupAutoplay(containerEl);
+
+    const targetId = decodeURIComponent(location.hash || "").replace(/^#/, "");
+    if (targetId) {
+      const target = document.getElementById(`reel-${targetId}`);
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   });
 }
 
@@ -65,7 +106,7 @@ export function startReelsPreview(db, containerEl) {
   return onSnapshot(q, (snapshot) => {
     const reels = snapshot.docs
       .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((p) => p.mediaType === "video" && p.mediaUrl)
+      .filter((p) => (p.type === "reel" || p.mediaType === "video") && p.mediaUrl)
       .slice(0, 8);
 
     containerEl.innerHTML = "";
