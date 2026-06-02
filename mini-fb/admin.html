@@ -172,6 +172,10 @@
               <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">User reports</p>
             </div>
           </div>
+          <div class="mt-6">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Posts activity (last 7 days)</h3>
+            <div id="weeklyPostsChart" class="space-y-2"></div>
+          </div>
         </div>
       </section>
 
@@ -200,6 +204,15 @@
         </div>
 
         <div class="px-6 py-6 sm:px-8">
+          <div class="mb-4 flex flex-col sm:flex-row gap-2">
+            <select id="flagStatusFilter" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-3 py-2 text-sm">
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="post_deleted">Post deleted</option>
+            </select>
+            <button id="resolveAllFlagsBtn" type="button" class="rounded-xl bg-green-600 text-white px-3 py-2 text-sm font-semibold hover:bg-green-700 transition">Resolve all pending</button>
+          </div>
           <div id="flaggedPosts" class="space-y-4">
             <!-- Flagged posts render here -->
           </div>
@@ -231,6 +244,15 @@
           <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Moderate reports filed against users.</p>
         </div>
         <div class="px-6 py-6 sm:px-8">
+          <div class="mb-4 flex flex-col sm:flex-row gap-2">
+            <select id="userReportStatusFilter" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-3 py-2 text-sm">
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="banned">Banned</option>
+            </select>
+            <button id="resolveAllUserReportsBtn" type="button" class="rounded-xl bg-green-600 text-white px-3 py-2 text-sm font-semibold hover:bg-green-700 transition">Resolve all pending</button>
+          </div>
           <div id="userReports" class="space-y-4">
             <!-- User reports render here -->
           </div>
@@ -355,7 +377,7 @@
       loadAnalytics(firebase);
 
       // Load flagged posts
-      loadFlaggedPosts(firebase);
+      loadFlaggedPosts(firebase, user);
 
       // Load user management
       loadUserManagement(firebase, user);
@@ -379,6 +401,49 @@
         formEl: document.getElementById("adminCreatePostForm"),
         btnEl: document.getElementById("adminPublishBtn"),
         statusEl: adminCreateStatus,
+      });
+    };
+
+    const renderWeeklyPostsChart = (postsSnap) => {
+      const chartEl = document.getElementById("weeklyPostsChart");
+      if (!chartEl) return;
+
+      const labels = [];
+      const dayCounts = new Map();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        labels.push(key);
+        dayCounts.set(key, 0);
+      }
+
+      postsSnap.forEach((docSnap) => {
+        const created = docSnap.data()?.createdAt?.toDate?.();
+        if (!created) return;
+        const key = new Date(created.getFullYear(), created.getMonth(), created.getDate())
+          .toISOString()
+          .slice(0, 10);
+        if (dayCounts.has(key)) {
+          dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
+        }
+      });
+
+      const max = Math.max(...labels.map((k) => dayCounts.get(k) || 0), 1);
+      chartEl.innerHTML = "";
+      labels.forEach((key) => {
+        const count = dayCounts.get(key) || 0;
+        const row = document.createElement("div");
+        row.className = "flex items-center gap-2 text-xs";
+        row.innerHTML = `
+          <span class="w-16 text-slate-500">${key.slice(5)}</span>
+          <div class="flex-1 h-2 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden">
+            <div class="h-full bg-accent" style="width:${Math.max(4, Math.round((count / max) * 100))}%"></div>
+          </div>
+          <span class="w-6 text-right font-semibold">${count}</span>
+        `;
+        chartEl.appendChild(row);
       });
     };
 
@@ -417,35 +482,39 @@
           totalComments += commentsSnap.size;
         }
         document.getElementById("totalComments").textContent = totalComments;
+        renderWeeklyPostsChart(postsSnap);
       } catch (error) {
         console.error("Error loading analytics:", error);
       }
     };
 
-    const loadFlaggedPosts = (firebase) => {
+    const loadFlaggedPosts = (firebase, actingUser) => {
       const db = firebase.__db;
       const flagsCol = collection(db, "flags");
       const q = query(flagsCol, orderBy("createdAt", "desc"));
+      const statusFilter = document.getElementById("flagStatusFilter");
+      const resolveAllBtn = document.getElementById("resolveAllFlagsBtn");
+      const container = document.getElementById("flaggedPosts");
+      const noFlagsEl = document.getElementById("noFlags");
+      let latestFlags = [];
+      let latestDocs = [];
+      let wired = false;
 
-      onSnapshot(q, async (snapshot) => {
-        const container = document.getElementById("flaggedPosts");
-        const noFlagsEl = document.getElementById("noFlags");
+      const render = async () => {
         container.innerHTML = "";
-
-        if (snapshot.empty) {
+        const selectedStatus = statusFilter?.value || "all";
+        if (!latestDocs.length) {
           noFlagsEl.classList.remove("hidden");
           return;
         }
-
         noFlagsEl.classList.add("hidden");
 
-        for (const flagDoc of snapshot.docs) {
+        for (const flagDoc of latestDocs) {
           const flag = flagDoc.data();
+          if (selectedStatus !== "all" && (flag.status || "pending") !== selectedStatus) continue;
           const postRef = doc(db, "posts", flag.postId);
           const postSnap = await getDoc(postRef);
-
           if (!postSnap.exists()) continue;
-
           const post = postSnap.data();
 
           const card = document.createElement("div");
@@ -471,7 +540,6 @@
           container.appendChild(card);
         }
 
-        // Add event listeners for flag actions
         container.querySelectorAll("button[data-action]").forEach((btn) => {
           btn.addEventListener("click", async () => {
             const flagId = btn.dataset.flagId;
@@ -483,16 +551,36 @@
               await logAdminAction(db, actingUser, "resolve_post_flag", { flagId, postId });
               showToast("Flag resolved.", "success");
             } else if (action === "delete") {
-              if (confirm("Delete this post?")) {
-                await adminDeletePost(firebase, postId);
-                await updateDoc(doc(db, "flags", flagId), { status: "post_deleted" });
-                await logAdminAction(db, actingUser, "delete_post_from_flag", { flagId, postId });
-                showToast("Post deleted.", "success");
-              }
+              if (!confirm("Delete this post?")) return;
+              await adminDeletePost(firebase, postId);
+              await updateDoc(doc(db, "flags", flagId), { status: "post_deleted" });
+              await logAdminAction(db, actingUser, "delete_post_from_flag", { flagId, postId });
+              showToast("Post deleted.", "success");
             }
           });
         });
+
+        if (!container.children.length) noFlagsEl.classList.remove("hidden");
+      };
+
+      onSnapshot(q, async (snapshot) => {
+        latestDocs = snapshot.docs;
+        latestFlags = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        await render();
       });
+
+      if (!wired) {
+        wired = true;
+        statusFilter?.addEventListener("change", () => render());
+        resolveAllBtn?.addEventListener("click", async () => {
+          const pending = latestFlags.filter((f) => (f.status || "pending") === "pending");
+          if (!pending.length) return showToast("No pending flags.", "info");
+          if (!confirm(`Resolve ${pending.length} pending flags?`)) return;
+          await Promise.all(pending.map((f) => updateDoc(doc(db, "flags", f.id), { status: "resolved" })));
+          await logAdminAction(db, actingUser, "bulk_resolve_post_flags", { count: pending.length });
+          showToast(`Resolved ${pending.length} flags.`, "success");
+        });
+      }
     };
 
     const loadUserManagement = (firebase, actingUser) => {
@@ -556,19 +644,26 @@
     const loadUserReports = (firebase, actingUser) => {
       const db = firebase.__db;
       const q = query(collection(db, "userFlags"), orderBy("createdAt", "desc"));
-      onSnapshot(q, (snapshot) => {
-        const container = document.getElementById("userReports");
-        const empty = document.getElementById("noUserReports");
-        container.innerHTML = "";
+      const statusFilter = document.getElementById("userReportStatusFilter");
+      const resolveAllBtn = document.getElementById("resolveAllUserReportsBtn");
+      const container = document.getElementById("userReports");
+      const empty = document.getElementById("noUserReports");
+      let latestDocs = [];
+      let latestReports = [];
+      let wired = false;
 
-        if (snapshot.empty) {
+      const render = () => {
+        container.innerHTML = "";
+        const selectedStatus = statusFilter?.value || "all";
+        if (!latestDocs.length) {
           empty.classList.remove("hidden");
           return;
         }
         empty.classList.add("hidden");
 
-        snapshot.forEach((reportDoc) => {
+        latestDocs.forEach((reportDoc) => {
           const report = reportDoc.data();
+          if (selectedStatus !== "all" && (report.status || "pending") !== selectedStatus) return;
           const status = report.status || "pending";
           const card = document.createElement("div");
           card.className = "rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/10 p-4";
@@ -615,7 +710,28 @@
             }
           });
         });
+
+        if (!container.children.length) empty.classList.remove("hidden");
+      };
+
+      onSnapshot(q, (snapshot) => {
+        latestDocs = snapshot.docs;
+        latestReports = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        render();
       });
+
+      if (!wired) {
+        wired = true;
+        statusFilter?.addEventListener("change", () => render());
+        resolveAllBtn?.addEventListener("click", async () => {
+          const pending = latestReports.filter((r) => (r.status || "pending") === "pending");
+          if (!pending.length) return showToast("No pending user reports.", "info");
+          if (!confirm(`Resolve ${pending.length} pending user reports?`)) return;
+          await Promise.all(pending.map((r) => updateDoc(doc(db, "userFlags", r.id), { status: "resolved" })));
+          await logAdminAction(db, actingUser, "bulk_resolve_user_reports", { count: pending.length });
+          showToast(`Resolved ${pending.length} user reports.`, "success");
+        });
+      }
     };
 
     const loadAdminRoles = (firebase, actingUser) => {
