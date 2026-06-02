@@ -1,10 +1,11 @@
-const CACHE_NAME = 'snapverse-v3';
+const CACHE_NAME = 'snapverse-v4';
 const urlsToCache = [
   '/',
   '/index.html',
   '/login.html',
   '/mini-fb/search.html',
   '/mini-fb/explore.html',
+  '/mini-fb/reels.html',
   '/mini-fb/profile.html',
   '/mini-fb/admin.html',
   '/mini-fb/hashtag.html',

@@ -66,7 +66,7 @@
 
     <div class="space-y-6">
       <!-- Account Section -->
-      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <section id="quickActionsSection" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">Account</h2>
         </div>
@@ -167,7 +167,7 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { getCurrentUser } from "./src/auth.js";
+    import { getCurrentUser, isAdmin } from "./src/auth.js";
     import { requireAuth, hideAdminNavIfNeeded, bootPage } from "./src/page-boot.js";
     import { addStoryFromFile } from "./src/stories.js";
     import { showToast } from "./src/ui.js";
@@ -217,6 +217,28 @@
     };
 
     loadAccountInfo();
+
+    // Admin-only quick access (hidden for everyone else)
+    try {
+      const admin = await isAdmin(firebase, user.uid);
+      if (admin) {
+          const quickActions = document.querySelector("#quickActionsSection .p-5.space-y-3");
+        if (quickActions) {
+          const adminLink = document.createElement("a");
+          adminLink.href = "/mini-fb/admin.html";
+          adminLink.className = "block w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition";
+          adminLink.innerHTML = `
+            <span class="text-gray-900 dark:text-white font-medium">Admin Dashboard</span>
+            <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          `;
+          quickActions.appendChild(adminLink);
+        }
+      }
+    } catch {
+      // Ignore admin lookup errors on settings page
+    }
 
     import("./src/blocks.js").then(async ({ getBlockedUids, unblockUser }) => {
       const list = document.getElementById("blockedList");

@@ -16,6 +16,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getFriendSuggestions } from "./friend-suggestions.js";
 import { profileUrl } from "./profiles-cache.js";
+import { startReelsPreview } from "./reels.js";
 
 export async function bootFeedPage(firebase) {
   const user = await requireAuth(firebase);
@@ -100,6 +101,7 @@ export async function bootFeedPage(firebase) {
     containerEl: document.getElementById("storiesContainer"),
     addBtnEl: document.getElementById("addStoryBtn"),
   });
+  startReelsPreview(db, document.getElementById("reelsPreview"));
 
   loadTrendingTopics(db);
   loadFriendSuggestions(db, user.uid);

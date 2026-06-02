@@ -14,6 +14,7 @@ import { openStoryViewer, showToast } from "./ui.js";
 import { getCurrentUser } from "./auth.js";
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
+const STORY_VIEWED_KEY = "sv_viewed_stories";
 
 function parseExpiresAt(story) {
   if (story.expiresAt?.toDate) return story.expiresAt.toDate();
@@ -62,11 +63,21 @@ export function startStories(db, { containerEl, addBtnEl }) {
       return;
     }
 
+    const viewed = new Set(
+      (() => {
+        try {
+          return JSON.parse(localStorage.getItem(STORY_VIEWED_KEY) || "[]");
+        } catch {
+          return [];
+        }
+      })()
+    );
+
     stories.forEach((story) => {
       const storyEl = document.createElement("button");
       storyEl.type = "button";
       storyEl.className =
-        "flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-accent to-purple-600 cursor-pointer relative overflow-hidden ring-2 ring-accent/50 hover:ring-accent transition focus:outline-none focus:ring-4";
+        `flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-accent to-purple-600 cursor-pointer relative overflow-hidden ring-2 ${viewed.has(story.id) ? "ring-gray-400/40" : "ring-accent/60"} hover:ring-accent transition focus:outline-none focus:ring-4`;
       storyEl.setAttribute("aria-label", `View story by ${story.authorEmail || "user"}`);
 
       if (story.mediaUrl) {
@@ -87,7 +98,13 @@ export function startStories(db, { containerEl, addBtnEl }) {
       label.textContent = story.authorEmail?.split("@")[0] || "User";
       storyEl.appendChild(label);
 
-      storyEl.addEventListener("click", () => openStoryViewer(story));
+      storyEl.addEventListener("click", () => {
+        openStoryViewer(story);
+        viewed.add(story.id);
+        localStorage.setItem(STORY_VIEWED_KEY, JSON.stringify([...viewed].slice(-300)));
+        storyEl.classList.remove("ring-accent/60");
+        storyEl.classList.add("ring-gray-400/40");
+      });
       containerEl.appendChild(storyEl);
     });
   });

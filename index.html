@@ -96,6 +96,7 @@
           <div class="hidden sm:flex sm:items-center sm:gap-3">
             <a href="mini-fb/search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Search</a>
             <a href="mini-fb/explore.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Explore</a>
+            <a href="mini-fb/reels.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Reels</a>
             <a href="mini-fb/messages.html" class="relative text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Messages<span id="messagesBadge" class="hidden absolute -top-2 -right-3 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-accent text-white text-[10px] flex items-center justify-center">0</span></a>
             <a href="mini-fb/saved.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Saved</a>
             <a href="/mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
@@ -124,6 +125,7 @@
       <div class="p-4 space-y-2">
         <a href="mini-fb/search.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Search</a>
         <a href="mini-fb/explore.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Explore</a>
+        <a href="mini-fb/reels.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Reels</a>
         <a href="mini-fb/messages.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Messages</a>
         <a href="mini-fb/saved.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Saved</a>
         <a href="/mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">Profile</a>
@@ -144,6 +146,19 @@
         <button id="addStoryBtn" class="mt-4 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">
           + Add Story
         </button>
+      </div>
+    </section>
+
+    <!-- Reels preview -->
+    <section class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Reels</h2>
+          <a href="mini-fb/reels.html" class="text-sm text-accent font-medium">Open Reels →</a>
+        </div>
+        <div id="reelsPreview" class="flex gap-3 overflow-x-auto pb-2">
+          <span class="text-sm text-gray-500 dark:text-gray-400">Loading reels...</span>
+        </div>
       </div>
     </section>
 
