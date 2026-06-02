@@ -40,10 +40,10 @@ service cloud.firestore {
         || onlyKeysChanged(['shareCount']);
     }
 
-    // Admin list — read own doc only; writes via Firebase Console
+    // Admin list — admins can manage roles
     match /admins/{uid} {
-      allow read: if isSignedIn() && request.auth.uid == uid;
-      allow write: if false;
+      allow read: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     match /banned/{uid} {
@@ -150,6 +150,12 @@ service cloud.firestore {
       allow create: if notBanned()
         && request.resource.data.reporterUid == request.auth.uid;
       allow read, update, delete: if isAdmin();
+    }
+
+    match /adminActions/{actionId} {
+      allow create: if isAdmin();
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
 
     match /conversations/{convId} {

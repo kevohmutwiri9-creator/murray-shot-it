@@ -1,0 +1,6 @@
+/mini-fb/admin.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store, max-age=0
+
+/mini-fb/admin*
+  X-Robots-Tag: noindex, nofollow

@@ -224,6 +224,37 @@
         </div>
       </section>
 
+      <!-- User Reports Section -->
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">User Reports</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Moderate reports filed against users.</p>
+        </div>
+        <div class="px-6 py-6 sm:px-8">
+          <div id="userReports" class="space-y-4">
+            <!-- User reports render here -->
+          </div>
+          <div id="noUserReports" class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-gray-700 py-12 text-center text-slate-500 dark:text-slate-400">
+            No user reports.
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Roles Section -->
+      <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Admin Roles</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Grant or revoke admin access by UID.</p>
+        </div>
+        <div class="px-6 py-6 sm:px-8 space-y-4">
+          <form id="grantAdminForm" class="flex flex-col sm:flex-row gap-2">
+            <input id="grantAdminUid" type="text" required placeholder="User UID" class="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-gray-700 px-4 py-2 text-sm" />
+            <button type="submit" class="rounded-xl bg-accent text-white px-4 py-2 text-sm font-semibold">Grant admin</button>
+          </form>
+          <div id="adminRolesList" class="space-y-2"></div>
+        </div>
+      </section>
+
       <section class="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
         <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-5 sm:px-8">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Create a post</h2>
@@ -289,10 +320,11 @@
 
   <script type="module">
     import { initFirebase } from "./src/firebase-config.js";
-    import { getCurrentUser, isAdmin } from "./src/auth.js";
+    import { isAdmin } from "./src/auth.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { showToast } from "./src/ui.js";
     import { renderAdminPosts, adminBindCreatePost, adminDeletePost } from "./src/admin.js";
+    import { logAdminAction } from "./src/admin-audit.js";
     import { getDocs, collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
@@ -311,6 +343,9 @@
       if (!admin) {
         adminStatus.textContent = "Access denied: not an admin.";
         adminCreateStatus.textContent = "You do not have permission to publish or delete posts.";
+        setTimeout(() => {
+          window.location.href = "/index.html";
+        }, 1200);
         return;
       }
 
@@ -323,13 +358,17 @@
       loadFlaggedPosts(firebase);
 
       // Load user management
-      loadUserManagement(firebase);
+      loadUserManagement(firebase, user);
+      loadUserReports(firebase, user);
+      loadAdminRoles(firebase, user);
+      startAdminAuditFeed(firebase);
 
       renderAdminPosts(firebase, {
         containerEl: document.getElementById("adminPosts"),
         emptyEl: document.getElementById("adminEmpty"),
         onDelete: async (postId) => {
           await adminDeletePost(firebase, postId);
+          await logAdminAction(firebase.__db, user, "delete_post", { postId, source: "posts_panel" });
         },
       });
 
@@ -441,11 +480,13 @@
 
             if (action === "resolve") {
               await updateDoc(doc(db, "flags", flagId), { status: "resolved" });
+              await logAdminAction(db, actingUser, "resolve_post_flag", { flagId, postId });
               showToast("Flag resolved.", "success");
             } else if (action === "delete") {
               if (confirm("Delete this post?")) {
                 await adminDeletePost(firebase, postId);
                 await updateDoc(doc(db, "flags", flagId), { status: "post_deleted" });
+                await logAdminAction(db, actingUser, "delete_post_from_flag", { flagId, postId });
                 showToast("Post deleted.", "success");
               }
             }
@@ -454,7 +495,7 @@
       });
     };
 
-    const loadUserManagement = (firebase) => {
+    const loadUserManagement = (firebase, actingUser) => {
       const db = firebase.__db;
       const profilesCol = collection(db, "profiles");
 
@@ -495,18 +536,184 @@
                 await setDoc(doc(db, "banned", uid), {
                   uid,
                   bannedAt: new Date(),
-                  bannedBy: user.email || user.uid
+                  bannedBy: actingUser.email || actingUser.uid
                 });
+                await logAdminAction(db, actingUser, "ban_user", { uid, source: "user_management" });
                 showToast("User banned.", "success");
               }
             } else if (action === "unban") {
               if (confirm("Unban this user?")) {
                 await deleteDoc(doc(db, "banned", uid));
+                await logAdminAction(db, actingUser, "unban_user", { uid, source: "user_management" });
                 showToast("User unbanned.", "success");
               }
             }
           });
         });
+      });
+    };
+
+    const loadUserReports = (firebase, actingUser) => {
+      const db = firebase.__db;
+      const q = query(collection(db, "userFlags"), orderBy("createdAt", "desc"));
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById("userReports");
+        const empty = document.getElementById("noUserReports");
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+          empty.classList.remove("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
+
+        snapshot.forEach((reportDoc) => {
+          const report = reportDoc.data();
+          const status = report.status || "pending";
+          const card = document.createElement("div");
+          card.className = "rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/10 p-4";
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="font-semibold">${report.targetUid || "Unknown user"}</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Reason: ${report.reason || "No reason provided"}</p>
+                <p class="text-xs text-slate-500 mt-1">Reported by: ${report.reporterEmail || report.reporterUid || "Unknown"}</p>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">${status}</span>
+            </div>
+            <div class="mt-3 flex gap-2">
+              <button type="button" data-report-id="${reportDoc.id}" data-target-uid="${report.targetUid || ""}" data-action="resolve" class="px-3 py-1 rounded-lg bg-green-500 text-white text-sm">Resolve</button>
+              <button type="button" data-report-id="${reportDoc.id}" data-target-uid="${report.targetUid || ""}" data-action="ban" class="px-3 py-1 rounded-lg bg-rose-500 text-white text-sm">Ban user</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        container.querySelectorAll("button[data-action]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const reportId = btn.dataset.reportId;
+            const targetUid = btn.dataset.targetUid;
+            const action = btn.dataset.action;
+
+            if (action === "resolve") {
+              await updateDoc(doc(db, "userFlags", reportId), { status: "resolved" });
+              await logAdminAction(db, actingUser, "resolve_user_report", { reportId, targetUid });
+              showToast("Report resolved.", "success");
+              return;
+            }
+            if (action === "ban" && targetUid) {
+              if (!confirm("Ban this user and mark report as actioned?")) return;
+              await setDoc(doc(db, "banned", targetUid), {
+                uid: targetUid,
+                bannedAt: new Date(),
+                bannedBy: actingUser.email || actingUser.uid,
+                reason: "Moderation action from user report",
+              });
+              await updateDoc(doc(db, "userFlags", reportId), { status: "banned" });
+              await logAdminAction(db, actingUser, "ban_user_from_report", { reportId, targetUid });
+              showToast("User banned from report.", "success");
+            }
+          });
+        });
+      });
+    };
+
+    const loadAdminRoles = (firebase, actingUser) => {
+      const db = firebase.__db;
+      const listEl = document.getElementById("adminRolesList");
+      const form = document.getElementById("grantAdminForm");
+      const input = document.getElementById("grantAdminUid");
+
+      const refreshRoles = async () => {
+        const snap = await getDocs(collection(db, "admins"));
+        listEl.innerHTML = "";
+        if (snap.empty) {
+          listEl.innerHTML = '<p class="text-sm text-slate-500">No admin users found.</p>';
+          return;
+        }
+        snap.forEach((d) => {
+          const uid = d.id;
+          const row = document.createElement("div");
+          row.className = "flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2";
+          row.innerHTML = `<span class="text-sm font-mono">${uid}</span>`;
+
+          if (uid === actingUser.uid) {
+            const selfTag = document.createElement("span");
+            selfTag.className = "text-xs text-slate-500";
+            selfTag.textContent = "You";
+            row.appendChild(selfTag);
+          } else {
+            const revokeBtn = document.createElement("button");
+            revokeBtn.type = "button";
+            revokeBtn.className = "text-sm text-rose-600 font-semibold";
+            revokeBtn.textContent = "Revoke";
+            revokeBtn.addEventListener("click", async () => {
+              if (!confirm(`Revoke admin access for ${uid}?`)) return;
+              await deleteDoc(doc(db, "admins", uid));
+              await logAdminAction(db, actingUser, "revoke_admin", { uid });
+              showToast("Admin access revoked.", "success");
+              refreshRoles();
+            });
+            row.appendChild(revokeBtn);
+          }
+
+          listEl.appendChild(row);
+        });
+      };
+
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const uid = input.value.trim();
+        if (!uid) return;
+        await setDoc(doc(db, "admins", uid), {
+          uid,
+          grantedBy: actingUser.uid,
+          grantedAt: new Date(),
+        }, { merge: true });
+        await logAdminAction(db, actingUser, "grant_admin", { uid });
+        input.value = "";
+        showToast("Admin granted.", "success");
+        refreshRoles();
+      });
+
+      refreshRoles();
+    };
+
+    const startAdminAuditFeed = (firebase) => {
+      const db = firebase.__db;
+      const listEl = document.getElementById("adminRolesList");
+      if (!listEl) return;
+
+      const q = query(collection(db, "adminActions"), orderBy("createdAt", "desc"));
+      onSnapshot(q, (snapshot) => {
+        const existing = document.getElementById("adminAuditFeed");
+        if (existing) existing.remove();
+
+        const wrap = document.createElement("div");
+        wrap.id = "adminAuditFeed";
+        wrap.className = "mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3";
+        const title = document.createElement("p");
+        title.className = "text-xs uppercase tracking-wide text-slate-500 mb-2";
+        title.textContent = "Recent admin actions";
+        wrap.appendChild(title);
+
+        const events = snapshot.docs.slice(0, 8);
+        if (!events.length) {
+          const empty = document.createElement("p");
+          empty.className = "text-sm text-slate-500";
+          empty.textContent = "No admin actions yet.";
+          wrap.appendChild(empty);
+        } else {
+          events.forEach((d) => {
+            const a = d.data();
+            const row = document.createElement("p");
+            row.className = "text-xs text-slate-600 dark:text-slate-300 mb-1";
+            row.textContent = `${a.actorEmail || a.actorUid || "admin"} -> ${a.action}`;
+            wrap.appendChild(row);
+          });
+        }
+
+        listEl.parentElement.appendChild(wrap);
       });
     };
 
