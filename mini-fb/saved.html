@@ -7,7 +7,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="murray.png" type="image/png" />
-  <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { accent: '#e94560' } } } } }</script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            accent: '#e94560'
+          }
+        }
+      }
+    };
+  </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
   <nav class="bg-white dark:bg-gray-800 border-b px-4 py-3">
@@ -46,6 +57,21 @@
         const post = await fetchPost(db, id);
         if (post) list.appendChild(renderPostCard(post, db));
       }
+    }
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
     }
   </script>
 </body>

@@ -4,19 +4,87 @@
   "description": "A social media platform for sharing photos and connecting with friends",
   "start_url": "/index.html",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#1a1a2e",
   "theme_color": "#e94560",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["social", "photography", "lifestyle"],
   "icons": [
     {
       "src": "murray.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "murray.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "murray.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "murray.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "murray.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "murray.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "murray.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "murray.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Create Post",
+      "short_name": "Post",
+      "description": "Create a new post",
+      "url": "/index.html?action=create",
+      "icons": [
+        {
+          "src": "murray.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "description": "Explore trending content",
+      "url": "/mini-fb/explore.html",
+      "icons": [
+        {
+          "src": "murray.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
