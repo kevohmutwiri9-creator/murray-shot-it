@@ -1,47 +1,28 @@
-const CACHE_NAME = 'snapverse-v1';
-const urlsToCache = [
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `snapverse-${CACHE_VERSION}`;
+const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
+
+// Static assets to cache on install
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/login.html',
   '/mini-fb/manifest.json',
+  '/murray.png',
   '/mini-fb/murray.png',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
 
-// Install event - cache assets
+// Install event - cache static assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then(cache => {
-        return cache.addAll(urlsToCache);
+        return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
       })
-  );
-});
-
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(response => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          // Clone response
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          return response;
-        });
-      })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -51,11 +32,133 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
+
+// Determine caching strategy based on request
+function getCacheStrategy(request) {
+  const url = new URL(request.url);
+
+  // Static assets - cache first
+  if (STATIC_ASSETS.some(asset => url.pathname.includes(asset) || url.href === asset)) {
+    return 'cache-first';
+  }
+
+  // API calls - network first
+  if (url.hostname.includes('firebase') || url.hostname.includes('gstatic')) {
+    return 'network-first';
+  }
+
+  // Images - cache first with short TTL
+  if (request.destination === 'image') {
+    return 'cache-first';
+  }
+
+  // HTML pages - network first with cache fallback
+  if (request.destination === 'document') {
+    return 'network-first';
+  }
+
+  // Default - stale while revalidate
+  return 'stale-while-revalidate';
+}
+
+// Cache-first strategy
+async function cacheFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await cache.match(request);
+  
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    console.error('Cache-first failed:', error);
+    throw error;
+  }
+}
+
+// Network-first strategy
+async function networkFirst(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    console.log('Network failed, trying cache:', error);
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
+}
+
+// Stale-while-revalidate strategy
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  const cached = await cache.match(request);
+
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  }).catch(error => {
+    console.error('Fetch failed in stale-while-revalidate:', error);
+    if (cached) return cached;
+    throw error;
+  });
+
+  return cached || fetchPromise;
+}
+
+// Fetch event - apply appropriate caching strategy
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    (async () => {
+      const strategy = getCacheStrategy(event.request);
+
+      switch (strategy) {
+        case 'cache-first':
+          return cacheFirst(event.request);
+        case 'network-first':
+          return networkFirst(event.request);
+        case 'stale-while-revalidate':
+          return staleWhileRevalidate(event.request);
+        default:
+          return staleWhileRevalidate(event.request);
+      }
+    })()
+  );
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-posts') {
+    event.waitUntil(syncPosts());
+  }
+});
+
+// Sync posts when back online
+async function syncPosts() {
+  // Implementation for syncing offline posts
+  console.log('Syncing offline posts...');
+}
