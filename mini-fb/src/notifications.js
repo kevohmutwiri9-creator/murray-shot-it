@@ -145,6 +145,12 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
   );
 
   let panelOpen = false;
+  let lastNotificationCount = 0;
+
+  // Request notification permission
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
 
   btnEl?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -166,6 +172,19 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
       // Filter out message notifications since they're tracked separately
       const nonMessageNotifications = notifications.filter((n) => n.type !== "message");
       const unread = nonMessageNotifications.filter((n) => !n.read).length;
+
+      // Show desktop notification for new notifications
+      if (unread > lastNotificationCount && "Notification" in window && Notification.permission === "granted") {
+        const newNotifications = nonMessageNotifications.slice(0, unread - lastNotificationCount);
+        newNotifications.forEach((notif) => {
+          new Notification("SnapVerse", {
+            body: notif.message || "New notification",
+            icon: "/murray.png",
+            badge: "/murray.png",
+          });
+        });
+      }
+      lastNotificationCount = unread;
 
       if (badgeEl) {
         badgeEl.textContent = unread > 99 ? "99+" : String(unread);
@@ -266,11 +285,31 @@ export function startMessageNotifications(firebaseApp, { badgeEl }) {
     limit(50)
   );
 
+  let lastMessageCount = 0;
+
+  // Request notification permission
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+
   onSnapshot(
     q,
     (snapshot) => {
       const messageNotifications = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       const unreadMessages = messageNotifications.filter((n) => !n.read).length;
+
+      // Show desktop notification for new messages
+      if (unreadMessages > lastMessageCount && "Notification" in window && Notification.permission === "granted") {
+        const newMessages = messageNotifications.slice(0, unreadMessages - lastMessageCount);
+        newMessages.forEach((notif) => {
+          new Notification("New Message - SnapVerse", {
+            body: notif.message || "You have a new message",
+            icon: "/murray.png",
+            badge: "/murray.png",
+          });
+        });
+      }
+      lastMessageCount = unreadMessages;
 
       if (badgeEl) {
         badgeEl.textContent = unreadMessages > 99 ? "99+" : String(unreadMessages);
