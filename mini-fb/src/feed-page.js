@@ -75,6 +75,12 @@ export async function bootFeedPage(firebase) {
   await loadProfilesCache(db);
   setFeedMode(feedMode);
 
+  // Hide skeleton when feed loads
+  const feedSkeleton = document.getElementById("feedSkeleton");
+  if (feedSkeleton) {
+    feedSkeleton.classList.add("hidden");
+  }
+
   bindCreatePost(firebase, {
     titleEl: document.getElementById("postTitle"),
     textEl: document.getElementById("postText"),
