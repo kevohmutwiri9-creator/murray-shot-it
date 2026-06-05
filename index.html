@@ -382,12 +382,28 @@
     console.log('Is HTTPS:', window.location.protocol === 'https:');
     console.log('Is localhost:', window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
+    // Debug: Check manifest link
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    console.log('Manifest href:', manifestLink ? manifestLink.href : 'Not found');
+
     // Debug: Check service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then(registration => {
         console.log('Service Worker registration:', registration);
+        if (registration) {
+          console.log('Service Worker scope:', registration.scope);
+          console.log('Service Worker state:', registration.active ? registration.active.state : 'No active worker');
+        }
       });
+    } else {
+      console.log('Service Worker not supported');
     }
+
+    // Check if app is already installed
+    window.addEventListener('appinstalled', () => {
+      installBtn.classList.add('hidden');
+      console.log('PWA was installed');
+    });
 
     // Temporarily show button for testing (remove this line in production)
     installBtn.classList.remove('hidden');
@@ -403,7 +419,8 @@
       console.log('Install button clicked');
       if (!deferredPrompt) {
         console.log('No deferred prompt available - app may already be installed or not installable');
-        alert('The app cannot be installed right now. Make sure you are on HTTPS or localhost.');
+        console.log('Check browser console for more details');
+        alert('The app cannot be installed right now.\n\nMake sure you are on HTTPS or localhost.\nCheck the browser console (F12) for debug information.');
         return;
       }
 
@@ -418,11 +435,6 @@
 
       deferredPrompt = null;
       installBtn.classList.add('hidden');
-    });
-
-    window.addEventListener('appinstalled', () => {
-      installBtn.classList.add('hidden');
-      console.log('PWA was installed');
     });
   </script>
 </body>
