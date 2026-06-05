@@ -163,7 +163,9 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
     q,
     (snapshot) => {
       const notifications = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      const unread = notifications.filter((n) => !n.read).length;
+      // Filter out message notifications since they're tracked separately
+      const nonMessageNotifications = notifications.filter((n) => n.type !== "message");
+      const unread = nonMessageNotifications.filter((n) => !n.read).length;
 
       if (badgeEl) {
         badgeEl.textContent = unread > 99 ? "99+" : String(unread);
@@ -173,13 +175,13 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
       if (!listEl) return;
       listEl.innerHTML = "";
 
-      if (notifications.length === 0) {
+      if (nonMessageNotifications.length === 0) {
         listEl.innerHTML =
           '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
         return;
       }
 
-      notifications.forEach((notif) => {
+      nonMessageNotifications.forEach((notif) => {
         const item = document.createElement("button");
         item.type = "button";
         item.className = `w-full text-left p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition ${notif.read ? "opacity-70" : "bg-accent/5"}`;
@@ -246,6 +248,37 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
         listEl.innerHTML =
           '<div class="p-4 text-center text-rose-500 text-sm">Could not load notifications. Add a Firestore index for toUid + createdAt.</div>';
       }
+    }
+  );
+}
+
+export function startMessageNotifications(firebaseApp, { badgeEl }) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const db = getDbService(firebaseApp);
+  const notificationsCol = collection(db, "notifications");
+  const q = query(
+    notificationsCol,
+    where("toUid", "==", user.uid),
+    where("type", "==", "message"),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
+
+  onSnapshot(
+    q,
+    (snapshot) => {
+      const messageNotifications = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const unreadMessages = messageNotifications.filter((n) => !n.read).length;
+
+      if (badgeEl) {
+        badgeEl.textContent = unreadMessages > 99 ? "99+" : String(unreadMessages);
+        badgeEl.classList.toggle("hidden", unreadMessages === 0);
+      }
+    },
+    () => {
+      console.log("Could not load message notifications");
     }
   );
 }

@@ -6,7 +6,7 @@ import { loadProfilesCache } from "./profiles-cache.js";
 import { bindCreatePost } from "./admin.js";
 import { publishDueScheduledPosts } from "./scheduled-posts.js";
 import { startStories } from "./stories.js";
-import { startNotifications } from "./notifications.js";
+import { startNotifications, startMessageNotifications } from "./notifications.js";
 import { bindCharCounter, bindMediaPreview, closeModal, showToast } from "./ui.js";
 import {
   collection,
@@ -96,6 +96,10 @@ export async function bootFeedPage(firebase) {
     badgeEl: document.getElementById("notificationBadge"),
     panelEl: document.getElementById("notificationsPanel"),
     btnEl: document.getElementById("notificationsBtn"),
+  });
+
+  startMessageNotifications(firebase, {
+    badgeEl: document.getElementById("messagesBadge"),
   });
 
   startStories(db, {
