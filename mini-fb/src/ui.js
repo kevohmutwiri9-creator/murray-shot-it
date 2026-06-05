@@ -20,12 +20,33 @@ export function showToast(message, type = "info", durationMs = 3200) {
     error: "bg-rose-600 text-white",
     info: "bg-gray-900 dark:bg-gray-700 text-white",
   };
-  el.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm ${styles[type] || styles.info}`;
-  el.textContent = message;
+  const icons = {
+    success: "✓",
+    error: "✕",
+    info: "ℹ",
+  };
+
+  el.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm flex items-center gap-3 ${styles[type] || styles.info}`;
+  el.innerHTML = `
+    <span class="text-lg">${icons[type] || icons.info}</span>
+    <span class="flex-1">${message}</span>
+    <button class="opacity-70 hover:opacity-100 transition" aria-label="Dismiss">✕</button>
+  `;
   root.appendChild(el);
-  setTimeout(() => {
+
+  // Dismiss on button click
+  const dismissBtn = el.querySelector("button");
+  dismissBtn.addEventListener("click", () => {
     el.classList.add("opacity-0", "transition", "duration-300");
     setTimeout(() => el.remove(), 300);
+  });
+
+  // Auto dismiss after duration
+  setTimeout(() => {
+    if (el.isConnected) {
+      el.classList.add("opacity-0", "transition", "duration-300");
+      setTimeout(() => el.remove(), 300);
+    }
   }, durationMs);
 }
 
