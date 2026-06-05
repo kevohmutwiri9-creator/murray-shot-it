@@ -13,6 +13,7 @@ import { getFollowingUids } from "./follows.js";
 import { canViewPost } from "./post-visibility.js";
 import { renderPostCard, openCommentsForPost } from "./post-card.js";
 import { getBlockedUids, filterBlockedPosts } from "./blocks.js";
+import { showToast } from "./ui.js";
 
 const FEED_PAGE_SIZE = 25;
 const LIVE_WINDOW = 30;
@@ -130,6 +131,9 @@ export function startFeed(firebaseApp, { mode = "all", resetLimit = true } = {})
     livePosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     lastLiveDoc = snapshot.docs[snapshot.docs.length - 1] || null;
     await renderFeed(firebaseApp, mode);
+  }, (error) => {
+    console.error("Error loading feed:", error);
+    showToast("Failed to load feed. Please refresh the page.", "error");
   });
 
   loadMoreBtn.onclick = async () => {
@@ -161,6 +165,9 @@ export function startFeed(firebaseApp, { mode = "all", resetLimit = true } = {})
       lastExtraDoc = snap.docs[snap.docs.length - 1];
       displayLimit += FEED_PAGE_SIZE;
       await renderFeed(firebaseApp, mode);
+    } catch (error) {
+      console.error("Error loading more posts:", error);
+      showToast("Failed to load more posts. Please try again.", "error");
     } finally {
       loadingMore = false;
       loadMoreBtn.disabled = false;
