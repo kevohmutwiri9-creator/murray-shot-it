@@ -98,7 +98,7 @@
             Sign in to publish content or create an account if you’re new to SnapVerse.
           </p>
 
-          <form id="loginForm" class="mt-8 space-y-5">
+          <form id="loginForm" class="mt-8 space-y-5" novalidate>
             <div>
               <label for="email" class="mb-2 block text-sm font-semibold text-white/85">Email address</label>
               <input
@@ -109,6 +109,7 @@
                 class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-accent focus:bg-white/10 focus:ring-4 focus:ring-accent/15"
                 placeholder="you@example.com"
               />
+              <p id="emailError" class="mt-2 text-xs text-rose-400 hidden"></p>
             </div>
 
             <div>
@@ -122,6 +123,7 @@
                 class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-accent focus:bg-white/10 focus:ring-4 focus:ring-accent/15"
                 placeholder="••••••••"
               />
+              <p id="passwordError" class="mt-2 text-xs text-rose-400 hidden"></p>
               <p class="mt-2 text-xs text-white/50">Passwords must be at least 6 characters.</p>
             </div>
 
@@ -161,6 +163,8 @@
     const form = document.getElementById("loginForm");
     const emailEl = document.getElementById("email");
     const passwordEl = document.getElementById("password");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
     const authStatus = document.getElementById("authStatus");
     const loginBtn = document.getElementById("loginBtn");
     const createAccountBtn = document.getElementById("createAccountBtn");
@@ -172,12 +176,75 @@
         : "rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80";
     };
 
+    const validateEmail = (email) => {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    };
+
+    const validateForm = () => {
+      let isValid = true;
+
+      // Validate email
+      if (!emailEl.value.trim()) {
+        emailError.textContent = "Email is required";
+        emailError.classList.remove("hidden");
+        emailEl.classList.add("border-rose-400");
+        isValid = false;
+      } else if (!validateEmail(emailEl.value)) {
+        emailError.textContent = "Please enter a valid email address";
+        emailError.classList.remove("hidden");
+        emailEl.classList.add("border-rose-400");
+        isValid = false;
+      } else {
+        emailError.textContent = "";
+        emailError.classList.add("hidden");
+        emailEl.classList.remove("border-rose-400");
+      }
+
+      // Validate password
+      if (!passwordEl.value) {
+        passwordError.textContent = "Password is required";
+        passwordError.classList.remove("hidden");
+        passwordEl.classList.add("border-rose-400");
+        isValid = false;
+      } else if (passwordEl.value.length < 6) {
+        passwordError.textContent = "Password must be at least 6 characters";
+        passwordError.classList.remove("hidden");
+        passwordEl.classList.add("border-rose-400");
+        isValid = false;
+      } else {
+        passwordError.textContent = "";
+        passwordError.classList.add("hidden");
+        passwordEl.classList.remove("border-rose-400");
+      }
+
+      return isValid;
+    };
+
+    // Clear errors on input
+    emailEl.addEventListener("input", () => {
+      emailError.textContent = "";
+      emailError.classList.add("hidden");
+      emailEl.classList.remove("border-rose-400");
+    });
+
+    passwordEl.addEventListener("input", () => {
+      passwordError.textContent = "";
+      passwordError.classList.add("hidden");
+      passwordEl.classList.remove("border-rose-400");
+    });
+
     const goToFeed = () => {
       window.location.href = "/index.html";
     };
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!validateForm()) {
+        return;
+      }
+
       loginBtn.disabled = true;
       showStatus("Signing in...");
       try {
@@ -193,6 +260,10 @@
     });
 
     createAccountBtn.addEventListener("click", async () => {
+      if (!validateForm()) {
+        return;
+      }
+
       createAccountBtn.disabled = true;
       showStatus("Creating account...");
       try {
