@@ -377,14 +377,35 @@
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
 
+    // Debug: Check if we're on HTTPS
+    console.log('Protocol:', window.location.protocol);
+    console.log('Is HTTPS:', window.location.protocol === 'https:');
+    console.log('Is localhost:', window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    // Debug: Check service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(registration => {
+        console.log('Service Worker registration:', registration);
+      });
+    }
+
+    // Temporarily show button for testing (remove this line in production)
+    installBtn.classList.remove('hidden');
+
     window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt event fired!');
       e.preventDefault();
       deferredPrompt = e;
       installBtn.classList.remove('hidden');
     });
 
     installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
+      console.log('Install button clicked');
+      if (!deferredPrompt) {
+        console.log('No deferred prompt available - app may already be installed or not installable');
+        alert('The app cannot be installed right now. Make sure you are on HTTPS or localhost.');
+        return;
+      }
 
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
