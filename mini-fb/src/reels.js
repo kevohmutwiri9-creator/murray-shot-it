@@ -6,12 +6,14 @@ import {
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { profileUrl } from "./profiles-cache.js";
+import { isFollowing, followUser, unfollowUser } from "./follows.js";
+import { showToast } from "./ui.js";
 
 function authorLabel(item) {
   return item.authorEmail?.split("@")[0] || item.authorDisplayName || "User";
 }
 
-function createReelCard(item) {
+function createReelCard(item, { meUid, firebase, db } = {}) {
   const card = document.createElement("article");
   card.className =
     "reel-card rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden snap-start";
@@ -43,6 +45,41 @@ function createReelCard(item) {
     <a href="/index.html?post=${encodeURIComponent(item.id)}&comments=1" class="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">Comments</a>
     <a href="${profileUrl(item.authorUid)}" class="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">Creator</a>
   `;
+
+  if (meUid && item.authorUid && item.authorUid !== meUid && db) {
+    const followBtn = document.createElement("button");
+    followBtn.type = "button";
+    followBtn.className =
+      "text-xs px-2 py-1 rounded-lg bg-accent text-white hover:bg-accent/90";
+    followBtn.textContent = "Follow";
+
+    isFollowing(db, meUid, item.authorUid)
+      .then((f) => {
+        followBtn.textContent = f ? "Following" : "Follow";
+        followBtn.className = f
+          ? "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+          : "text-xs px-2 py-1 rounded-lg bg-accent text-white hover:bg-accent/90";
+      })
+      .catch(() => {});
+
+    followBtn.addEventListener("click", async () => {
+      try {
+        const f = await isFollowing(db, meUid, item.authorUid);
+        if (f) await unfollowUser(db, meUid, item.authorUid);
+        else await followUser(db, meUid, item.authorUid, firebase);
+        showToast(f ? "Unfollowed." : "Following!", f ? "info" : "success");
+        const now = await isFollowing(db, meUid, item.authorUid);
+        followBtn.textContent = now ? "Following" : "Follow";
+        followBtn.className = now
+          ? "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+          : "text-xs px-2 py-1 rounded-lg bg-accent text-white hover:bg-accent/90";
+      } catch (err) {
+        showToast(err.message || "Could not update follow.", "error");
+      }
+    });
+    actions.appendChild(followBtn);
+  }
+
   footer.append(author, caption, actions);
   card.appendChild(footer);
   return card;
@@ -68,7 +105,7 @@ function setupAutoplay(containerEl) {
   videos.forEach((v) => observer.observe(v));
 }
 
-export function startReelsPage(db, containerEl) {
+export function startReelsPage(db, containerEl, opts = {}) {
   const q = query(
     collection(db, "posts"),
     orderBy("createdAt", "desc"),
@@ -86,7 +123,7 @@ export function startReelsPage(db, containerEl) {
       return;
     }
 
-    reels.forEach((item) => containerEl.appendChild(createReelCard(item)));
+    reels.forEach((item) => containerEl.appendChild(createReelCard(item, { ...opts, db })));
     setupAutoplay(containerEl);
 
     const targetId = decodeURIComponent(location.hash || "").replace(/^#/, "");

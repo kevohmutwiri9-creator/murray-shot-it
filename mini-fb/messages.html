@@ -39,7 +39,11 @@
 
     <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)]">
       <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
-        <span class="font-semibold">Select a conversation</span>
+        <div class="min-w-0">
+          <span id="chatHeaderTitle" class="font-semibold">Select a conversation</span>
+          <p id="chatHeaderStatus" class="text-xs text-gray-500 hidden"></p>
+        </div>
+        <div id="chatHeaderActions" class="shrink-0"></div>
       </div>
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
         <p class="text-sm text-gray-500 text-center py-8">Pick someone from the list or search to start chatting.</p>
@@ -66,14 +70,22 @@
       getProfileDisplayName,
       escapeHtml,
       markConversationRead,
+      markMessagesDelivered,
+      setTyping,
       createGroupConversation,
       isGroupConversationId,
     } from "./src/messages.js";
+    import {
+      subscribePresence,
+      messageStatusMeta,
+      presenceDotClass,
+      isTypingRecent,
+    } from "./src/presence.js";
     import { profileUrl } from "./src/profiles-cache.js";
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -99,9 +111,18 @@
     const userSearch = document.getElementById("userSearch");
 
     let activeTarget = urlConv || urlUid || null;
+    let activeConvId = null;
+    let activeOtherUid = null;
     let msgUnsub = null;
+    let convUnsub = null;
+    let typingTimer = null;
     let didInitialOpen = false;
     const nameCache = new Map();
+    const presenceByUid = new Map();
+
+    const chatHeaderTitle = document.getElementById("chatHeaderTitle");
+    const chatHeaderStatus = document.getElementById("chatHeaderStatus");
+    const chatHeaderActions = document.getElementById("chatHeaderActions");
 
     async function displayName(uid) {
       if (nameCache.has(uid)) return nameCache.get(uid);
@@ -117,6 +138,15 @@
         btn.classList.toggle("border-l-4", active);
         btn.classList.toggle("border-accent", active);
       });
+    }
+
+    function renderMessageStatus(m) {
+      const status = messageStatusMeta(m);
+      const meta = document.createElement("span");
+      meta.className = `text-[10px] mt-0.5 flex items-center gap-1 ${status.className}`;
+      meta.title = status.label;
+      meta.innerHTML = `<span class="tracking-tighter font-semibold">${status.ticks}</span><span>${status.label}</span>`;
+      return meta;
     }
 
     function renderMessages(snap) {
@@ -156,24 +186,56 @@
           inner.appendChild(a);
         }
         wrap.appendChild(inner);
-        if (mine) {
-          const meta = document.createElement("span");
-          meta.className = "text-[10px] text-gray-400 mt-0.5";
-          meta.textContent = m.read ? "Seen" : "Sent";
-          wrap.appendChild(meta);
-        }
+        if (mine) wrap.appendChild(renderMessageStatus(m));
         chatMessages.appendChild(wrap);
       });
       chatMessages.scrollTop = chatMessages.scrollHeight;
+      if (activeConvId) markMessagesDelivered(db, activeConvId).catch(() => {});
+    }
+
+    function updateChatPresenceLabel(state, typing = false) {
+      if (!chatHeaderStatus) return;
+      if (typing) {
+        chatHeaderStatus.textContent = "typing...";
+        chatHeaderStatus.classList.remove("hidden", "text-emerald-500");
+        chatHeaderStatus.classList.add("text-accent");
+        return;
+      }
+      if (!state) {
+        chatHeaderStatus.classList.add("hidden");
+        return;
+      }
+      chatHeaderStatus.classList.remove("hidden", "text-accent");
+      chatHeaderStatus.classList.toggle("text-emerald-500", state.online);
+      chatHeaderStatus.classList.toggle("text-gray-500", !state.online);
+      chatHeaderStatus.textContent = state.label;
+    }
+
+    function ensurePresenceWatch(uid) {
+      if (!uid) return;
+      if (presenceByUid.has(uid)) return;
+      presenceByUid.set(uid, { online: false, label: "Offline" });
+      subscribePresence(db, uid, (state) => {
+        presenceByUid.set(uid, state);
+        document.querySelectorAll(`[data-presence-uid="${uid}"]`).forEach((dot) => {
+          dot.className = `inline-block w-2 h-2 rounded-full shrink-0 ${presenceDotClass(state.online)}`;
+          dot.title = state.label;
+        });
+        if (uid === activeOtherUid) updateChatPresenceLabel(state, false);
+      });
     }
 
     async function openConversation(convId, otherUid = null) {
       if (!convId) return;
-      if (activeTarget === convId && msgUnsub) {
+      if (activeConvId === convId && msgUnsub) {
         setActiveConv(convId, otherUid);
         return;
       }
+
+      activeConvId = convId;
+      activeOtherUid = otherUid;
       activeTarget = isGroupConversationId(convId) ? convId : otherUid || activeTarget;
+
       history.replaceState(
         null,
         "",
@@ -184,24 +246,54 @@
         msgUnsub();
         msgUnsub = null;
       }
+      if (convUnsub) {
+        convUnsub();
+        convUnsub = null;
+      }
 
       chatForm.classList.remove("hidden");
       setActiveConv(convId, otherUid);
       await markConversationRead(db, convId);
+      await markMessagesDelivered(db, convId);
 
       const convSnap = await getDoc(doc(db, "conversations", convId));
       const convData = convSnap.data() || {};
+      const isGroup = convData.type === "group" || isGroupConversationId(convId);
 
-      if (convData.type === "group" || isGroupConversationId(convId)) {
-        chatHeader.innerHTML = `<span class="font-semibold">${escapeHtml(convData.title || "Group chat")}</span>`;
+      chatHeaderActions.innerHTML = "";
+      chatHeaderStatus.classList.add("hidden");
+
+      if (isGroup) {
+        chatHeaderTitle.textContent = convData.title || "Group chat";
+        chatHeaderStatus.textContent = `${(convData.participants || []).length} members`;
+        chatHeaderStatus.classList.remove("hidden");
+        chatHeaderStatus.classList.remove("text-emerald-500", "text-accent");
+        chatHeaderStatus.classList.add("text-gray-500");
       } else {
         const uid = otherUid || (convData.participants || []).find((p) => p !== user.uid);
+        activeOtherUid = uid;
         const name = await displayName(uid);
-        chatHeader.innerHTML = `
-          <a href="${profileUrl(uid)}" class="font-semibold hover:text-accent transition">${escapeHtml(name)}</a>
-          <a href="${profileUrl(uid)}" class="text-xs text-accent font-medium shrink-0">View profile</a>
-        `;
+        chatHeaderTitle.innerHTML = `<a href="${profileUrl(uid)}" class="hover:text-accent transition">${escapeHtml(name)}</a>`;
+        const profileLink = document.createElement("a");
+        profileLink.href = profileUrl(uid);
+        profileLink.className = "text-xs text-accent font-medium";
+        profileLink.textContent = "View profile";
+        chatHeaderActions.appendChild(profileLink);
+
+        ensurePresenceWatch(uid);
+        updateChatPresenceLabel(presenceByUid.get(uid));
       }
+
+      convUnsub = onSnapshot(doc(db, "conversations", convId), (snap) => {
+        const data = snap.data() || {};
+        if (isGroup || !activeOtherUid) return;
+        const typingAt = data.typing?.[activeOtherUid];
+        if (isTypingRecent(typingAt)) {
+          updateChatPresenceLabel(presenceByUid.get(activeOtherUid), true);
+        } else {
+          updateChatPresenceLabel(presenceByUid.get(activeOtherUid), false);
+        }
+      });
 
       if (sharePost && !chatInput.value) {
         chatInput.value = `Check this out: ${decodeURIComponent(sharePost)}`;
@@ -252,8 +344,14 @@
           const preview = data.lastMessage || "Start chatting";
           const you = data.lastSenderUid === user.uid ? "You: " : "";
           const badge = unread > 0 ? `<span class="ml-auto bg-accent text-white text-xs px-2 py-0.5 rounded-full">${unread}</span>` : "";
+          const otherUid = isGroup ? null : (data.participants || []).find((p) => p !== user.uid);
+          if (otherUid) ensurePresenceWatch(otherUid);
+          const dot = otherUid
+            ? `<span data-presence-uid="${otherUid}" class="inline-block w-2 h-2 rounded-full shrink-0 ${presenceDotClass(presenceByUid.get(otherUid)?.online)}"></span>`
+            : "";
           btn.innerHTML = `
             <div class="flex items-center gap-2">
+              ${dot}
               <div class="min-w-0 flex-1">
                 <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">${isGroup ? "👥 " : ""}${escapeHtml(name)}</p>
                 <p class="text-xs text-gray-500 truncate">${escapeHtml(you + preview)}</p>
@@ -331,6 +429,13 @@
     });
 
     document.getElementById("attachImageBtn").addEventListener("click", () => chatImage.click());
+
+    chatInput.addEventListener("input", () => {
+      if (!activeConvId) return;
+      clearTimeout(typingTimer);
+      setTyping(db, activeConvId, true).catch(() => {});
+      typingTimer = setTimeout(() => setTyping(db, activeConvId, false).catch(() => {}), 1200);
+    });
 
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();

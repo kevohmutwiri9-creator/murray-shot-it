@@ -46,6 +46,9 @@ export async function requireAuth(firebaseApp, { loginPath = "/login.html" } = {
   }
 
   await ensureProfile(firebaseApp, user);
+  import("./presence.js").then(({ startPresence }) => {
+    startPresence(getDbService(firebaseApp), user.uid);
+  });
   return user;
 }
 

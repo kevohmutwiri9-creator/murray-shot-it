@@ -364,6 +364,11 @@ export function renderPostCard(post, db) {
       const result = await toggleShare(window.__firebaseApp, post);
       post.shareCount = Math.max(0, (post.shareCount ?? 0) + (result.shared ? 1 : -1));
       updateCountsOnCard(card, post);
+      if (result.shared) {
+        showToast("Shared.", "success");
+      } else {
+        showToast("Unshared.", "info");
+      }
     } catch (err) {
       statusEl.textContent = err.message;
     }

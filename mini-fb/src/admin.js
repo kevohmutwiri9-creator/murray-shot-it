@@ -191,7 +191,13 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
 
       for (let i = 0; i < Math.min(files.length, 5); i++) {
         statusEl.textContent = `Uploading media ${i + 1}/${Math.min(files.length, 5)}...`;
-        const uploadResult = await uploadMedia(files[i]);
+        const uploadResult = await uploadMedia(files[i], {
+          firebaseApp,
+          uid: user.uid,
+          onProgress: (pct) => {
+            statusEl.textContent = `Uploading media ${i + 1}/${Math.min(files.length, 5)}... ${pct}%`;
+          },
+        });
         mediaUrls.push({ url: uploadResult.url, type: uploadResult.mediaType });
       }
       if (mediaUrls[0]) {

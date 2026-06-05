@@ -56,3 +56,9 @@ export async function getFollowingUids(db, followerUid) {
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data().followingUid).filter(Boolean);
 }
+
+export async function getFollowerUids(db, followingUid) {
+  const q = query(collection(db, "followers"), where("followingUid", "==", followingUid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data().followerUid).filter(Boolean);
+}

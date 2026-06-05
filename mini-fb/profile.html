@@ -86,15 +86,19 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Profile Header -->
     <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-      <div class="h-32 bg-gradient-to-r from-accent to-purple-600"></div>
+      <div id="profileCover" class="h-32 bg-gradient-to-r from-accent to-purple-600 relative overflow-hidden">
+        <img id="profileCoverImg" class="absolute inset-0 h-full w-full object-cover hidden" alt="" />
+      </div>
       <div class="px-6 pb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
-          <div id="profileAvatar" class="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-secondary text-white text-3xl font-bold flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg">
-            ?
-          </div>
+          <button id="profileAvatar" type="button" class="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-secondary text-white text-3xl font-bold flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg relative overflow-hidden">
+            <img id="profileAvatarImg" class="absolute inset-0 h-full w-full object-cover hidden" alt="" />
+            <span id="profileAvatarInitial">?</span>
+          </button>
           <div class="flex-1 min-w-0">
             <h1 id="profileName" class="text-2xl font-bold text-gray-900 dark:text-white">Loading...</h1>
             <p id="profileEmail" class="text-gray-500 dark:text-gray-400">Loading...</p>
+            <p id="profileStatus" class="text-sm mt-1 hidden"></p>
             <div class="mt-2 flex gap-4 text-sm">
               <span id="followersCount" class="text-gray-600 dark:text-gray-400">0 followers</span>
               <span id="followingCount" class="text-gray-600 dark:text-gray-400">0 following</span>
@@ -104,10 +108,20 @@
         <div class="mt-6">
           <p id="profileBio" class="text-gray-700 dark:text-gray-300">No bio yet. Click Edit Profile to add one!</p>
         </div>
+        <div id="profileAbout" class="mt-4 grid gap-2 text-sm text-gray-600 dark:text-gray-400"></div>
         <div id="profileActions" class="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 w-full">
           <span class="text-sm text-gray-500">Loading actions...</span>
         </div>
       </div>
+    </section>
+
+    <!-- Pinned post -->
+    <section id="pinnedSection" class="hidden mb-8">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Pinned</h2>
+        <button id="unpinBtn" type="button" class="hidden text-sm px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Unpin</button>
+      </div>
+      <div id="pinnedPost"></div>
     </section>
 
     <!-- Edit Profile Modal -->
@@ -135,6 +149,20 @@
               placeholder="Tell us about yourself..."
             ></textarea>
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Location</label>
+              <input id="editLocation" type="text" maxlength="60" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30" placeholder="e.g. Nairobi" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Website</label>
+              <input id="editWebsite" type="url" maxlength="120" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30" placeholder="https://your-site.com" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Instagram</label>
+            <input id="editInstagram" type="text" maxlength="60" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30" placeholder="@yourhandle" />
+          </div>
           <div class="flex gap-3">
             <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">
               Save
@@ -147,19 +175,49 @@
       </div>
     </div>
 
-    <!-- User's Posts -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <h2 id="postsSectionTitle" class="text-2xl font-bold text-gray-900 dark:text-white">Posts</h2>
-        <div class="text-sm text-gray-500 dark:text-gray-400" id="postCount"></div>
+    <!-- Followers/Following Modal -->
+    <div id="followListModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="followListTitle" class="text-xl font-bold text-gray-900 dark:text-white">Connections</h2>
+          <button type="button" id="closeFollowListBtn" class="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Close</button>
+        </div>
+        <div id="followListBody" class="mt-4 max-h-[60vh] overflow-y-auto space-y-2"></div>
       </div>
+    </div>
 
+    <!-- Profile tabs -->
+    <section class="mb-4">
+      <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-white dark:bg-gray-800">
+        <button type="button" id="tabPosts" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Posts</button>
+        <button type="button" id="tabReels" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Reels</button>
+        <button type="button" id="tabAbout" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">About</button>
+      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="postCount"></div>
+    </section>
+
+    <!-- Posts -->
+    <section id="postsSection">
       <div id="userPosts" class="space-y-4">
         <!-- Posts render here -->
       </div>
 
       <div id="noPosts" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
         No posts yet. Create your first post!
+      </div>
+    </section>
+
+    <!-- Reels -->
+    <section id="reelsSection" class="hidden">
+      <div id="userReels" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+      <div id="noReels" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">No reels yet.</div>
+    </section>
+
+    <!-- About -->
+    <section id="aboutSection" class="hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">About</h3>
+        <div id="aboutCard" class="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300"></div>
       </div>
     </section>
   </main>
@@ -170,12 +228,13 @@
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
     import { canViewPost } from "./src/post-visibility.js";
-    import { getFollowingUids } from "./src/follows.js";
     import { showToast, promptFlagReason } from "./src/ui.js";
     import { loadProfilesCache } from "./src/profiles-cache.js";
     import { renderPostCard } from "./src/post-card.js";
-    import { collection, query, orderBy, where, onSnapshot, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount } from "./src/follows.js";
+    import { uploadImageToImgbb } from "./src/image-upload.js";
+    import { subscribePresence, presenceDotClass } from "./src/presence.js";
+    import { collection, query, orderBy, where, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount, getFollowingUids, getFollowerUids } from "./src/follows.js";
     import { blockUser, unblockUser, isBlocked } from "./src/blocks.js";
     import { reportUser } from "./src/user-reports.js";
 
@@ -192,9 +251,119 @@
     const params = new URLSearchParams(location.search);
     const viewUid = params.get("uid") || params.get("user") || me.uid;
     const isOwnProfile = viewUid === me.uid;
+    let pinnedPostId = null;
 
     const btnClass =
       "inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0";
+
+    // Tabs
+    const tabPosts = document.getElementById("tabPosts");
+    const tabReels = document.getElementById("tabReels");
+    const tabAbout = document.getElementById("tabAbout");
+    const postsSection = document.getElementById("postsSection");
+    const reelsSection = document.getElementById("reelsSection");
+    const aboutSection = document.getElementById("aboutSection");
+    const aboutCard = document.getElementById("aboutCard");
+
+    const styleTab = (btn, active) => {
+      btn.className = active
+        ? "px-3 py-1.5 text-sm font-semibold rounded-lg bg-accent text-white transition"
+        : "px-3 py-1.5 text-sm font-semibold rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+    };
+    const setTab = (tab) => {
+      styleTab(tabPosts, tab === "posts");
+      styleTab(tabReels, tab === "reels");
+      styleTab(tabAbout, tab === "about");
+      postsSection.classList.toggle("hidden", tab !== "posts");
+      reelsSection.classList.toggle("hidden", tab !== "reels");
+      aboutSection.classList.toggle("hidden", tab !== "about");
+      localStorage.setItem("sv_profile_tab", tab);
+    };
+    tabPosts?.addEventListener("click", () => setTab("posts"));
+    tabReels?.addEventListener("click", () => setTab("reels"));
+    tabAbout?.addEventListener("click", () => setTab("about"));
+
+    // Follow list modal
+    const followListModal = document.getElementById("followListModal");
+    const followListTitle = document.getElementById("followListTitle");
+    const followListBody = document.getElementById("followListBody");
+    document.getElementById("closeFollowListBtn")?.addEventListener("click", () => followListModal.classList.add("hidden"));
+    followListModal?.addEventListener("click", (e) => { if (e.target === followListModal) followListModal.classList.add("hidden"); });
+
+    async function loadProfileLabel(uid) {
+      const snap = await getDoc(doc(db, "profiles", uid));
+      if (!snap.exists()) return { displayName: uid.slice(0, 8) + "…", email: "" };
+      const p = snap.data();
+      return { displayName: p.displayName || p.email || "User", email: p.email || "" };
+    }
+
+    async function openFollowList(mode) {
+      followListModal.classList.remove("hidden");
+      followListTitle.textContent = mode === "followers" ? "Followers" : "Following";
+      followListBody.innerHTML = '<p class="text-sm text-gray-500">Loading...</p>';
+      try {
+        const uids = mode === "followers" ? await getFollowerUids(db, viewUid) : await getFollowingUids(db, viewUid);
+        if (!uids.length) {
+          followListBody.innerHTML = `<p class="text-sm text-gray-500">No ${mode} yet.</p>`;
+          return;
+        }
+        followListBody.innerHTML = "";
+        for (const uid of uids.slice(0, 60)) {
+          const { displayName, email } = await loadProfileLabel(uid);
+          const row = document.createElement("div");
+          row.className = "flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 p-3";
+          row.innerHTML = `
+            <a href="/mini-fb/profile.html?uid=${encodeURIComponent(uid)}" class="min-w-0">
+              <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">${displayName}</p>
+              <p class="text-xs text-gray-500 truncate">${email}</p>
+            </a>
+          `;
+          const actions = document.createElement("div");
+          actions.className = "flex gap-2 shrink-0";
+
+          if (uid !== me.uid) {
+            const msg = document.createElement("a");
+            msg.href = `/mini-fb/messages.html?uid=${encodeURIComponent(uid)}`;
+            msg.className = "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700";
+            msg.textContent = "Message";
+            actions.appendChild(msg);
+
+            const follow = document.createElement("button");
+            follow.type = "button";
+            follow.className = "text-xs px-2 py-1 rounded-lg bg-accent text-white";
+            follow.textContent = "Follow";
+            isFollowing(db, me.uid, uid).then((f) => {
+              follow.textContent = f ? "Unfollow" : "Follow";
+              follow.className = f
+                ? "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600"
+                : "text-xs px-2 py-1 rounded-lg bg-accent text-white";
+            });
+            follow.addEventListener("click", async () => {
+              const f = await isFollowing(db, me.uid, uid);
+              if (f) await unfollowUser(db, me.uid, uid);
+              else await followUser(db, me.uid, uid, firebase);
+              showToast(f ? "Unfollowed." : "Following!", f ? "info" : "success");
+              const now = await isFollowing(db, me.uid, uid);
+              follow.textContent = now ? "Unfollow" : "Follow";
+              follow.className = now
+                ? "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600"
+                : "text-xs px-2 py-1 rounded-lg bg-accent text-white";
+            });
+            actions.appendChild(follow);
+          }
+          row.appendChild(actions);
+          followListBody.appendChild(row);
+        }
+        if (uids.length > 60) {
+          const more = document.createElement("p");
+          more.className = "text-xs text-gray-500 text-center pt-2";
+          more.textContent = `Showing 60 of ${uids.length}.`;
+          followListBody.appendChild(more);
+        }
+      } catch (err) {
+        followListBody.innerHTML = `<p class="text-sm text-rose-500">${err.message || "Could not load list."}</p>`;
+      }
+    }
 
     async function safeIsBlocked() {
       try {
@@ -284,21 +453,95 @@
       const profileSnap = await getDoc(profileRef);
 
       const profile = profileSnap.exists() ? profileSnap.data() : {};
+      pinnedPostId = profile.pinnedPostId || null;
       const displayName = profile.displayName || profile.email || "User";
       document.getElementById("profileName").textContent = displayName;
       document.getElementById("profileEmail").textContent = profile.email || (isOwnProfile ? me.email : "");
       document.getElementById("profileBio").textContent = profile.bio || (isOwnProfile ? "No bio yet. Click Edit Profile to add one!" : "No bio yet.");
-      document.getElementById("profileAvatar").textContent = displayName.charAt(0).toUpperCase();
+
+      const statusEl = document.getElementById("profileStatus");
+      if (isOwnProfile) {
+        statusEl.classList.remove("hidden");
+        statusEl.classList.add("text-emerald-500");
+        statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>You are online`;
+      } else {
+        statusEl.classList.remove("hidden");
+        subscribePresence(db, viewUid, (state) => {
+          statusEl.classList.toggle("text-emerald-500", state.online);
+          statusEl.classList.toggle("text-gray-500", !state.online);
+          statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full mr-1.5 ${presenceDotClass(state.online)}"></span>${state.label}`;
+        });
+      }
+
+      // Avatar + cover
+      const avatarInitial = document.getElementById("profileAvatarInitial");
+      const avatarImg = document.getElementById("profileAvatarImg");
+      const coverImg = document.getElementById("profileCoverImg");
+      avatarInitial.textContent = displayName.charAt(0).toUpperCase();
+
+      if (profile.avatarUrl) {
+        avatarImg.src = profile.avatarUrl;
+        avatarImg.classList.remove("hidden");
+      } else {
+        avatarImg.classList.add("hidden");
+        avatarImg.removeAttribute("src");
+      }
+
+      if (profile.coverUrl) {
+        coverImg.src = profile.coverUrl;
+        coverImg.classList.remove("hidden");
+      } else {
+        coverImg.classList.add("hidden");
+        coverImg.removeAttribute("src");
+      }
+
+      const aboutEl = document.getElementById("profileAbout");
+      const bits = [];
+      if (profile.location) bits.push(`📍 ${profile.location}`);
+      if (profile.website) bits.push(`🔗 ${profile.website}`);
+      if (profile.instagram) bits.push(`📸 ${profile.instagram}`);
+      aboutEl.innerHTML = bits.length
+        ? bits.map((t) => `<div>${t}</div>`).join("")
+        : `<div class="text-gray-500">${isOwnProfile ? "Add links and location to your profile." : "No extra details."}</div>`;
+
+      aboutCard.innerHTML = `
+        <p><strong>Name:</strong> ${displayName}</p>
+        <p><strong>Email:</strong> ${profile.email || ""}</p>
+        <p><strong>Location:</strong> ${profile.location || "—"}</p>
+        <p><strong>Website:</strong> ${profile.website ? `<a class="text-accent underline" href="${profile.website}" target="_blank" rel="noopener">${profile.website}</a>` : "—"}</p>
+        <p><strong>Instagram:</strong> ${profile.instagram || "—"}</p>
+      `;
 
       const followersCount = await getFollowersCount(db, viewUid);
       const followingCount = await getFollowingCount(db, viewUid);
-      document.getElementById("followersCount").textContent = `${followersCount} followers`;
-      document.getElementById("followingCount").textContent = `${followingCount} following`;
+      const followersEl = document.getElementById("followersCount");
+      const followingEl = document.getElementById("followingCount");
+      followersEl.textContent = `${followersCount} followers`;
+      followingEl.textContent = `${followingCount} following`;
+      followersEl.classList.add("cursor-pointer");
+      followingEl.classList.add("cursor-pointer");
+      followersEl.onclick = () => openFollowList("followers");
+      followingEl.onclick = () => openFollowList("following");
 
       const actions = document.getElementById("profileActions");
       actions.innerHTML = "";
 
       try {
+        const shareBtn = document.createElement("button");
+        shareBtn.type = "button";
+        shareBtn.className = `${btnClass} border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`;
+        shareBtn.textContent = "Share profile";
+        shareBtn.addEventListener("click", async () => {
+          const link = `${location.origin}/mini-fb/profile.html?uid=${encodeURIComponent(viewUid)}`;
+          try {
+            await navigator.clipboard.writeText(link);
+            showToast("Profile link copied.", "success");
+          } catch {
+            showToast("Could not copy link.", "error");
+          }
+        });
+        actions.appendChild(shareBtn);
+
         if (isOwnProfile) {
           const editBtn = document.createElement("button");
           editBtn.type = "button";
@@ -321,7 +564,6 @@
         actions.innerHTML = `<p class="text-sm text-rose-500">${err.message || "Could not load actions."}</p>`;
       }
 
-      document.getElementById("postsSectionTitle").textContent = isOwnProfile ? "My Posts" : "Posts";
       document.title = isOwnProfile ? "SnapVerse • My Profile" : `SnapVerse • ${displayName}`;
     };
 
@@ -336,23 +578,84 @@
         followingSet.add(me.uid);
 
         const posts = [];
+        const reels = [];
         snapshot.forEach((docSnap) => {
           const post = { id: docSnap.id, ...docSnap.data() };
           if (!isPostVisible(post)) return;
           if (!canViewPost(post, me.uid, followingSet)) return;
-          posts.push(post);
+          if (post.type === "reel" || (post.mediaType === "video" && post.mediaUrl)) reels.push(post);
+          else posts.push(post);
         });
 
         const container = document.getElementById("userPosts");
         const emptyEl = document.getElementById("noPosts");
         const countEl = document.getElementById("postCount");
+        const pinnedSection = document.getElementById("pinnedSection");
+        const pinnedWrap = document.getElementById("pinnedPost");
+        const unpinBtn = document.getElementById("unpinBtn");
 
         container.innerHTML = "";
         emptyEl.classList.toggle("hidden", posts.length > 0);
-        countEl.textContent = `${posts.length} post${posts.length === 1 ? "" : "s"}`;
+        countEl.textContent = `${posts.length} post${posts.length === 1 ? "" : "s"} • ${reels.length} reel${reels.length === 1 ? "" : "s"}`;
+
+        // Pinned post
+        pinnedWrap.innerHTML = "";
+        pinnedSection.classList.add("hidden");
+        unpinBtn.classList.add("hidden");
+        if (pinnedPostId) {
+          const pinned = posts.find((p) => p.id === pinnedPostId) || reels.find((p) => p.id === pinnedPostId);
+          if (pinned) {
+            pinnedSection.classList.remove("hidden");
+            pinnedWrap.appendChild(renderPostCard(pinned, db));
+            if (isOwnProfile) {
+              unpinBtn.classList.remove("hidden");
+              unpinBtn.onclick = async () => {
+                await setDoc(doc(db, "profiles", me.uid), { pinnedPostId: null, updatedAt: new Date() }, { merge: true });
+                pinnedPostId = null;
+                showToast("Unpinned.", "info");
+              };
+            }
+          }
+        }
 
         posts.forEach((post) => {
-          container.appendChild(renderPostCard(post, db));
+          const card = renderPostCard(post, db);
+          if (isOwnProfile) {
+            const bar = document.createElement("div");
+            bar.className = "px-5 pt-4";
+            const pin = document.createElement("button");
+            pin.type = "button";
+            const isPinned = pinnedPostId === post.id;
+            pin.className = isPinned
+              ? "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600"
+              : "text-xs px-2 py-1 rounded-lg bg-accent text-white hover:bg-accent/90";
+            pin.textContent = isPinned ? "Pinned" : "Pin";
+            pin.addEventListener("click", async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              await setDoc(doc(db, "profiles", me.uid), { pinnedPostId: post.id, updatedAt: new Date() }, { merge: true });
+              pinnedPostId = post.id;
+              showToast("Pinned to profile.", "success");
+            });
+            bar.appendChild(pin);
+            card.prepend(bar);
+          }
+          container.appendChild(card);
+        });
+
+        const reelsEl = document.getElementById("userReels");
+        const noReels = document.getElementById("noReels");
+        reelsEl.innerHTML = "";
+        noReels.classList.toggle("hidden", reels.length > 0);
+        reels.slice(0, 24).forEach((r) => {
+          const a = document.createElement("a");
+          a.href = `/mini-fb/reels.html#${encodeURIComponent(r.id)}`;
+          a.className = "relative block rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black aspect-[9/16]";
+          a.innerHTML = `
+            <video src="${r.mediaUrl}" class="h-full w-full object-cover" muted playsinline preload="metadata"></video>
+            <span class="absolute bottom-2 left-2 text-white text-xs font-semibold bg-black/40 px-2 py-1 rounded">▶ Reel</span>
+          `;
+          reelsEl.appendChild(a);
         });
       });
     };
@@ -362,6 +665,37 @@
     const cancelBtn = document.getElementById("cancelEditBtn");
     const editForm = document.getElementById("editProfileForm");
 
+    async function promptImageUpload({ title, field }) {
+      if (!isOwnProfile) return;
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          showToast(title, "info");
+          const result = await uploadImageToImgbb(file);
+          await setDoc(doc(db, "profiles", me.uid), { [field]: result.url, updatedAt: new Date() }, { merge: true });
+          showToast("Updated!", "success");
+          await loadProfile();
+        } catch (err) {
+          showToast(err.message || "Upload failed.", "error");
+        }
+      };
+      input.click();
+    }
+
+    document.getElementById("profileAvatar")?.addEventListener("click", () => {
+      if (!isOwnProfile) return;
+      promptImageUpload({ title: "Uploading avatar...", field: "avatarUrl" });
+    });
+
+    document.getElementById("profileCover")?.addEventListener("click", () => {
+      if (!isOwnProfile) return;
+      promptImageUpload({ title: "Uploading cover...", field: "coverUrl" });
+    });
+
     async function openEditModal() {
       const profileRef = doc(db, "profiles", me.uid);
       const profileSnap = await getDoc(profileRef);
@@ -369,6 +703,9 @@
         const profile = profileSnap.data();
         document.getElementById("editName").value = profile.displayName || "";
         document.getElementById("editBio").value = profile.bio || "";
+        document.getElementById("editLocation").value = profile.location || "";
+        document.getElementById("editWebsite").value = profile.website || "";
+        document.getElementById("editInstagram").value = profile.instagram || "";
       }
       modal.classList.remove("hidden");
     }
@@ -381,11 +718,20 @@
       e.preventDefault();
       const displayName = document.getElementById("editName").value.trim();
       const bio = document.getElementById("editBio").value.trim();
+      const location = document.getElementById("editLocation").value.trim();
+      const websiteRaw = document.getElementById("editWebsite").value.trim();
+      const instagramRaw = document.getElementById("editInstagram").value.trim();
+      const website = websiteRaw && !websiteRaw.startsWith("http") ? `https://${websiteRaw}` : websiteRaw;
+      const instagram = instagramRaw.startsWith("@") ? instagramRaw : instagramRaw ? `@${instagramRaw}` : "";
 
       const profileRef = doc(db, "profiles", me.uid);
       await setDoc(profileRef, {
         displayName,
         bio,
+        location,
+        website,
+        instagram,
+        avatarInitial: (displayName || me.email || "?").charAt(0).toUpperCase(),
         email: me.email,
         uid: me.uid,
         updatedAt: new Date()
@@ -398,6 +744,7 @@
     // Initialize
     await loadProfile();
     loadUserPosts();
+    setTab(localStorage.getItem("sv_profile_tab") || "posts");
   </script>
 </body>
 </html>

@@ -3,11 +3,15 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
       "firebase.json",
       "firestore.rules",
+      "storage.rules",
       "firestore.indexes.json",
       "**/.*",
       "**/node_modules/**",

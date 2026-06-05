@@ -39,7 +39,7 @@
     bootPage(firebase);
 
     const db = firebase.__db;
-    startReelsPage(db, document.getElementById("reelsFeed"));
+    startReelsPage(db, document.getElementById("reelsFeed"), { meUid: user.uid, firebase });
 
     let muted = true;
     const btn = document.getElementById("toggleReelSound");

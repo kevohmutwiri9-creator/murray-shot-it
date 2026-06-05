@@ -25,7 +25,8 @@ export async function addStoryFromFile(db, file) {
   const user = getCurrentUser();
   if (!user) throw new Error("Sign in to add a story.");
 
-  const result = await uploadMedia(file);
+  const firebaseApp = window.__firebaseApp;
+  const result = await uploadMedia(file, { firebaseApp, uid: user.uid });
   const expiresAt = Timestamp.fromMillis(Date.now() + STORY_TTL_MS);
 
   await addDoc(collection(db, "stories"), {

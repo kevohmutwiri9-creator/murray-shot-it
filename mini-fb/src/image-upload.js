@@ -116,11 +116,26 @@ export async function uploadVideoToAlternative(file) {
   });
 }
 
-export async function uploadMedia(file) {
+export async function uploadMedia(file, opts = {}) {
   if (file.type.startsWith("image/")) {
     return await uploadImageToImgbb(file);
   } else if (file.type.startsWith("video/")) {
-    return await uploadVideoToAlternative(file);
+    if (file.size <= MAX_VIDEO_BYTES) {
+      return await uploadVideoToAlternative(file);
+    }
+    if (opts?.firebaseApp && opts?.uid) {
+      const { uploadFileToStorage } = await import("./storage-upload.js");
+      const result = await uploadFileToStorage(opts.firebaseApp, {
+        uid: opts.uid,
+        file,
+        folder: "reels",
+        onProgress: opts.onProgress,
+      });
+      return { url: result.url, mediaType: "video" };
+    }
+    throw new Error(
+      `Video is too large (${Math.round(file.size / 1024)}KB). Please upload a shorter clip, or enable Firebase Storage uploads.`
+    );
   } else {
     throw new Error("Unsupported file type. Please upload images only.");
   }

@@ -93,11 +93,43 @@ export async function markConversationRead(db, convId) {
   snap.forEach((d) => {
     const m = d.data();
     if (m.senderUid !== user.uid && !m.read) {
-      batch.update(d.ref, { read: true });
+      batch.update(d.ref, { read: true, delivered: true });
       n++;
     }
   });
   if (n) await batch.commit();
+}
+
+export async function markMessagesDelivered(db, convId) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const q = query(
+    collection(db, "conversations", convId, "messages"),
+    orderBy("createdAt", "asc")
+  );
+  const snap = await getDocs(q);
+  const batch = writeBatch(db);
+  let n = 0;
+  snap.forEach((d) => {
+    const m = d.data();
+    if (m.senderUid !== user.uid && !m.delivered) {
+      batch.update(d.ref, { delivered: true });
+      n++;
+    }
+  });
+  if (n) await batch.commit();
+}
+
+export async function setTyping(db, convId, isTyping) {
+  const user = getCurrentUser();
+  if (!user || !convId) return;
+
+  await setDoc(
+    doc(db, "conversations", convId),
+    { [`typing.${user.uid}`]: isTyping ? serverTimestamp() : null },
+    { merge: true }
+  );
 }
 
 export async function sendMessage(firebaseApp, target, payload) {
@@ -139,6 +171,7 @@ export async function sendMessage(firebaseApp, target, payload) {
     postLink,
     createdAt: serverTimestamp(),
     read: false,
+    delivered: false,
   });
 
   const convSnap = await getDoc(doc(db, "conversations", convId));
