@@ -1,4 +1,10 @@
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { toggleShare } from "./shares.js";
 import { formatTextWithHashtags } from "./hashtags.js";
 import { formatTextWithMentions } from "./mentions.js";
@@ -138,14 +144,85 @@ function hideCommentsPanel(postId, commentsPanel) {
   commentsPanel.classList.add("hidden");
 }
 
+function openPostDetail(postId) {
+  // Create modal for post detail
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in';
+  modal.id = 'postDetailModal';
+  
+  const modalContent = document.createElement('div');
+  modalContent.className = 'bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in';
+  
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700';
+  modalHeader.innerHTML = `
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Post Details</h2>
+    <button type="button" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  `;
+  
+  const modalBody = document.createElement('div');
+  modalBody.className = 'p-4 overflow-y-auto max-h-[70vh]';
+  modalBody.innerHTML = '<p class="text-center text-gray-500">Loading post...</p>';
+  
+  modalContent.appendChild(modalHeader);
+  modalContent.appendChild(modalBody);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Close button handler
+  modalHeader.querySelector('button').addEventListener('click', () => {
+    modal.remove();
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  // Load post content
+  const originalCard = document.getElementById(`post-${postId}`);
+  if (originalCard) {
+    modalBody.innerHTML = '';
+    modalBody.appendChild(originalCard.cloneNode(true));
+  } else {
+    // If card not found, fetch from Firestore
+    const db = window.__firebaseApp.__db;
+    getDoc(doc(db, "posts", postId)).then((docSnap) => {
+      if (docSnap.exists()) {
+        const post = { id: docSnap.id, ...docSnap.data() };
+        modalBody.innerHTML = '';
+        modalBody.appendChild(renderPostCard(post, db));
+      } else {
+        modalBody.innerHTML = '<p class="text-center text-gray-500">Post not found</p>';
+      }
+    }).catch(() => {
+      modalBody.innerHTML = '<p class="text-center text-rose-500">Could not load post</p>';
+    });
+  }
+}
+
 export function renderPostCard(post, db) {
   const card = createEl(
     "article",
-    "overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_18px_40px_rgba(15,23,42,0.08)] scroll-mt-24"
+    "overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_18px_40px_rgba(15,23,42,0.08)] scroll-mt-24 cursor-pointer hover:shadow-lg transition-shadow"
   );
   card.id = `post-${post.id}`;
   card.dataset.postId = post.id;
   const me = window.currentFirebaseUser;
+
+  // Add click handler to open post detail view
+  card.addEventListener('click', (e) => {
+    // Don't trigger if clicking on interactive elements
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input') || e.target.closest('textarea')) {
+      return;
+    }
+    openPostDetail(post.id);
+  });
 
   const header = createEl("div", "border-b border-gray-100 dark:border-gray-700 px-5 py-5 space-y-3");
 
