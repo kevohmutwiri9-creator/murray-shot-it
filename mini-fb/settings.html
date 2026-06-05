@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SnapVerse • Settings</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="../murray.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../murray.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../murray.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="murray.png" type="image/png" />
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -41,6 +43,9 @@
         </a>
 
         <div class="flex items-center gap-2 sm:gap-3">
+          <button id="installBtn" class="hidden px-4 py-2 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition">
+            Install App
+          </button>
           <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
             <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -383,6 +388,48 @@
           });
       });
     }
+  </script>
+
+  <!-- PWA Install Handler -->
+  <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    // Temporarily show button for testing
+    installBtn.classList.remove('hidden');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt event fired!');
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      console.log('Install button clicked');
+      if (!deferredPrompt) {
+        console.log('No deferred prompt available');
+        alert('The app cannot be installed right now. Make sure you are on HTTPS or localhost.');
+        return;
+      }
+
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+
+      deferredPrompt = null;
+      installBtn.classList.add('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBtn.classList.add('hidden');
+      console.log('PWA was installed');
+    });
   </script>
 </body>
 </html>
