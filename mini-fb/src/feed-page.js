@@ -100,6 +100,7 @@ export async function bootFeedPage(firebase) {
 
   startMessageNotifications(firebase, {
     badgeEl: document.getElementById("messagesBadge"),
+    mobileBadgeEl: document.getElementById("mobileMessagesBadge"),
   });
 
   startStories(db, {

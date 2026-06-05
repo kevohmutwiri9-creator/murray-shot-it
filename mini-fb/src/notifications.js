@@ -284,7 +284,7 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
   );
 }
 
-export function startMessageNotifications(firebaseApp, { badgeEl }) {
+export function startMessageNotifications(firebaseApp, { badgeEl, mobileBadgeEl }) {
   const user = getCurrentUser();
   if (!user) return;
 
@@ -327,6 +327,11 @@ export function startMessageNotifications(firebaseApp, { badgeEl }) {
       if (badgeEl) {
         badgeEl.textContent = unreadMessages > 99 ? "99+" : String(unreadMessages);
         badgeEl.classList.toggle("hidden", unreadMessages === 0);
+      }
+
+      if (mobileBadgeEl) {
+        mobileBadgeEl.textContent = unreadMessages > 99 ? "99+" : String(unreadMessages);
+        mobileBadgeEl.classList.toggle("hidden", unreadMessages === 0);
       }
     },
     () => {
