@@ -194,6 +194,19 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
       if (!listEl) return;
       listEl.innerHTML = "";
 
+      // Add "Mark all as read" button if there are unread notifications
+      if (unread > 0) {
+        const markAllBtn = document.createElement("button");
+        markAllBtn.type = "button";
+        markAllBtn.className = "w-full text-left p-3 text-sm text-accent font-medium hover:bg-accent/5 transition border-b border-gray-100 dark:border-gray-700";
+        markAllBtn.textContent = "Mark all as read";
+        markAllBtn.addEventListener("click", async () => {
+          const unreadNotifs = nonMessageNotifications.filter((n) => !n.read);
+          await Promise.all(unreadNotifs.map((n) => updateDoc(doc(db, "notifications", n.id), { read: true })));
+        });
+        listEl.appendChild(markAllBtn);
+      }
+
       if (nonMessageNotifications.length === 0) {
         listEl.innerHTML =
           '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
