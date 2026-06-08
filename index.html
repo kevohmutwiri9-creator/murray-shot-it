@@ -24,6 +24,13 @@
             accentHover: '#d63d55',
             accentLight: '#f06b82',
             light: '#f8f9fa',
+            dark: {
+              bg: '#0f172a',
+              surface: '#1e293b',
+              border: '#334155',
+              text: '#f1f5f9',
+              muted: '#94a3b8',
+            },
             gradient: {
               from: '#e94560',
               to: '#8b5cf6',
@@ -122,12 +129,12 @@
   </style>
 </head>
 
-<body class="bg-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+<body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans">
   <div id="auth-loading">
     <div class="spinner"></div>
   </div>
   <!-- Header -->
-  <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-30">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
       <div class="flex items-center justify-between h-14 sm:h-16">
         <a href="index.html" class="flex items-center space-x-2 group" aria-label="SnapVerse Home">
@@ -245,10 +252,10 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8 animate-fade-in">
     <!-- Stories Section -->
     <section class="mb-8 animate-slide-up">
-      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-dark-border/50 p-5">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Stories</h2>
-          <span class="text-xs text-gray-500 dark:text-gray-400">Share moments that disappear in 24h</span>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text">Stories</h2>
+          <span class="text-xs text-gray-500 dark:text-dark-muted">Share moments that disappear in 24h</span>
         </div>
         <div id="storiesContainer" class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
           <!-- Stories render here -->
@@ -260,7 +267,7 @@
             </svg>
             Add Story
           </button>
-          <div id="storiesCount" class="text-sm text-gray-500 dark:text-gray-400">0 stories</div>
+          <div id="storiesCount" class="text-sm text-gray-500 dark:text-dark-muted">0 stories</div>
         </div>
       </div>
     </section>
@@ -320,31 +327,31 @@
 
     <!-- Trending & suggestions -->
     <section class="mb-8 grid md:grid-cols-2 gap-4">
-      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-dark-border/50 p-5">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Trending Topics</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text">Trending Topics</h2>
           <a href="mini-fb/explore.html" class="text-sm text-accent font-medium">Explore →</a>
         </div>
         <div id="trendingTopics" class="flex flex-wrap gap-2"></div>
       </div>
-      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">People you may know</h2>
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-dark-border/50 p-5">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">People you may know</h2>
         <div id="friendSuggestions" class="space-y-1"></div>
       </div>
     </section>
 
     <!-- Post composer -->
     <section class="mb-8 animate-slide-up">
-      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-dark-border/50 overflow-hidden">
+        <div class="p-5 border-b border-gray-200/50 dark:border-dark-border/50">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create a post</h2>
-              <p class="text-gray-600 dark:text-gray-400 mt-1">Share photos/videos with your community.</p>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-dark-text">Create a post</h2>
+              <p class="text-gray-600 dark:text-dark-muted mt-1">Share photos/videos with your community.</p>
             </div>
             <div class="flex items-center gap-2">
               <button type="button" id="emojiBtn" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Add emoji">
-                <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-5 w-5 text-gray-600 dark:text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </button>
@@ -450,15 +457,15 @@
     <section class="animate-slide-up">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feed</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Discover posts from your community</p>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-dark-text">Feed</h2>
+          <p class="text-sm text-gray-500 dark:text-dark-muted mt-1">Discover posts from your community</p>
         </div>
         <div class="flex items-center gap-2">
-          <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-white dark:bg-gray-800">
+          <div class="inline-flex rounded-xl border border-gray-200 dark:border-dark-border p-1 bg-white dark:bg-dark-surface">
             <button type="button" id="feedFilterAll" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">All</button>
             <button type="button" id="feedFilterFollowing" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Following</button>
           </div>
-          <div class="text-sm text-gray-500 dark:text-gray-400" id="feedCount"></div>
+          <div class="text-sm text-gray-500 dark:text-dark-muted" id="feedCount"></div>
         </div>
       </div>
 
@@ -466,8 +473,8 @@
         <!-- Posts render here -->
       </div>
 
-      <div id="feedEmpty" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
-        <svg class="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div id="feedEmpty" class="text-center text-gray-500 dark:text-dark-muted py-12 hidden">
+        <svg class="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
         <p class="text-lg font-semibold mb-2">No posts yet</p>
@@ -475,7 +482,7 @@
       </div>
 
       <div class="mt-6 text-center">
-        <button type="button" id="loadMoreFeed" class="hidden px-6 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition transform hover:scale-105 active:scale-95">
+        <button type="button" id="loadMoreFeed" class="hidden px-6 py-2.5 rounded-xl border border-gray-200 dark:border-dark-border font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition transform hover:scale-105 active:scale-95">
           Load more posts
         </button>
       </div>
