@@ -8,6 +8,9 @@ import {
   doc,
   serverTimestamp,
   Timestamp,
+  updateDoc,
+  increment,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { uploadMedia } from "./image-upload.js";
 import { openStoryViewer, showToast } from "./ui.js";
@@ -36,6 +39,23 @@ export async function addStoryFromFile(db, file) {
     authorEmail: user.email || null,
     createdAt: serverTimestamp(),
     expiresAt,
+    viewCount: 0,
+  });
+}
+
+async function recordStoryView(db, storyId) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const storyRef = doc(db, "stories", storyId);
+  const storySnap = await getDoc(storyRef);
+  if (!storySnap.exists()) return;
+
+  const story = storySnap.data();
+  if (story.authorUid === user.uid) return; // Don't count own views
+
+  await updateDoc(storyRef, {
+    viewCount: increment(1),
   });
 }
 
@@ -99,12 +119,27 @@ export function startStories(db, { containerEl, addBtnEl }) {
       label.textContent = story.authorEmail?.split("@")[0] || "User";
       storyEl.appendChild(label);
 
-      storyEl.addEventListener("click", () => {
+      // Add view count badge
+      const viewBadge = document.createElement("div");
+      viewBadge.className = "absolute top-1 right-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 pointer-events-none";
+      viewBadge.innerHTML = `
+        <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        <span>${story.viewCount || 0}</span>
+      `;
+      storyEl.appendChild(viewBadge);
+
+      storyEl.addEventListener("click", async () => {
         openStoryViewer(story);
         viewed.add(story.id);
         localStorage.setItem(STORY_VIEWED_KEY, JSON.stringify([...viewed].slice(-300)));
         storyEl.classList.remove("ring-accent/60");
         storyEl.classList.add("ring-gray-400/40");
+        
+        // Record the view
+        await recordStoryView(db, story.id);
       });
       containerEl.appendChild(storyEl);
     });
