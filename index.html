@@ -285,11 +285,22 @@
     </section>
 
     <!-- Post composer -->
-    <section class="mb-8">
+    <section class="mb-8 animate-slide-up">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create a post</h2>
-          <p class="text-gray-600 dark:text-gray-400 mt-1">Share photos/videos with your community.</p>
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create a post</h2>
+              <p class="text-gray-600 dark:text-gray-400 mt-1">Share photos/videos with your community.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="emojiBtn" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Add emoji">
+                <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <form id="createPostForm" class="p-5 space-y-4">
@@ -304,7 +315,7 @@
                 type="text"
                 required
                 maxlength="80"
-                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white transition"
                 placeholder="e.g., Summer Shoot"
               />
             </div>
@@ -319,62 +330,65 @@
                 required
                 maxlength="140"
                 rows="2"
-                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white resize-none"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent/30 text-gray-900 dark:text-white resize-none transition"
                 placeholder="Short description — use #hashtags and @mentions"
               ></textarea>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Media (up to 5 images/videos)</label>
-            <input
-              id="postFile"
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
-            />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Select multiple files for an album. Images up to 32MB. Reels can upload larger videos via Firebase Storage (if enabled); otherwise keep videos short.
-            </p>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Media (up to 5 images/videos)</label>
+            <div id="mediaDropZone" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-accent dark:hover:border-accent transition cursor-pointer">
+              <input
+                id="postFile"
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                class="hidden"
+              />
+              <svg class="h-10 w-10 mx-auto text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Click or drag & drop files here</p>
+              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Images up to 32MB, videos for reels</p>
+            </div>
             <div id="postMediaPreview" class="hidden mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600"></div>
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Post type</label>
-            <select id="postKind" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white">
-              <option value="post">Post</option>
-              <option value="reel">Reel (video)</option>
-            </select>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Post type</label>
+              <select id="postKind" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition">
+                <option value="post">Post</option>
+                <option value="reel">Reel (video)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Audience</label>
+              <select id="postVisibility" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition">
+                <option value="public">Public — everyone</option>
+                <option value="followers">Followers only</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Schedule</label>
+              <input
+                id="postSchedule"
+                type="datetime-local"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition"
+              />
+            </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Audience</label>
-            <select id="postVisibility" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white">
-              <option value="public">Public — everyone</option>
-              <option value="followers">Followers only</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Schedule (optional)</label>
-            <input
-              id="postSchedule"
-              type="datetime-local"
-              class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30"
-            />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Leave empty to publish immediately.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-3">
+          <div class="flex items-center justify-between pt-2">
             <button
               type="submit"
               id="createPostBtn"
-              class="px-5 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              class="px-6 py-2.5 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Publish
+              Publish Post
             </button>
 
             <div id="createPostStatus" class="text-sm text-gray-600 dark:text-gray-400"></div>
@@ -459,6 +473,91 @@
 
     const firebase = initFirebase();
     await bootFeedPage(firebase);
+
+    // Emoji picker functionality
+    const emojiBtn = document.getElementById('emojiBtn');
+    const postText = document.getElementById('postText');
+    
+    const commonEmojis = ['😀', '😂', '🥰', '😎', '🤔', '👍', '❤️', '🔥', '✨', '🎉', '💯', '🙌', '👏', '💪', '🌟', '📸', '🎬', '🎵', '💬', '📍'];
+    
+    if (emojiBtn && postText) {
+      let emojiPicker = null;
+      
+      emojiBtn.addEventListener('click', () => {
+        if (emojiPicker) {
+          emojiPicker.remove();
+          emojiPicker = null;
+          return;
+        }
+        
+        emojiPicker = document.createElement('div');
+        emojiPicker.className = 'absolute z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 grid grid-cols-5 gap-2 animate-scale-in';
+        emojiPicker.style.top = 'auto';
+        emojiPicker.style.bottom = '100%';
+        emojiPicker.style.left = '0';
+        emojiPicker.style.marginBottom = '8px';
+        
+        commonEmojis.forEach(emoji => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition';
+          btn.textContent = emoji;
+          btn.addEventListener('click', () => {
+            const start = postText.selectionStart;
+            const end = postText.selectionEnd;
+            const text = postText.value;
+            postText.value = text.substring(0, start) + emoji + text.substring(end);
+            postText.focus();
+            postText.selectionStart = postText.selectionEnd = start + emoji.length;
+            postText.dispatchEvent(new Event('input'));
+            emojiPicker.remove();
+            emojiPicker = null;
+          });
+          emojiPicker.appendChild(btn);
+        });
+        
+        emojiBtn.parentElement.style.position = 'relative';
+        emojiBtn.parentElement.appendChild(emojiPicker);
+        
+        // Close when clicking outside
+        const closeEmojiPicker = (e) => {
+          if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+            emojiPicker.remove();
+            emojiPicker = null;
+            document.removeEventListener('click', closeEmojiPicker);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', closeEmojiPicker), 0);
+      });
+    }
+
+    // Drag and drop functionality for media
+    const mediaDropZone = document.getElementById('mediaDropZone');
+    const postFile = document.getElementById('postFile');
+    
+    if (mediaDropZone && postFile) {
+      mediaDropZone.addEventListener('click', () => postFile.click());
+      
+      mediaDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        mediaDropZone.classList.add('border-accent', 'bg-accent/5');
+      });
+      
+      mediaDropZone.addEventListener('dragleave', () => {
+        mediaDropZone.classList.remove('border-accent', 'bg-accent/5');
+      });
+      
+      mediaDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        mediaDropZone.classList.remove('border-accent', 'bg-accent/5');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          postFile.files = files;
+          postFile.dispatchEvent(new Event('change'));
+        }
+      });
+    }
   </script>
 
   <!-- Service Worker Registration -->

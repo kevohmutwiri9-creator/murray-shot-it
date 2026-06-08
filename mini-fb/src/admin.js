@@ -159,6 +159,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
     e.preventDefault();
     btnEl.disabled = true;
     statusEl.textContent = "";
+    statusEl.className = "text-sm text-gray-600 dark:text-gray-400";
 
     try {
       const user = getCurrentUser();
@@ -171,23 +172,52 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       const scheduledTime = scheduleEl?.value ? new Date(scheduleEl.value) : null;
       const postKind = kindEl?.value === "reel" ? "reel" : "post";
 
-      if (!title) throw new Error("Title is required.");
-      if (!text) throw new Error("Text is required.");
+      // Validation with better error messages
+      if (!title) {
+        throw new Error("Please add a title for your post.");
+      }
+      if (title.length < 3) {
+        throw new Error("Title must be at least 3 characters long.");
+      }
+      if (!text) {
+        throw new Error("Please add some text to describe your post.");
+      }
+      if (text.length < 5) {
+        throw new Error("Text must be at least 5 characters long.");
+      }
 
       if (scheduledTime && scheduledTime <= new Date()) {
         throw new Error("Scheduled time must be in the future.");
       }
 
+      const files = fileEl?.files?.length ? [...fileEl.files] : file ? [file] : [];
+      if (postKind === "reel") {
+        if (files.length !== 1) {
+          throw new Error("Reels require exactly 1 video file.");
+        }
+        if (!files[0].type.startsWith("video/")) {
+          throw new Error("Reels must be uploaded as video.");
+        }
+        if (files[0].size > 100 * 1024 * 1024) {
+          throw new Error("Video file is too large. Maximum size is 100MB.");
+        }
+      } else {
+        if (files.length > 5) {
+          throw new Error("You can upload up to 5 files for a post.");
+        }
+        files.forEach((f, i) => {
+          if (f.size > 32 * 1024 * 1024) {
+            throw new Error(`File ${i + 1} is too large. Maximum size for images is 32MB.`);
+          }
+        });
+      }
+
       statusEl.textContent = scheduledTime ? "Scheduling post..." : "Publishing post...";
+      statusEl.className = "text-sm text-accent";
 
       let mediaUrl = null;
       let mediaType = null;
       let mediaUrls = [];
-      const files = fileEl?.files?.length ? [...fileEl.files] : file ? [file] : [];
-      if (postKind === "reel") {
-        if (files.length !== 1) throw new Error("Reels require exactly 1 video file.");
-        if (!files[0].type.startsWith("video/")) throw new Error("Reels must be uploaded as video.");
-      }
 
       for (let i = 0; i < Math.min(files.length, 5); i++) {
         statusEl.textContent = `Uploading media ${i + 1}/${Math.min(files.length, 5)}...`;
@@ -245,6 +275,7 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
       statusEl.textContent = scheduledTime
         ? `${postKind === "reel" ? "Reel" : "Post"} scheduled successfully.`
         : `${postKind === "reel" ? "Reel" : "Post"} published successfully.`;
+      statusEl.className = "text-sm text-emerald-600 dark:text-emerald-400";
       showToast(statusEl.textContent, "success");
       titleEl.value = "";
       textEl.value = "";

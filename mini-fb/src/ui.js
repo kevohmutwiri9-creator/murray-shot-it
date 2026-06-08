@@ -64,28 +64,75 @@ export function bindCharCounter(inputEl, counterEl, max) {
 
 export function bindMediaPreview(fileEl, previewEl) {
   if (!fileEl || !previewEl) return;
+  
   fileEl.addEventListener("change", () => {
-    const file = fileEl.files?.[0];
+    const files = Array.from(fileEl.files || []);
     previewEl.innerHTML = "";
     previewEl.classList.add("hidden");
-    if (!file) return;
+    
+    if (!files.length) return;
 
-    const url = URL.createObjectURL(file);
     previewEl.classList.remove("hidden");
-
-    if (file.type.startsWith("video/")) {
-      const video = document.createElement("video");
-      video.src = url;
-      video.controls = true;
-      video.className = "w-full max-h-64 rounded-xl bg-black";
-      previewEl.appendChild(video);
-    } else {
-      const img = document.createElement("img");
-      img.src = url;
-      img.alt = "Preview";
-      img.className = "w-full max-h-64 object-cover rounded-xl";
-      previewEl.appendChild(img);
-    }
+    
+    // Create grid for multiple files
+    const grid = document.createElement("div");
+    grid.className = files.length > 1 ? "grid grid-cols-2 gap-2" : "";
+    
+    files.forEach((file, index) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative group";
+      
+      const url = URL.createObjectURL(file);
+      
+      if (file.type.startsWith("video/")) {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.className = "w-full max-h-64 rounded-xl bg-black object-cover";
+        wrapper.appendChild(video);
+      } else {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = `Preview ${index + 1}`;
+        img.className = "w-full max-h-64 object-cover rounded-xl";
+        wrapper.appendChild(img);
+      }
+      
+      // Add remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-0 group-hover:opacity-100 transition";
+      removeBtn.innerHTML = `
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      `;
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const newFiles = files.filter((_, i) => i !== index);
+        const dataTransfer = new DataTransfer();
+        newFiles.forEach(f => dataTransfer.items.add(f));
+        fileEl.files = dataTransfer.files;
+        fileEl.dispatchEvent(new Event("change"));
+      });
+      wrapper.appendChild(removeBtn);
+      
+      // Add file type indicator
+      const typeBadge = document.createElement("div");
+      typeBadge.className = "absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-full";
+      typeBadge.textContent = file.type.startsWith("video/") ? "🎬 Video" : "📷 Image";
+      wrapper.appendChild(typeBadge);
+      
+      grid.appendChild(wrapper);
+    });
+    
+    previewEl.appendChild(grid);
+    
+    // Add file count
+    const countDiv = document.createElement("div");
+    countDiv.className = "text-xs text-gray-500 dark:text-gray-400 mt-2";
+    countDiv.textContent = `${files.length} file${files.length > 1 ? "s" : ""} selected`;
+    previewEl.appendChild(countDiv);
   });
 }
 
