@@ -206,13 +206,22 @@
     <!-- Stories Section -->
     <section class="mb-8 animate-slide-up">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Stories</h2>
-        <div id="storiesContainer" class="flex gap-4 overflow-x-auto pb-2">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Stories</h2>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Share moments that disappear in 24h</span>
+        </div>
+        <div id="storiesContainer" class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
           <!-- Stories render here -->
         </div>
-        <button id="addStoryBtn" class="mt-4 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition transform hover:scale-105 active:scale-95">
-          + Add Story
-        </button>
+        <div class="flex items-center justify-between mt-4">
+          <button id="addStoryBtn" class="px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition transform hover:scale-105 active:scale-95 flex items-center gap-2">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Story
+          </button>
+          <div id="storiesCount" class="text-sm text-gray-500 dark:text-gray-400">0 stories</div>
+        </div>
       </div>
     </section>
 
@@ -398,9 +407,12 @@
     </section>
 
     <!-- Feed -->
-    <section>
+    <section class="animate-slide-up">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feed</h2>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feed</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Discover posts from your community</p>
+        </div>
         <div class="flex items-center gap-2">
           <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-white dark:bg-gray-800">
             <button type="button" id="feedFilterAll" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">All</button>
@@ -415,11 +427,15 @@
       </div>
 
       <div id="feedEmpty" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
-        No posts yet. Create the first one above.
+        <svg class="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <p class="text-lg font-semibold mb-2">No posts yet</p>
+        <p>Create the first post above to get started!</p>
       </div>
 
       <div class="mt-6 text-center">
-        <button type="button" id="loadMoreFeed" class="hidden px-6 py-2 rounded-xl border border-gray-200 dark:border-gray-600 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+        <button type="button" id="loadMoreFeed" class="hidden px-6 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition transform hover:scale-105 active:scale-95">
           Load more posts
         </button>
       </div>
