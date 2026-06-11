@@ -221,7 +221,7 @@
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -405,6 +405,13 @@
         editedAt: new Date().toISOString()
       });
     }
+    
+    async function deleteMessage(messageId) {
+      if (!confirm("Are you sure you want to delete this message?")) return;
+      
+      const msgRef = doc(db, "conversations", activeConvId, "messages", messageId);
+      await deleteDoc(msgRef);
+    }
 
     function setActiveConv(convId, otherUid) {
       convList.querySelectorAll("[data-conv-id]").forEach((btn) => {
@@ -496,6 +503,16 @@
           editBtn.textContent = "✏️ Edit";
           editBtn.addEventListener("click", () => editMessage(d.id, m.text));
           wrap.appendChild(editBtn);
+        }
+        
+        // Add delete button for user's own messages
+        if (mine) {
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "text-xs text-gray-400 hover:text-rose-500 mt-1 transition";
+          deleteBtn.textContent = "🗑️ Delete";
+          deleteBtn.addEventListener("click", () => deleteMessage(d.id));
+          wrap.appendChild(deleteBtn);
         }
         
         // Add reaction button
