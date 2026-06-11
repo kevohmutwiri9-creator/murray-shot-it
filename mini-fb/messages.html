@@ -563,11 +563,33 @@
           : displayName((data.participants || []).find((p) => p !== user.uid));
 
         labelPromise.then((name) => {
-          const preview = data.lastMessage || "Start chatting";
-          const you = data.lastSenderUid === user.uid ? "You: " : "";
-          const badge = unread > 0 ? `<span class="ml-auto bg-accent text-white text-xs px-2 py-0.5 rounded-full">${unread}</span>` : "";
           const otherUid = isGroup ? null : (data.participants || []).find((p) => p !== user.uid);
           if (otherUid) ensurePresenceWatch(otherUid);
+          
+          // Check if someone is typing
+          const typingAt = data.typing?.[otherUid];
+          const isTyping = isTypingRecent(typingAt);
+          const preview = isTyping ? "typing..." : (data.lastMessage || "Start chatting");
+          const you = data.lastSenderUid === user.uid && !isTyping ? "You: " : "";
+          const badge = unread > 0 ? `<span class="ml-auto bg-accent text-white text-xs px-2 py-0.5 rounded-full">${unread}</span>` : "";
+          
+          // Format timestamp
+          let timestamp = "";
+          if (data.lastMessageAt && !isTyping) {
+            const date = new Date(data.lastMessageAt);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) timestamp = "now";
+            else if (diffMins < 60) timestamp = `${diffMins}m`;
+            else if (diffHours < 24) timestamp = `${diffHours}h`;
+            else if (diffDays < 7) timestamp = `${diffDays}d`;
+            else timestamp = date.toLocaleDateString();
+          }
+          
           const dot = otherUid
             ? `<span data-presence-uid="${otherUid}" class="inline-block w-2 h-2 rounded-full shrink-0 ${presenceDotClass(presenceByUid.get(otherUid)?.online)}"></span>`
             : "";
@@ -575,15 +597,19 @@
           const btn = document.createElement("button");
           btn.type = "button";
           btn.dataset.convId = convId;
+          btn.dataset.otherUid = otherUid || "";
           btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent";
           btn.innerHTML = `
             <div class="flex items-center gap-2">
               ${dot}
               <div class="min-w-0 flex-1">
                 <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">${isGroup ? "👥 " : ""}${escapeHtml(name)}</p>
-                <p class="text-xs text-gray-500 truncate">${escapeHtml(you + preview)}</p>
+                <p class="text-xs ${isTyping ? 'text-accent font-medium' : 'text-gray-500'} truncate">${escapeHtml(you + preview)}</p>
               </div>
-              ${badge}
+              <div class="flex flex-col items-end gap-1">
+                ${badge}
+                ${timestamp ? `<span class="text-[10px] text-gray-400">${timestamp}</span>` : ""}
+              </div>
             </div>
           `;
 
