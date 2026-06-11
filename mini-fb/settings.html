@@ -158,9 +158,17 @@
           <div id="accountInfo" class="mb-4">
             <p class="text-sm text-gray-500 dark:text-dark-muted">Loading account info...</p>
           </div>
-          <a href="/mini-fb/profile.html" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow">
+          <a href="/mini-fb/profile.html" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow mb-4">
             Edit Profile
           </a>
+          <div class="space-y-3 mt-4">
+            <button id="changePasswordBtn" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-dark-text font-medium hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+              Change Password
+            </button>
+            <button id="changeEmailBtn" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-dark-text font-medium hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+              Change Email
+            </button>
+          </div>
         </div>
       </section>
 
@@ -292,7 +300,7 @@
     import { addStoryFromFile } from "./src/stories.js";
     import { showToast } from "./src/ui.js";
     import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -398,6 +406,69 @@
     };
     
     loadPrivacySettings();
+
+    // Account settings - Change Password
+    const changePasswordBtn = document.getElementById("changePasswordBtn");
+    changePasswordBtn.addEventListener("click", async () => {
+      const currentPassword = prompt("Enter your current password:");
+      if (!currentPassword) return;
+      
+      const newPassword = prompt("Enter your new password (at least 6 characters):");
+      if (!newPassword || newPassword.length < 6) {
+        showToast("Password must be at least 6 characters", "error");
+        return;
+      }
+      
+      const confirmPassword = prompt("Confirm your new password:");
+      if (newPassword !== confirmPassword) {
+        showToast("Passwords do not match", "error");
+        return;
+      }
+      
+      try {
+        const auth = getAuth(firebase);
+        const user = auth.currentUser;
+        
+        // Re-authenticate user before password change
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        
+        // Now change the password
+        await updatePassword(user, newPassword);
+        showToast("Password updated successfully", "success");
+      } catch (error) {
+        showToast("Failed to update password: " + error.message, "error");
+      }
+    });
+    
+    // Account settings - Change Email
+    const changeEmailBtn = document.getElementById("changeEmailBtn");
+    changeEmailBtn.addEventListener("click", async () => {
+      const currentPassword = prompt("Enter your current password:");
+      if (!currentPassword) return;
+      
+      const newEmail = prompt("Enter your new email:");
+      if (!newEmail || !newEmail.includes("@")) {
+        showToast("Please enter a valid email", "error");
+        return;
+      }
+      
+      try {
+        const auth = getAuth(firebase);
+        const user = auth.currentUser;
+        
+        // Re-authenticate user before email change
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        
+        // Now change the email
+        await updateEmail(user, newEmail);
+        showToast("Email updated successfully. Please verify your new email.", "success");
+        setTimeout(() => location.reload(), 2000);
+      } catch (error) {
+        showToast("Failed to update email: " + error.message, "error");
+      }
+    });
 
     // Admin-only quick access (hidden for everyone else)
     try {
