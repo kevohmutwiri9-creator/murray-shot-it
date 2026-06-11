@@ -11,6 +11,15 @@ const STATIC_ASSETS = [
   '/mini-fb/manifest.json',
   '/murray.png',
   '/mini-fb/murray.png',
+  '/mini-fb/messages.html',
+  '/mini-fb/settings.html',
+  '/mini-fb/profile.html',
+  '/mini-fb/explore.html',
+  '/mini-fb/search.html',
+  '/mini-fb/reels.html',
+  '/mini-fb/saved.html',
+  '/mini-fb/hashtag.html',
+  '/mini-fb/admin.html',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
