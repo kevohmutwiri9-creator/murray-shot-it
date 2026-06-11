@@ -110,7 +110,13 @@
     <div class="max-w-3xl mx-auto flex items-center justify-between">
       <a href="/index.html" class="font-bold text-accent hover:scale-105 transition-transform">← Feed</a>
       <h1 class="font-bold text-gray-900 dark:text-dark-text">Reels</h1>
-      <a href="/mini-fb/search.html" class="text-sm text-gray-600 dark:text-dark-muted hover:text-accent transition-colors">Search</a>
+      <div class="flex items-center gap-2">
+        <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+          <span class="dark:hidden">🌙</span>
+          <span class="hidden dark:block">☀️</span>
+        </button>
+        <a href="/mini-fb/search.html" class="text-sm text-gray-600 dark:text-dark-muted hover:text-accent transition-colors">Search</a>
+      </div>
     </div>
   </nav>
 
@@ -126,11 +132,13 @@
     import { initFirebase } from "./src/firebase-config.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { startReelsPage } from "./src/reels.js";
+    import { initDarkMode } from "./src/ui.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("auth");
     bootPage(firebase);
+    initDarkMode("darkModeToggle");
 
     const db = firebase.__db;
     startReelsPage(db, document.getElementById("reelsFeed"), { meUid: user.uid, firebase });

@@ -110,7 +110,10 @@
     <div class="max-w-3xl mx-auto flex justify-between items-center">
       <a href="/index.html" class="font-bold text-accent hover:scale-105 transition-transform">← Feed</a>
       <h1 class="font-bold text-gray-900 dark:text-dark-text">Saved posts</h1>
-      <span class="w-12"></span>
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:block">☀️</span>
+      </button>
     </div>
   </nav>
   <main class="max-w-3xl mx-auto p-4 space-y-4 animate-fade-in" id="savedList">
@@ -122,11 +125,13 @@
     import { getSavedPostIds } from "./src/bookmarks.js";
     import { fetchPost } from "./src/repost.js";
     import { renderPostCard } from "./src/post-card.js";
+    import { initDarkMode } from "./src/ui.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("auth");
     bootPage(firebase);
+    initDarkMode("darkModeToggle");
     window.currentFirebaseUser = user;
     window.__firebaseApp = firebase;
 
