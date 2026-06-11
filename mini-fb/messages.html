@@ -393,6 +393,18 @@
       
       await updateDoc(msgRef, { reactions });
     }
+    
+    async function editMessage(messageId, currentText) {
+      const newText = prompt("Edit your message:", currentText);
+      if (!newText || newText === currentText || newText.trim() === "") return;
+      
+      const msgRef = doc(db, "conversations", activeConvId, "messages", messageId);
+      await updateDoc(msgRef, { 
+        text: newText.trim(),
+        edited: true,
+        editedAt: new Date().toISOString()
+      });
+    }
 
     function setActiveConv(convId, otherUid) {
       convList.querySelectorAll("[data-conv-id]").forEach((btn) => {
@@ -432,6 +444,15 @@
           p.textContent = m.text;
           inner.appendChild(p);
         }
+        
+        // Show edited indicator
+        if (m.edited) {
+          const editedSpan = document.createElement("span");
+          editedSpan.className = "text-[10px] opacity-70";
+          editedSpan.textContent = "(edited)";
+          inner.appendChild(editedSpan);
+        }
+        
         if (m.imageUrl) {
           const img = document.createElement("img");
           img.src = m.imageUrl;
@@ -466,6 +487,16 @@
         }
         
         wrap.appendChild(inner);
+        
+        // Add edit button for user's own messages
+        if (mine && m.text) {
+          const editBtn = document.createElement("button");
+          editBtn.type = "button";
+          editBtn.className = "text-xs text-gray-400 hover:text-accent mt-1 transition";
+          editBtn.textContent = "✏️ Edit";
+          editBtn.addEventListener("click", () => editMessage(d.id, m.text));
+          wrap.appendChild(editBtn);
+        }
         
         // Add reaction button
         const reactionBtn = document.createElement("button");
