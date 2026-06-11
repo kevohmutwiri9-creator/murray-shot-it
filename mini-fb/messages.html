@@ -132,12 +132,17 @@
     </aside>
 
     <section class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up">
-      <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50 flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <span id="chatHeaderTitle" class="font-semibold text-gray-900 dark:text-dark-text">Select a conversation</span>
-          <p id="chatHeaderStatus" class="text-xs text-gray-500 hidden"></p>
+      <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50">
+        <div class="flex items-center gap-3">
+          <div id="chatProfileAvatar" class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+            <span class="text-gray-400">?</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h2 id="chatHeaderTitle" class="font-semibold text-gray-900 dark:text-dark-text truncate">Select a conversation</h2>
+            <p id="chatHeaderStatus" class="text-xs text-gray-500 dark:text-dark-muted hidden"></p>
+          </div>
+          <div id="chatHeaderActions" class="shrink-0"></div>
         </div>
-        <div id="chatHeaderActions" class="shrink-0"></div>
       </div>
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
         <p class="text-sm text-gray-500 dark:text-dark-muted text-center py-8">Pick someone from the list or search to start chatting.</p>
@@ -217,6 +222,7 @@
     const chatHeaderTitle = document.getElementById("chatHeaderTitle");
     const chatHeaderStatus = document.getElementById("chatHeaderStatus");
     const chatHeaderActions = document.getElementById("chatHeaderActions");
+    const chatProfileAvatar = document.getElementById("chatProfileAvatar");
 
     async function displayName(uid) {
       if (nameCache.has(uid)) return nameCache.get(uid);
@@ -356,6 +362,7 @@
 
       chatHeaderActions.innerHTML = "";
       chatHeaderStatus.classList.add("hidden");
+      chatProfileAvatar.innerHTML = '<span class="text-gray-400">?</span>';
 
       if (isGroup) {
         chatHeaderTitle.textContent = convData.title || "Group chat";
@@ -363,14 +370,25 @@
         chatHeaderStatus.classList.remove("hidden");
         chatHeaderStatus.classList.remove("text-emerald-500", "text-accent");
         chatHeaderStatus.classList.add("text-gray-500");
+        chatProfileAvatar.innerHTML = '<span class="text-2xl">👥</span>';
       } else {
         const uid = otherUid || (convData.participants || []).find((p) => p !== user.uid);
         activeOtherUid = uid;
         const name = await displayName(uid);
         chatHeaderTitle.innerHTML = `<a href="${profileUrl(uid)}" class="hover:text-accent transition">${escapeHtml(name)}</a>`;
+        
+        // Fetch and display profile photo
+        const profileDoc = await getDoc(doc(db, "profiles", uid));
+        const profileData = profileDoc.data();
+        if (profileData?.photoUrl) {
+          chatProfileAvatar.innerHTML = `<img src="${profileData.photoUrl}" alt="${escapeHtml(name)}" class="w-full h-full object-cover" />`;
+        } else {
+          chatProfileAvatar.innerHTML = `<span class="text-xl font-semibold text-gray-500">${name.charAt(0).toUpperCase()}</span>`;
+        }
+        
         const profileLink = document.createElement("a");
         profileLink.href = profileUrl(uid);
-        profileLink.className = "text-xs text-accent font-medium";
+        profileLink.className = "text-xs text-accent font-medium hover:scale-105 active:scale-95 transition-all duration-200";
         profileLink.textContent = "View profile";
         chatHeaderActions.appendChild(profileLink);
 
