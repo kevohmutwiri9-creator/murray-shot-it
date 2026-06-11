@@ -13,53 +13,140 @@
       theme: {
         extend: {
           colors: {
+            primary: '#1a1a2e',
+            secondary: '#16213e',
             accent: '#e94560',
-            primary: '#1a1a2e'
-          }
-        }
-      }
-    };
+            accentHover: '#d63d55',
+            accentLight: '#f06b82',
+            light: '#f8f9fa',
+            dark: {
+              bg: '#0f172a',
+              surface: '#1e293b',
+              border: '#334155',
+              text: '#f1f5f9',
+              muted: '#94a3b8',
+            },
+            gradient: {
+              from: '#e94560',
+              to: '#8b5cf6',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          fontSize: {
+            'xs': ['0.75rem', { lineHeight: '1rem' }],
+            'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+            'base': ['1rem', { lineHeight: '1.5rem' }],
+            'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+            'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+            '2xl': ['1.5rem', { lineHeight: '2rem' }],
+            '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+          },
+          letterSpacing: {
+            'tight': '-0.025em',
+            'normal': '0',
+            'wide': '0.025em',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'slide-down': 'slideDown 0.3s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'gradient-x': 'gradientX 3s ease infinite',
+            'float': 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            slideDown: {
+              '0%': { transform: 'translateY(-10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            gradientX: {
+              '0%, 100%': {
+                'background-size': '200% 200%',
+                'background-position': 'left center'
+              },
+              '50%': {
+                'background-size': '200% 200%',
+                'background-position': 'right center'
+              },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' },
+            },
+          },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+          },
+          boxShadow: {
+            'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
+            'medium': '0 4px 16px rgba(0, 0, 0, 0.12)',
+            'strong': '0 8px 32px rgba(0, 0, 0, 0.16)',
+            'glow': '0 0 20px rgba(233, 69, 96, 0.3)',
+            'glow-purple': '0 0 20px rgba(139, 92, 246, 0.3)',
+          },
+        },
+      },
+    }
   </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans min-h-screen">
-  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+<body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30 px-4 py-3">
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
-      <a href="/index.html" class="font-bold text-accent shrink-0">← Feed</a>
-      <h1 class="font-bold">Messages</h1>
-      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm">🌙</button>
+      <a href="/index.html" class="font-bold text-accent shrink-0 hover:scale-105 transition-transform">← Feed</a>
+      <h1 class="font-bold text-gray-900 dark:text-dark-text">Messages</h1>
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:block">☀️</span>
+      </button>
     </div>
   </nav>
 
-  <main class="max-w-5xl mx-auto p-4 grid lg:grid-cols-[300px_1fr] gap-4 min-h-[calc(100vh-4rem)]">
-    <aside class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
-      <div class="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">New message</label>
-        <input id="userSearch" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm" />
+  <main class="max-w-5xl mx-auto p-4 grid lg:grid-cols-[300px_1fr] gap-4 min-h-[calc(100vh-4rem)] animate-fade-in">
+    <aside class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
+      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 space-y-2">
+        <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">New message</label>
+        <input id="userSearch" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="searchResults" class="max-h-32 overflow-y-auto hidden"></div>
-        <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">+ New group chat</button>
+        <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">+ New group chat</button>
       </div>
-      <div class="p-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm">Conversations</div>
-      <div id="convList" class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
-        <p class="p-4 text-sm text-gray-500">Loading...</p>
+      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 font-semibold text-sm text-gray-900 dark:text-dark-text">Conversations</div>
+      <div id="convList" class="flex-1 overflow-y-auto divide-y divide-gray-100/50 dark:divide-dark-border/50">
+        <p class="p-4 text-sm text-gray-500 dark:text-dark-muted">Loading...</p>
       </div>
     </aside>
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)]">
-      <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
+    <section class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up">
+      <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50 flex items-center justify-between gap-2">
         <div class="min-w-0">
-          <span id="chatHeaderTitle" class="font-semibold">Select a conversation</span>
+          <span id="chatHeaderTitle" class="font-semibold text-gray-900 dark:text-dark-text">Select a conversation</span>
           <p id="chatHeaderStatus" class="text-xs text-gray-500 hidden"></p>
         </div>
         <div id="chatHeaderActions" class="shrink-0"></div>
       </div>
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
-        <p class="text-sm text-gray-500 text-center py-8">Pick someone from the list or search to start chatting.</p>
+        <p class="text-sm text-gray-500 dark:text-dark-muted text-center py-8">Pick someone from the list or search to start chatting.</p>
       </div>
-      <form id="chatForm" class="p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 hidden">
+      <form id="chatForm" class="p-4 border-t border-gray-200/50 dark:border-dark-border/50 flex flex-wrap gap-2 hidden">
         <input id="chatImage" type="file" accept="image/*" class="hidden" />
-        <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm shrink-0">📷</button>
-        <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="flex-1 min-w-[120px] rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white" />
-        <button type="submit" class="px-4 py-2 rounded-xl bg-accent text-white font-semibold text-sm shrink-0">Send</button>
+        <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">📷</button>
+        <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="flex-1 min-w-[120px] rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-4 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
+        <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow shrink-0">Send</button>
       </form>
     </section>
   </main>
