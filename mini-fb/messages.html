@@ -221,7 +221,7 @@
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -339,6 +339,61 @@
       chatSection.classList.remove("flex");
     }
 
+    const reactionEmojis = ["❤️", "👍", "😂", "😮", "😢", "🔥", "🎉", "👏"];
+    
+    function showReactionPicker(messageId) {
+      const picker = document.createElement("div");
+      picker.className = "absolute bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 flex gap-2 z-50 animate-fade-in";
+      picker.style.bottom = "60px";
+      picker.style.left = "50%";
+      picker.style.transform = "translateX(-50%)";
+      
+      reactionEmojis.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "text-2xl hover:scale-125 transition-transform p-1";
+        btn.textContent = emoji;
+        btn.addEventListener("click", () => {
+          toggleReaction(messageId, emoji);
+          picker.remove();
+        });
+        picker.appendChild(btn);
+      });
+      
+      // Close on click outside
+      const closePicker = (e) => {
+        if (!picker.contains(e.target)) {
+          picker.remove();
+          document.removeEventListener("click", closePicker);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closePicker), 100);
+      
+      chatMessages.appendChild(picker);
+    }
+    
+    async function toggleReaction(messageId, emoji) {
+      if (!activeConvId) return;
+      
+      const msgRef = doc(db, "conversations", activeConvId, "messages", messageId);
+      const msgSnap = await getDoc(msgRef);
+      const msgData = msgSnap.data();
+      
+      const reactions = msgData.reactions || {};
+      const emojiReactors = reactions[emoji] || [];
+      
+      if (emojiReactors.includes(user.uid)) {
+        // Remove reaction
+        reactions[emoji] = emojiReactors.filter(uid => uid !== user.uid);
+        if (reactions[emoji].length === 0) delete reactions[emoji];
+      } else {
+        // Add reaction
+        reactions[emoji] = [...emojiReactors, user.uid];
+      }
+      
+      await updateDoc(msgRef, { reactions });
+    }
+
     function setActiveConv(convId, otherUid) {
       convList.querySelectorAll("[data-conv-id]").forEach((btn) => {
         const active = btn.dataset.convId === convId;
@@ -393,7 +448,33 @@
           a.textContent = "View shared post";
           inner.appendChild(a);
         }
+        
+        // Add reactions display
+        if (m.reactions && Object.keys(m.reactions).length > 0) {
+          const reactionsDiv = document.createElement("div");
+          reactionsDiv.className = "flex flex-wrap gap-1 mt-2";
+          Object.entries(m.reactions).forEach(([emoji, uids]) => {
+            const reactionBtn = document.createElement("button");
+            reactionBtn.type = "button";
+            reactionBtn.className = `px-2 py-1 rounded-full text-xs ${uids.includes(user.uid) ? 'bg-accent/20 text-accent' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'}`;
+            reactionBtn.textContent = `${emoji} ${uids.length}`;
+            reactionBtn.title = uids.length === 1 ? "React" : `${uids.length} people reacted`;
+            reactionBtn.addEventListener("click", () => toggleReaction(d.id, emoji));
+            reactionsDiv.appendChild(reactionBtn);
+          });
+          inner.appendChild(reactionsDiv);
+        }
+        
         wrap.appendChild(inner);
+        
+        // Add reaction button
+        const reactionBtn = document.createElement("button");
+        reactionBtn.type = "button";
+        reactionBtn.className = "text-xs text-gray-400 hover:text-accent mt-1 transition";
+        reactionBtn.textContent = "❤️ React";
+        reactionBtn.addEventListener("click", () => showReactionPicker(d.id));
+        wrap.appendChild(reactionBtn);
+        
         if (mine) wrap.appendChild(renderMessageStatus(m));
         chatMessages.appendChild(wrap);
       });
