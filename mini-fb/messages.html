@@ -558,11 +558,6 @@
         const unread = data.unreadCounts?.[user.uid] || 0;
         const isGroup = data.type === "group" || isGroupConversationId(convId);
 
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.dataset.convId = convId;
-        btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent";
-
         const labelPromise = isGroup
           ? Promise.resolve(data.title || "Group chat")
           : displayName((data.participants || []).find((p) => p !== user.uid));
@@ -576,6 +571,11 @@
           const dot = otherUid
             ? `<span data-presence-uid="${otherUid}" class="inline-block w-2 h-2 rounded-full shrink-0 ${presenceDotClass(presenceByUid.get(otherUid)?.online)}"></span>`
             : "";
+          
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.dataset.convId = convId;
+          btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent";
           btn.innerHTML = `
             <div class="flex items-center gap-2">
               ${dot}
@@ -586,17 +586,18 @@
               ${badge}
             </div>
           `;
-        });
 
-        btn.addEventListener("click", () => {
-          if (isGroup) openConversation(convId);
-          else {
-            const other = (data.participants || []).find((p) => p !== user.uid);
-            openConversation(convId, other);
-          }
+          btn.addEventListener("click", () => {
+            if (isGroup) openConversation(convId);
+            else {
+              const other = (data.participants || []).find((p) => p !== user.uid);
+              openConversation(convId, other);
+            }
+          });
+          
+          convList.appendChild(btn.cloneNode(true));
+          convListMobile.appendChild(btn.cloneNode(true));
         });
-        convList.appendChild(btn.cloneNode(true));
-        convListMobile.appendChild(btn.cloneNode(true));
       });
       maybeOpenFromUrl();
     }
