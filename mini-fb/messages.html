@@ -166,7 +166,7 @@
 
     <section id="chatSection" class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up hidden lg:flex">
       <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 mb-3">
           <button id="backToConvList" class="lg:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -179,7 +179,17 @@
             <h2 id="chatHeaderTitle" class="font-semibold text-gray-900 dark:text-dark-text truncate">Select a conversation</h2>
             <p id="chatHeaderStatus" class="text-xs text-gray-500 dark:text-dark-muted hidden"></p>
           </div>
-          <div id="chatHeaderActions" class="shrink-0"></div>
+          <div id="chatHeaderActions" class="shrink-0 flex items-center gap-2">
+            <button id="toggleMessageSearchBtn" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Search messages">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="messageSearchContainer" class="hidden">
+          <input id="messageSearchInput" type="search" placeholder="Search messages..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
+          <div id="messageSearchResults" class="mt-2 max-h-40 overflow-y-auto hidden"></div>
         </div>
       </div>
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
@@ -414,6 +424,66 @@
       await deleteDoc(msgRef);
     }
 
+    // Store all messages for search functionality
+    let allMessages = [];
+
+    // Toggle message search
+    const toggleMessageSearchBtn = document.getElementById('toggleMessageSearchBtn');
+    const messageSearchContainer = document.getElementById('messageSearchContainer');
+    const messageSearchInput = document.getElementById('messageSearchInput');
+    const messageSearchResults = document.getElementById('messageSearchResults');
+
+    toggleMessageSearchBtn.addEventListener('click', () => {
+      messageSearchContainer.classList.toggle('hidden');
+      if (!messageSearchContainer.classList.contains('hidden')) {
+        messageSearchInput.focus();
+      }
+    });
+
+    // Search messages
+    messageSearchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      
+      if (query.length === 0) {
+        messageSearchResults.classList.add('hidden');
+        return;
+      }
+
+      const filteredMessages = allMessages.filter(m => 
+        m.text && m.text.toLowerCase().includes(query)
+      );
+
+      if (filteredMessages.length === 0) {
+        messageSearchResults.innerHTML = '<div class="p-3 text-sm text-gray-500 dark:text-gray-400">No messages found</div>';
+        messageSearchResults.classList.remove('hidden');
+        return;
+      }
+
+      messageSearchResults.innerHTML = filteredMessages.map(m => `
+        <div class="p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition" data-message-id="${m.id}">
+          <p class="text-sm text-gray-900 dark:text-white line-clamp-2">${m.text}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${new Date(m.createdAt).toLocaleString()}</p>
+        </div>
+      `).join('');
+
+      messageSearchResults.classList.remove('hidden');
+
+      // Add click handlers to scroll to message
+      messageSearchResults.querySelectorAll('[data-message-id]').forEach(item => {
+        item.addEventListener('click', () => {
+          const messageId = item.dataset.messageId;
+          const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+          if (messageElement) {
+            messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            messageElement.classList.add('ring-2', 'ring-accent');
+            setTimeout(() => messageElement.classList.remove('ring-2', 'ring-accent'), 2000);
+          }
+          messageSearchContainer.classList.add('hidden');
+          messageSearchInput.value = '';
+        });
+      });
+    });
+
     function setActiveConv(convId, otherUid) {
       convList.querySelectorAll("[data-conv-id]").forEach((btn) => {
         const active = btn.dataset.convId === convId;
@@ -434,15 +504,22 @@
 
     function renderMessages(snap) {
       chatMessages.innerHTML = "";
+      allMessages = []; // Clear and rebuild message cache
+      
       if (snap.empty) {
         chatMessages.innerHTML = '<p class="text-sm text-gray-500 text-center py-8">No messages yet. Say hello!</p>';
         return;
       }
       snap.forEach((d) => {
         const m = d.data();
+        m.id = d.id; // Store document ID
+        allMessages.push(m); // Add to message cache for search
+        
         const mine = m.senderUid === user.uid;
         const wrap = document.createElement("div");
         wrap.className = mine ? "flex flex-col items-end" : "flex flex-col items-start";
+        wrap.setAttribute('data-message-id', d.id); // Add data attribute for search
+        
         const inner = document.createElement("div");
         inner.className = `max-w-[85%] rounded-2xl px-4 py-2 text-sm break-words space-y-2 ${
           mine ? "bg-accent text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -606,6 +683,22 @@
       chatHeaderActions.innerHTML = "";
       chatHeaderStatus.classList.add("hidden");
       chatProfileAvatar.innerHTML = '<span class="text-gray-400">?</span>';
+
+      // Add search button
+      const searchBtn = document.createElement('button');
+      searchBtn.id = 'toggleMessageSearchBtn';
+      searchBtn.className = 'p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200';
+      searchBtn.setAttribute('aria-label', 'Search messages');
+      searchBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
+      chatHeaderActions.appendChild(searchBtn);
+      
+      // Re-attach event listener to search button
+      searchBtn.addEventListener('click', () => {
+        messageSearchContainer.classList.toggle('hidden');
+        if (!messageSearchContainer.classList.contains('hidden')) {
+          messageSearchInput.focus();
+        }
+      });
 
       if (isGroup) {
         chatHeaderTitle.textContent = convData.title || "Group chat";
