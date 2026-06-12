@@ -199,9 +199,14 @@
       <form id="chatForm" class="p-4 border-t border-gray-200/50 dark:border-dark-border/50 flex flex-wrap gap-2 hidden">
         <input id="chatImage" type="file" accept="image/*" class="hidden" />
         <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">📷</button>
+        <button type="button" id="emojiBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">😊</button>
         <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="flex-1 min-w-[120px] rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-4 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow shrink-0">Send</button>
       </form>
+      <!-- Emoji Picker -->
+      <div id="emojiPicker" class="absolute bottom-20 left-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg p-3 hidden z-50 w-64">
+        <div class="grid grid-cols-8 gap-1" id="emojiGrid"></div>
+      </div>
     </section>
   </main>
 
@@ -457,6 +462,50 @@
         replyContext.classList.add('hidden');
       }
     }
+
+    // Emoji picker functionality
+    const commonEmojis = [
+      '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
+      '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
+      '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
+      '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏',
+      '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
+      '👍', '👎', '👏', '🙌', '🤝', '💪', '✨', '🔥',
+      '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉',
+      '😢', '😭', '😤', '😠', '😡', '🤬', '😱', '😨'
+    ];
+
+    const emojiBtn = document.getElementById('emojiBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const emojiGrid = document.getElementById('emojiGrid');
+
+    // Populate emoji grid
+    emojiGrid.innerHTML = commonEmojis.map(emoji => `
+      <button type="button" class="text-2xl p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition" data-emoji="${emoji}">${emoji}</button>
+    `).join('');
+
+    // Toggle emoji picker
+    emojiBtn.addEventListener('click', () => {
+      emojiPicker.classList.toggle('hidden');
+    });
+
+    // Handle emoji selection
+    emojiGrid.addEventListener('click', (e) => {
+      const emojiBtn = e.target.closest('[data-emoji]');
+      if (emojiBtn) {
+        const emoji = emojiBtn.dataset.emoji;
+        chatInput.value += emoji;
+        chatInput.focus();
+        emojiPicker.classList.add('hidden');
+      }
+    });
+
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+        emojiPicker.classList.add('hidden');
+      }
+    });
 
     // Toggle message search
     const toggleMessageSearchBtn = document.getElementById('toggleMessageSearchBtn');
