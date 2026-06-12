@@ -238,7 +238,7 @@
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -428,6 +428,26 @@
       
       const msgRef = doc(db, "conversations", activeConvId, "messages", messageId);
       await deleteDoc(msgRef);
+    }
+
+    // Mute/unmute conversation
+    async function toggleMuteConversation(convId, isMuted) {
+      try {
+        const convRef = doc(db, "conversations", convId);
+        if (isMuted) {
+          await updateDoc(convRef, {
+            [`muted.${user.uid}`]: deleteField()
+          });
+          showToast("Conversation unmuted");
+        } else {
+          await updateDoc(convRef, {
+            [`muted.${user.uid}`]: true
+          });
+          showToast("Conversation muted");
+        }
+      } catch (err) {
+        showToast("Failed to toggle mute: " + err.message, "error");
+      }
     }
 
     // Store all messages for search functionality
@@ -789,6 +809,17 @@
       searchBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
       chatHeaderActions.appendChild(searchBtn);
       
+      // Add mute button
+      const muteBtn = document.createElement('button');
+      muteBtn.className = 'p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200';
+      muteBtn.setAttribute('aria-label', 'Mute conversation');
+      muteBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>';
+      muteBtn.addEventListener('click', () => {
+        const isMuted = convData.muted?.[user.uid];
+        toggleMuteConversation(convId, isMuted);
+      });
+      chatHeaderActions.appendChild(muteBtn);
+      
       // Re-attach event listener to search button
       searchBtn.addEventListener('click', () => {
         messageSearchContainer.classList.toggle('hidden');
@@ -918,7 +949,8 @@
           btn.type = "button";
           btn.dataset.convId = convId;
           btn.dataset.otherUid = otherUid || "";
-          btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent";
+          btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent relative";
+          const isMuted = data.muted?.[user.uid];
           btn.innerHTML = `
             <div class="flex items-center gap-2">
               ${dot}
@@ -930,10 +962,18 @@
                 ${badge}
                 ${timestamp ? `<span class="text-[10px] text-gray-400">${timestamp}</span>` : ""}
               </div>
+              ${isMuted ? '<span class="absolute top-2 right-2 text-xs">🔇</span>' : ''}
             </div>
           `;
 
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (e) => {
+            // Check if clicked on mute button area (right side)
+            if (e.target.closest('.mute-btn')) {
+              e.stopPropagation();
+              toggleMuteConversation(convId, isMuted);
+              return;
+            }
+            
             if (isGroup) openConversation(convId);
             else {
               const other = (data.participants || []).find((p) => p !== user.uid);
