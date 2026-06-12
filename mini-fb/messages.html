@@ -450,6 +450,53 @@
       }
     }
 
+    // Archive/unarchive conversation
+    async function toggleArchiveConversation(convId, isArchived) {
+      try {
+        const convRef = doc(db, "conversations", convId);
+        if (isArchived) {
+          await updateDoc(convRef, {
+            [`archived.${user.uid}`]: deleteField()
+          });
+          showToast("Conversation unarchived");
+        } else {
+          await updateDoc(convRef, {
+            [`archived.${user.uid}`]: true
+          });
+          showToast("Conversation archived");
+        }
+      } catch (err) {
+        showToast("Failed to toggle archive: " + err.message, "error");
+      }
+    }
+
+    // Delete conversation
+    async function deleteConversation(convId) {
+      if (!confirm("Are you sure you want to delete this conversation? This action cannot be undone.")) return;
+      
+      try {
+        const convRef = doc(db, "conversations", convId);
+        await updateDoc(convRef, {
+          [`deleted.${user.uid}`]: true
+        });
+        showToast("Conversation deleted");
+        
+        // If this is the active conversation, close it
+        if (activeConvId === convId) {
+          chatForm.classList.add("hidden");
+          chatMessages.innerHTML = '<p class="text-sm text-gray-500 text-center py-8">Pick someone from the list or search to start chatting.</p>';
+          chatHeaderTitle.textContent = "Select a conversation";
+          chatProfileAvatar.innerHTML = '<span class="text-gray-400">?</span>';
+          chatHeaderStatus.classList.add("hidden");
+          chatHeaderActions.innerHTML = "";
+          activeConvId = null;
+          activeOtherUid = null;
+        }
+      } catch (err) {
+        showToast("Failed to delete conversation: " + err.message, "error");
+      }
+    }
+
     // Store all messages for search functionality
     let allMessages = [];
     
@@ -949,8 +996,9 @@
           btn.type = "button";
           btn.dataset.convId = convId;
           btn.dataset.otherUid = otherUid || "";
-          btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent relative";
+          btn.className = "w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-l-4 border-transparent relative group";
           const isMuted = data.muted?.[user.uid];
+          const isArchived = data.archived?.[user.uid];
           btn.innerHTML = `
             <div class="flex items-center gap-2">
               ${dot}
@@ -963,14 +1011,24 @@
                 ${timestamp ? `<span class="text-[10px] text-gray-400">${timestamp}</span>` : ""}
               </div>
               ${isMuted ? '<span class="absolute top-2 right-2 text-xs">🔇</span>' : ''}
+              ${isArchived ? '<span class="absolute top-2 right-8 text-xs">📦</span>' : ''}
+            </div>
+            <div class="hidden group-hover:flex absolute top-2 right-2 gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1 z-10">
+              <button type="button" class="archive-btn p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-xs" title="${isArchived ? 'Unarchive' : 'Archive'}">${isArchived ? '📤' : '📦'}</button>
+              <button type="button" class="delete-btn p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-xs" title="Delete">🗑️</button>
             </div>
           `;
 
           btn.addEventListener("click", (e) => {
-            // Check if clicked on mute button area (right side)
-            if (e.target.closest('.mute-btn')) {
+            // Check if clicked on archive/delete buttons
+            if (e.target.closest('.archive-btn')) {
               e.stopPropagation();
-              toggleMuteConversation(convId, isMuted);
+              toggleArchiveConversation(convId, isArchived);
+              return;
+            }
+            if (e.target.closest('.delete-btn')) {
+              e.stopPropagation();
+              deleteConversation(convId);
               return;
             }
             
