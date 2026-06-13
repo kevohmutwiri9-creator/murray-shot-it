@@ -846,3 +846,176 @@ export function updateLiveRegion(element, message) {
     element.setAttribute("aria-live", previousContent || "polite");
   }, 100);
 }
+
+// Performance optimization utilities
+export function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+export function throttle(func, limit) {
+  let inThrottle;
+  return function executedFunction(...args) {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+export function memoize(fn) {
+  const cache = new Map();
+  return function(...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+export function lazyLoadImages(container = document) {
+  if (!('IntersectionObserver' in window)) {
+    // Fallback for browsers without IntersectionObserver
+    const images = container.querySelectorAll('img[data-src]');
+    images.forEach(img => {
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+    });
+    return;
+  }
+  
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        observer.unobserve(img);
+      }
+    });
+  }, {
+    rootMargin: '50px 0px',
+    threshold: 0.01
+  });
+  
+  const images = container.querySelectorAll('img[data-src]');
+  images.forEach(img => imageObserver.observe(img));
+  
+  return imageObserver;
+}
+
+export function requestIdleCallback(callback, timeout = 2000) {
+  if ('requestIdleCallback' in window) {
+    return window.requestIdleCallback(callback, { timeout });
+  }
+  // Fallback for browsers without requestIdleCallback
+  return setTimeout(callback, 0);
+}
+
+export function cancelIdleCallback(handle) {
+  if ('cancelIdleCallback' in window) {
+    return window.cancelIdleCallback(handle);
+  }
+  clearTimeout(handle);
+}
+
+export function batchDOMUpdates(updates) {
+  // Use requestAnimationFrame to batch DOM updates
+  requestAnimationFrame(() => {
+    document.body.style.display = 'none';
+    try {
+      updates.forEach(update => update());
+    } finally {
+      document.body.style.display = '';
+    }
+  });
+}
+
+export function virtualScroll(container, itemHeight, renderItem, totalItems) {
+  const visibleItems = Math.ceil(container.clientHeight / itemHeight) + 5;
+  const scrollTop = container.scrollTop;
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(startIndex + visibleItems, totalItems);
+  
+  const fragment = document.createDocumentFragment();
+  for (let i = startIndex; i < endIndex; i++) {
+    const item = renderItem(i);
+    item.style.position = 'absolute';
+    item.style.top = `${i * itemHeight}px`;
+    fragment.appendChild(item);
+  }
+  
+  container.innerHTML = '';
+  container.appendChild(fragment);
+  container.style.height = `${totalItems * itemHeight}px`;
+  
+  return { startIndex, endIndex };
+}
+
+export function cacheImage(url) {
+  if (!window.caches) return Promise.resolve();
+  
+  return caches.open('image-cache').then(cache => {
+    return cache.match(url).then(response => {
+      if (response) return response;
+      return cache.add(url);
+    });
+  }).catch(() => {
+    // Ignore cache errors
+  });
+}
+
+export function prefetchResource(url) {
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = url;
+  document.head.appendChild(link);
+}
+
+export function preloadResource(url, as = 'script') {
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.href = url;
+  link.as = as;
+  document.head.appendChild(link);
+}
+
+export function measurePerformance(name, fn) {
+  if (!performance || !performance.mark) return fn();
+  
+  const startMark = `${name}-start`;
+  const endMark = `${name}-end`;
+  const measureName = `${name}-measure`;
+  
+  performance.mark(startMark);
+  const result = fn();
+  performance.mark(endMark);
+  performance.measure(measureName, startMark, endMark);
+  
+  return result;
+}
+
+export function getPerformanceMetrics() {
+  if (!performance || !performance.getEntriesByType) return null;
+  
+  const navigation = performance.getEntriesByType('navigation')[0];
+  const paint = performance.getEntriesByType('paint');
+  
+  return {
+    domContentLoaded: navigation?.domContentLoadedEventEnd - navigation?.domContentLoadedEventStart,
+    loadComplete: navigation?.loadEventEnd - navigation?.loadEventStart,
+    firstPaint: paint?.find(p => p.name === 'first-paint')?.startTime,
+    firstContentfulPaint: paint?.find(p => p.name === 'first-contentful-paint')?.startTime,
+  };
+}
