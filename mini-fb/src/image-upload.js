@@ -73,14 +73,18 @@ export async function uploadImageToImgbb(file) {
   formData.append("image", fileToUpload);
 
   try {
+    console.log("Starting image upload to imgbb...");
     const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
       method: "POST",
       body: formData,
     });
 
+    console.log("Imgbb response status:", response.status);
     const data = await response.json();
+    console.log("Imgbb response data:", data);
 
     if (!data.success) {
+      console.error("Imgbb upload failed:", data);
       throw new Error(data.error?.message || "Upload failed");
     }
 
@@ -90,6 +94,7 @@ export async function uploadImageToImgbb(file) {
       mediaType: "image",
     };
   } catch (error) {
+    console.error("Image upload error:", error);
     throw new Error(`Image upload failed: ${error.message}`);
   }
 }

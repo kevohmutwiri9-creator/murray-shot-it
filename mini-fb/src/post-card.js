@@ -463,11 +463,14 @@ export function renderPostCard(post, db) {
 
   saveBtn.addEventListener("click", async () => {
     try {
+      console.log("Attempting to save post:", post.id);
       const result = await toggleSave(window.__firebaseApp, post.id);
+      console.log("Save result:", result);
       saveBtn.textContent = result.saved ? "🔖 Saved" : "🔖 Save";
       showToast(result.saved ? "Post saved." : "Removed from saved.", "info");
     } catch (err) {
-      showToast(err.message, "error");
+      console.error("Save error:", err);
+      showToast(err.message || "Failed to save post", "error");
     }
   });
 
