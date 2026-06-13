@@ -245,7 +245,7 @@
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc, deleteField, getDocs, query, collection, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc, deleteField, getDocs, query, collection, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -301,12 +301,6 @@
     }
 
     async function loadOnlinePeople() {
-      // Get all profiles from conversations
-      const profiles = [];
-      const convsSnap = await getDoc(doc(db, "conversations", "dummy")); // This won't work, need a different approach
-      
-      // For now, let's use the conversation list to get online people
-      // We'll populate this from the presence data we already have
       onlinePeople.innerHTML = "";
       onlinePeopleMobile.innerHTML = "";
       
@@ -315,18 +309,51 @@
         .filter(([_, state]) => state.online)
         .map(([uid, _]) => uid);
       
-      if (onlineUsers.length === 0) {
-        onlinePeople.innerHTML = '<p class="text-sm text-gray-500 dark:text-dark-muted">No one online</p>';
-        onlinePeopleMobile.innerHTML = '<p class="text-sm text-gray-500 dark:text-dark-muted">No one online</p>';
+      // If no online users, show suggested users instead
+      const usersToShow = onlineUsers.length > 0 ? onlineUsers : [];
+      
+      // If we have fewer than 8 online users, add some from recent conversations
+      if (usersToShow.length < 8) {
+        try {
+          const convsSnap = await getDocs(query(collection(db, "conversations"), 
+            where("participants", "array-contains", user.uid),
+            orderBy("updatedAt", "desc"),
+            limit(10)));
+          
+          const recentUids = new Set();
+          convsSnap.forEach(convDoc => {
+            const participants = convDoc.data().participants || [];
+            participants.forEach(uid => {
+              if (uid !== user.uid && !usersToShow.includes(uid) && !recentUids.has(uid)) {
+                recentUids.add(uid);
+              }
+            });
+          });
+          
+          // Add recent users to fill up to 8
+          for (const uid of recentUids) {
+            if (usersToShow.length < 8) {
+              usersToShow.push(uid);
+            }
+          }
+        } catch (err) {
+          // Ignore errors
+        }
+      }
+      
+      if (usersToShow.length === 0) {
+        onlinePeople.innerHTML = '<p class="text-sm text-gray-500 dark:text-dark-muted">No users available</p>';
+        onlinePeopleMobile.innerHTML = '<p class="text-sm text-gray-500 dark:text-dark-muted">No users available</p>';
         return;
       }
       
-      for (const uid of onlineUsers) {
+      for (const uid of usersToShow.slice(0, 8)) {
         if (uid === user.uid) continue;
         
         const name = await displayName(uid);
         const profileDoc = await getDoc(doc(db, "profiles", uid));
         const profileData = profileDoc.data();
+        const isOnline = presenceByUid.get(uid)?.online || false;
         
         const btn = document.createElement("button");
         btn.type = "button";
@@ -335,19 +362,34 @@
         
         let avatarHtml;
         if (profileData?.photoUrl) {
-          avatarHtml = `<img src="${profileData.photoUrl}" alt="${escapeHtml(name)}" class="w-12 h-12 rounded-full object-cover border-2 border-green-500 group-hover:scale-110 transition-transform" />`;
+          avatarHtml = `<img src="${profileData.photoUrl}" alt="${escapeHtml(name)}" class="w-12 h-12 rounded-full object-cover border-2 ${isOnline ? 'border-green-500' : 'border-gray-300 dark:border-gray-600'} group-hover:scale-110 transition-transform" />`;
         } else {
-          avatarHtml = `<div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center text-white font-semibold text-lg border-2 border-green-500 group-hover:scale-110 transition-transform">${name.charAt(0).toUpperCase()}</div>`;
+          avatarHtml = `<div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center text-white font-semibold text-lg border-2 ${isOnline ? 'border-green-500' : 'border-gray-300 dark:border-gray-600'} group-hover:scale-110 transition-transform">${name.charAt(0).toUpperCase()}</div>`;
         }
         
         btn.innerHTML = `
           ${avatarHtml}
-          <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-dark-surface"></span>
+          ${isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-dark-surface"></span>' : ''}
         `;
         
         btn.addEventListener("click", () => openDm(uid));
         onlinePeople.appendChild(btn.cloneNode(true));
         onlinePeopleMobile.appendChild(btn.cloneNode(true));
+      }
+      
+      // Add a "See all" button if we have more users
+      if (usersToShow.length > 8) {
+        const seeAllBtn = document.createElement("button");
+        seeAllBtn.type = "button";
+        seeAllBtn.className = "flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 font-semibold text-sm border-2 border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform";
+        seeAllBtn.textContent = "+";
+        seeAllBtn.title = "See more users";
+        seeAllBtn.addEventListener("click", () => {
+          // Could open a modal with all users
+          showToast("More users coming soon!", "info");
+        });
+        onlinePeople.appendChild(seeAllBtn);
+        onlinePeopleMobile.appendChild(seeAllBtn.cloneNode(true));
       }
     }
 
