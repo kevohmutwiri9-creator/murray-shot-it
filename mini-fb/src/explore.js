@@ -277,3 +277,264 @@ export function subscribeToCategories(db, callback) {
     callback(categories);
   });
 }
+
+// Search filters and sorting
+export async function searchPostsWithFilters(db, options = {}) {
+  const {
+    searchTerm = "",
+    category = null,
+    minViews = 0,
+    maxViews = null,
+    dateFrom = null,
+    dateTo = null,
+    authorUid = null,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    limitCount = 20,
+  } = options;
+  
+  const postsCol = collection(db, "posts");
+  let q = query(postsCol, where("status", "==", "published"), limit(100));
+  const snapshot = await getDocs(q);
+  
+  let posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+  // Apply search term filter
+  if (searchTerm) {
+    const searchLower = searchTerm.toLowerCase();
+    posts = posts.filter(post => {
+      const content = (post.content || "").toLowerCase();
+      return content.includes(searchLower);
+    });
+  }
+  
+  // Apply category filter
+  if (category) {
+    posts = posts.filter(post => post.category === category);
+  }
+  
+  // Apply author filter
+  if (authorUid) {
+    posts = posts.filter(post => post.authorUid === authorUid);
+  }
+  
+  // Apply view count filters
+  if (minViews > 0) {
+    posts = posts.filter(post => (post.viewCount || 0) >= minViews);
+  }
+  if (maxViews !== null) {
+    posts = posts.filter(post => (post.viewCount || 0) <= maxViews);
+  }
+  
+  // Apply date filters
+  if (dateFrom) {
+    const fromDate = new Date(dateFrom);
+    posts = posts.filter(post => {
+      const createdAt = post.createdAt?.toDate ? post.createdAt.toDate() : new Date(post.createdAt);
+      return createdAt >= fromDate;
+    });
+  }
+  if (dateTo) {
+    const toDate = new Date(dateTo);
+    posts = posts.filter(post => {
+      const createdAt = post.createdAt?.toDate ? post.createdAt.toDate() : new Date(post.createdAt);
+      return createdAt <= toDate;
+    });
+  }
+  
+  // Apply sorting
+  posts.sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case "viewCount":
+        aValue = a.viewCount || 0;
+        bValue = b.viewCount || 0;
+        break;
+      case "reactionCount":
+        aValue = a.reactionCount || 0;
+        bValue = b.reactionCount || 0;
+        break;
+      case "commentCount":
+        aValue = a.commentCount || 0;
+        bValue = b.commentCount || 0;
+        break;
+      case "createdAt":
+      default:
+        aValue = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+        bValue = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
+        break;
+    }
+    
+    if (sortOrder === "asc") {
+      return aValue - bValue;
+    } else {
+      return bValue - aValue;
+    }
+  });
+  
+  return posts.slice(0, limitCount);
+}
+
+export async function searchUsersWithFilters(db, options = {}) {
+  const {
+    searchTerm = "",
+    minFollowers = 0,
+    maxFollowers = null,
+    sortBy = "email",
+    sortOrder = "asc",
+    limitCount = 20,
+  } = options;
+  
+  const usersCol = collection(db, "users");
+  const q = query(usersCol, limit(100));
+  const snapshot = await getDocs(q);
+  
+  let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+  // Apply search term filter
+  if (searchTerm) {
+    const searchLower = searchTerm.toLowerCase();
+    users = users.filter(user => {
+      const email = (user.email || "").toLowerCase();
+      const displayName = (user.displayName || "").toLowerCase();
+      return email.includes(searchLower) || displayName.includes(searchLower);
+    });
+  }
+  
+  // Apply follower count filters
+  if (minFollowers > 0) {
+    users = users.filter(user => (user.followerCount || 0) >= minFollowers);
+  }
+  if (maxFollowers !== null) {
+    users = users.filter(user => (user.followerCount || 0) <= maxFollowers);
+  }
+  
+  // Apply sorting
+  users.sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case "followerCount":
+        aValue = a.followerCount || 0;
+        bValue = b.followerCount || 0;
+        break;
+      case "followingCount":
+        aValue = a.followingCount || 0;
+        bValue = b.followingCount || 0;
+        break;
+      case "displayName":
+        aValue = (a.displayName || "").toLowerCase();
+        bValue = (b.displayName || "").toLowerCase();
+        break;
+      case "email":
+      default:
+        aValue = (a.email || "").toLowerCase();
+        bValue = (b.email || "").toLowerCase();
+        break;
+    }
+    
+    if (sortOrder === "asc") {
+      if (typeof aValue === "string") return aValue.localeCompare(bValue);
+      return aValue - bValue;
+    } else {
+      if (typeof aValue === "string") return bValue.localeCompare(aValue);
+      return bValue - aValue;
+    }
+  });
+  
+  return users.slice(0, limitCount);
+}
+
+export async function searchHashtagsWithFilters(db, options = {}) {
+  const {
+    searchTerm = "",
+    minCount = 0,
+    sortBy = "count",
+    sortOrder = "desc",
+    limitCount = 20,
+  } = options;
+  
+  const postsCol = collection(db, "posts");
+  const q = query(postsCol, where("status", "==", "published"), limit(100));
+  const snapshot = await getDocs(q);
+  
+  const hashtagCounts = new Map();
+  
+  snapshot.docs.forEach(docSnap => {
+    const post = docSnap.data();
+    const content = post.content || "";
+    const hashtags = content.match(/#[\w-]+/g) || [];
+    
+    hashtags.forEach(hashtag => {
+      const normalized = hashtag.toLowerCase();
+      hashtagCounts.set(normalized, (hashtagCounts.get(normalized) || 0) + 1);
+    });
+  });
+  
+  let hashtags = Array.from(hashtagCounts.entries())
+    .map(([hashtag, count]) => ({ hashtag, count }));
+  
+  // Apply search term filter
+  if (searchTerm) {
+    const searchLower = searchTerm.toLowerCase();
+    hashtags = hashtags.filter(h => h.hashtag.includes(searchLower));
+  }
+  
+  // Apply minimum count filter
+  if (minCount > 0) {
+    hashtags = hashtags.filter(h => h.count >= minCount);
+  }
+  
+  // Apply sorting
+  hashtags.sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case "hashtag":
+        aValue = a.hashtag;
+        bValue = b.hashtag;
+        break;
+      case "count":
+      default:
+        aValue = a.count;
+        bValue = b.count;
+        break;
+    }
+    
+    if (sortOrder === "asc") {
+      if (typeof aValue === "string") return aValue.localeCompare(bValue);
+      return aValue - bValue;
+    } else {
+      if (typeof aValue === "string") return bValue.localeCompare(aValue);
+      return bValue - aValue;
+    }
+  });
+  
+  return hashtags.slice(0, limitCount);
+}
+
+export function getAvailableSortOptions() {
+  return [
+    { value: "createdAt", label: "Date Created" },
+    { value: "viewCount", label: "View Count" },
+    { value: "reactionCount", label: "Reaction Count" },
+    { value: "commentCount", label: "Comment Count" },
+  ];
+}
+
+export function getAvailableUserSortOptions() {
+  return [
+    { value: "email", label: "Email" },
+    { value: "displayName", label: "Display Name" },
+    { value: "followerCount", label: "Follower Count" },
+    { value: "followingCount", label: "Following Count" },
+  ];
+}
+
+export function getAvailableHashtagSortOptions() {
+  return [
+    { value: "hashtag", label: "Hashtag" },
+    { value: "count", label: "Count" },
+  ];
+}
