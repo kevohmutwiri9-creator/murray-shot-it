@@ -438,3 +438,189 @@ export function hideLoadingState(container) {
   const skeletons = container.querySelectorAll(".animate-pulse");
   skeletons.forEach(s => s.remove());
 }
+
+// Form validation improvements
+export function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+export function validatePassword(password) {
+  // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+  const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+  return re.test(password);
+}
+
+export function validateUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function validateUsername(username) {
+  // Alphanumeric, underscores, hyphens, 3-20 characters
+  const re = /^[a-zA-Z0-9_-]{3,20}$/;
+  return re.test(username);
+}
+
+export function setFieldError(inputEl, message) {
+  if (!inputEl) return;
+  
+  // Remove existing error
+  clearFieldError(inputEl);
+  
+  // Add error styling
+  inputEl.classList.add("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
+  inputEl.classList.remove("border-gray-200", "dark:border-gray-600", "focus:border-accent", "focus:ring-accent/30");
+  
+  // Add error message
+  const errorEl = document.createElement("div");
+  errorEl.className = "text-rose-500 text-xs mt-1 field-error";
+  errorEl.textContent = message;
+  inputEl.parentNode.appendChild(errorEl);
+}
+
+export function clearFieldError(inputEl) {
+  if (!inputEl) return;
+  
+  // Remove error styling
+  inputEl.classList.remove("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
+  inputEl.classList.add("border-gray-200", "dark:border-gray-600", "focus:border-accent", "focus:ring-accent/30");
+  
+  // Remove error message
+  const errorEl = inputEl.parentNode.querySelector(".field-error");
+  if (errorEl) errorEl.remove();
+}
+
+export function validateForm(formEl, rules) {
+  const errors = [];
+  
+  for (const [fieldName, rule] of Object.entries(rules)) {
+    const inputEl = formEl.querySelector(`[name="${fieldName}"]`) || 
+                   formEl.querySelector(`#${fieldName}`);
+    
+    if (!inputEl) continue;
+    
+    const value = inputEl.value.trim();
+    
+    // Required validation
+    if (rule.required && !value) {
+      setFieldError(inputEl, rule.requiredMessage || `${fieldName} is required`);
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Skip other validations if empty and not required
+    if (!value && !rule.required) {
+      clearFieldError(inputEl);
+      continue;
+    }
+    
+    // Email validation
+    if (rule.email && !validateEmail(value)) {
+      setFieldError(inputEl, rule.emailMessage || "Please enter a valid email address");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Password validation
+    if (rule.password && !validatePassword(value)) {
+      setFieldError(inputEl, rule.passwordMessage || "Password must be at least 8 characters with uppercase, lowercase, and number");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // URL validation
+    if (rule.url && !validateUrl(value)) {
+      setFieldError(inputEl, rule.urlMessage || "Please enter a valid URL");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Username validation
+    if (rule.username && !validateUsername(value)) {
+      setFieldError(inputEl, rule.usernameMessage || "Username must be 3-20 characters (letters, numbers, underscores, hyphens)");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Min length validation
+    if (rule.minLength && value.length < rule.minLength) {
+      setFieldError(inputEl, rule.minLengthMessage || `Must be at least ${rule.minLength} characters`);
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Max length validation
+    if (rule.maxLength && value.length > rule.maxLength) {
+      setFieldError(inputEl, rule.maxLengthMessage || `Must be no more than ${rule.maxLength} characters`);
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Pattern validation
+    if (rule.pattern && !rule.pattern.test(value)) {
+      setFieldError(inputEl, rule.patternMessage || "Invalid format");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Custom validation
+    if (rule.custom && !rule.custom(value)) {
+      setFieldError(inputEl, rule.customMessage || "Invalid value");
+      errors.push(fieldName);
+      continue;
+    }
+    
+    // Clear error if validation passes
+    clearFieldError(inputEl);
+  }
+  
+  return errors;
+}
+
+export function clearFormErrors(formEl) {
+  if (!formEl) return;
+  
+  const inputs = formEl.querySelectorAll("input, textarea, select");
+  inputs.forEach(input => clearFieldError(input));
+}
+
+export function bindFormValidation(formEl, rules, onSubmit) {
+  if (!formEl) return;
+  
+  formEl.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    // Clear previous errors
+    clearFormErrors(formEl);
+    
+    // Validate form
+    const errors = validateForm(formEl, rules);
+    
+    if (errors.length > 0) {
+      // Focus on first error
+      const firstErrorInput = formEl.querySelector(`[name="${errors[0]}"]`) ||
+                            formEl.querySelector(`#${errors[0]}`);
+      if (firstErrorInput) firstErrorInput.focus();
+      return;
+    }
+    
+    // Submit form if valid
+    await onSubmit(formEl);
+  });
+  
+  // Clear errors on input
+  const inputs = formEl.querySelectorAll("input, textarea, select");
+  inputs.forEach(input => {
+    input.addEventListener("input", () => clearFieldError(input));
+    input.addEventListener("blur", () => {
+      if (input.value.trim()) {
+        validateForm(formEl, rules);
+      }
+    });
+  });
+}
