@@ -127,6 +127,13 @@
         <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">+ New group chat</button>
       </div>
       
+      <!-- Global Message Search -->
+      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 space-y-2">
+        <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">Search all messages</label>
+        <input id="globalMessageSearch" type="search" placeholder="Search messages across all chats..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
+        <div id="globalMessageSearchResults" class="max-h-48 overflow-y-auto hidden"></div>
+      </div>
+      
       <!-- Online People Section -->
       <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide mb-2 block">Online now</label>
@@ -238,7 +245,7 @@
     import { loadProfilesCache, uidForHandle } from "./src/profiles-cache.js";
     import { initDarkMode, showToast } from "./src/ui.js";
     import { uploadMedia } from "./src/image-upload.js";
-    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot, updateDoc, deleteDoc, deleteField, getDocs, query, collection, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -572,6 +579,121 @@
       if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
         emojiPicker.classList.add('hidden');
       }
+    });
+
+    // Global message search across all conversations
+    const globalMessageSearch = document.getElementById('globalMessageSearch');
+    const globalMessageSearchResults = document.getElementById('globalMessageSearchResults');
+    let allConversations = [];
+
+    // Store conversations for global search
+    function storeConversationsForSearch(snap) {
+      allConversations = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    }
+
+    // Override renderConversationList to store conversations
+    const originalRenderConversationList = renderConversationList;
+    renderConversationList = function(snap) {
+      storeConversationsForSearch(snap);
+      originalRenderConversationList(snap);
+    };
+
+    // Global message search handler
+    let globalSearchTimer;
+    globalMessageSearch.addEventListener('input', () => {
+      clearTimeout(globalSearchTimer);
+      globalSearchTimer = setTimeout(async () => {
+        const query = globalMessageSearch.value.toLowerCase().trim();
+        
+        if (query.length === 0) {
+          globalMessageSearchResults.classList.add('hidden');
+          return;
+        }
+
+        const results = [];
+        
+        // Search through all conversations
+        for (const conv of allConversations) {
+          const convData = conv.data;
+          const isGroup = convData.type === "group" || isGroupConversationId(conv.id);
+          
+          // Skip deleted/archived conversations
+          if (convData.deleted?.[user.uid] || convData.archived?.[user.uid]) continue;
+          
+          // Search messages in this conversation
+          try {
+            const messagesSnap = await getDocs(query(collection(db, "conversations", conv.id, "messages"), 
+              orderBy("createdAt", "desc"), limit(50)));
+            
+            messagesSnap.forEach(msgDoc => {
+              const msg = msgDoc.data();
+              if (msg.text && msg.text.toLowerCase().includes(query)) {
+                const name = isGroup 
+                  ? convData.title || "Group chat"
+                  : (convData.participants || []).find(p => p !== user.uid);
+                
+                results.push({
+                  convId: conv.id,
+                  msgId: msgDoc.id,
+                  text: msg.text,
+                  convName: name,
+                  isGroup,
+                  timestamp: msg.createdAt
+                });
+              }
+            });
+          } catch (err) {
+            // Skip conversations we can't access
+          }
+        }
+
+        if (results.length === 0) {
+          globalMessageSearchResults.innerHTML = '<div class="p-3 text-sm text-gray-500 dark:text-gray-400">No messages found</div>';
+          globalMessageSearchResults.classList.remove('hidden');
+          return;
+        }
+
+        // Sort by timestamp (most recent first)
+        results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        globalMessageSearchResults.innerHTML = results.slice(0, 20).map(r => `
+          <div class="p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition" data-conv-id="${r.convId}" data-msg-id="${r.msgId}">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">${r.isGroup ? '👥 ' : ''}${escapeHtml(r.convName)}</p>
+            <p class="text-sm text-gray-900 dark:text-white line-clamp-2">${escapeHtml(r.text)}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${new Date(r.timestamp).toLocaleString()}</p>
+          </div>
+        `).join('');
+
+        globalMessageSearchResults.classList.remove('hidden');
+
+        // Add click handlers to open conversation and scroll to message
+        globalMessageSearchResults.querySelectorAll('[data-conv-id]').forEach(item => {
+          item.addEventListener('click', async () => {
+            const convId = item.dataset.convId;
+            const msgId = item.dataset.msgId;
+            
+            const isGroup = isGroupConversationId(convId);
+            const conv = allConversations.find(c => c.id === convId);
+            if (conv) {
+              const otherUid = isGroup ? null : (conv.data.participants || []).find(p => p !== user.uid);
+              await openConversation(convId, otherUid);
+              
+              // Wait for messages to load, then scroll to the message
+              setTimeout(() => {
+                const messageElement = document.querySelector(`[data-message-id="${msgId}"]`);
+                if (messageElement) {
+                  messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  messageElement.classList.add('ring-2', 'ring-accent');
+                  setTimeout(() => messageElement.classList.remove('ring-2', 'ring-accent'), 3000);
+                }
+              }, 500);
+            }
+            
+            globalMessageSearchResults.classList.add('hidden');
+            globalMessageSearch.value = '';
+          });
+        });
+      }, 500);
     });
 
     // Toggle message search
