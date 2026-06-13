@@ -1391,8 +1391,30 @@
             }
           });
           
-          convList.appendChild(btn.cloneNode(true));
-          convListMobile.appendChild(btn.cloneNode(true));
+          convList.appendChild(btn);
+          
+          // Clone for mobile and re-attach event listener
+          const mobileBtn = btn.cloneNode(true);
+          mobileBtn.addEventListener("click", (e) => {
+            // Check if clicked on archive/delete buttons
+            if (e.target.closest('.archive-btn')) {
+              e.stopPropagation();
+              toggleArchiveConversation(convId, isArchived);
+              return;
+            }
+            if (e.target.closest('.delete-btn')) {
+              e.stopPropagation();
+              deleteConversation(convId);
+              return;
+            }
+            
+            if (isGroup) openConversation(convId);
+            else {
+              const other = (data.participants || []).find((p) => p !== user.uid);
+              openConversation(convId, other);
+            }
+          });
+          convListMobile.appendChild(mobileBtn);
         });
       });
       maybeOpenFromUrl();
