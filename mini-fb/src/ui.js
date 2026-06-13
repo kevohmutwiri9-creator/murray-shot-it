@@ -1,4 +1,4 @@
-/** Shared UI helpers: toasts, modals, character counters */
+/** Shared UI helpers: toasts, modals, character counters, skeletons */
 
 let toastRoot = null;
 
@@ -332,4 +332,109 @@ export function initDarkMode(toggleId = "darkModeToggle") {
     document.documentElement.classList.toggle("dark");
     localStorage.setItem("darkMode", document.documentElement.classList.contains("dark"));
   });
+}
+
+// Skeleton loading components
+export function createSkeletonCard() {
+  const card = document.createElement("div");
+  card.className = "bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200/50 dark:border-dark-border/50 p-5 animate-pulse";
+  card.innerHTML = `
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      </div>
+    </div>
+    <div class="space-y-3">
+      <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+      <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+      <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    </div>
+  `;
+  return card;
+}
+
+export function createSkeletonComment() {
+  const comment = document.createElement("div");
+  comment.className = "rounded-xl bg-gray-50 dark:bg-gray-900/50 p-3 animate-pulse";
+  comment.innerHTML = `
+    <div class="flex items-center gap-2 mb-2">
+      <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+    </div>
+    <div class="space-y-2">
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+    </div>
+  `;
+  return comment;
+}
+
+export function createSkeletonProfile() {
+  const profile = document.createElement("div");
+  profile.className = "animate-pulse";
+  profile.innerHTML = `
+    <div class="h-32 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-t-2xl"></div>
+    <div class="p-6">
+      <div class="flex items-center gap-4 -mt-12">
+        <div class="w-24 h-24 rounded-2xl bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+        </div>
+      </div>
+      <div class="mt-6 space-y-3">
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+      </div>
+    </div>
+  `;
+  return profile;
+}
+
+export function createSkeletonMessage() {
+  const message = document.createElement("div");
+  message.className = "flex gap-3 p-3 animate-pulse";
+  message.innerHTML = `
+    <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+    <div class="flex-1 space-y-2">
+      <div class="flex items-center gap-2">
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+      </div>
+      <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    </div>
+  `;
+  return message;
+}
+
+export function showLoadingState(container, count = 3, type = "card") {
+  container.innerHTML = "";
+  const skeletons = [];
+  for (let i = 0; i < count; i++) {
+    let skeleton;
+    switch (type) {
+      case "comment":
+        skeleton = createSkeletonComment();
+        break;
+      case "profile":
+        skeleton = createSkeletonProfile();
+        break;
+      case "message":
+        skeleton = createSkeletonMessage();
+        break;
+      default:
+        skeleton = createSkeletonCard();
+    }
+    skeletons.push(skeleton);
+    container.appendChild(skeleton);
+  }
+  return skeletons;
+}
+
+export function hideLoadingState(container) {
+  const skeletons = container.querySelectorAll(".animate-pulse");
+  skeletons.forEach(s => s.remove());
 }
