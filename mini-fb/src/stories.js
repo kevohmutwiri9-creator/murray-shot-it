@@ -11,6 +11,8 @@ import {
   updateDoc,
   increment,
   getDoc,
+  getDocs,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { uploadMedia } from "./image-upload.js";
 import { openStoryViewer, showToast } from "./ui.js";
@@ -161,5 +163,152 @@ export function startStories(db, { containerEl, addBtnEl }) {
       }
     };
     fileInput.click();
+  });
+}
+
+// Story highlights functionality
+export async function createStoryHighlight(db, name, storyIds, coverUrl = null) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to create story highlights.");
+  
+  const highlightRef = doc(collection(db, "storyHighlights"));
+  await setDoc(highlightRef, {
+    id: highlightRef.id,
+    name,
+    authorUid: user.uid,
+    storyIds,
+    coverUrl,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  
+  return highlightRef.id;
+}
+
+export async function addStoryToHighlight(db, highlightId, storyId) {
+  const highlightRef = doc(db, "storyHighlights", highlightId);
+  const highlightSnap = await getDoc(highlightRef);
+  
+  if (!highlightSnap.exists()) {
+    throw new Error("Highlight not found");
+  }
+  
+  const highlightData = highlightSnap.data();
+  const storyIds = highlightData.storyIds || [];
+  
+  if (!storyIds.includes(storyId)) {
+    await updateDoc(highlightRef, {
+      storyIds: [...storyIds, storyId],
+      updatedAt: serverTimestamp(),
+    });
+  }
+}
+
+export async function removeStoryFromHighlight(db, highlightId, storyId) {
+  const highlightRef = doc(db, "storyHighlights", highlightId);
+  const highlightSnap = await getDoc(highlightRef);
+  
+  if (!highlightSnap.exists()) {
+    throw new Error("Highlight not found");
+  }
+  
+  const highlightData = highlightSnap.data();
+  const storyIds = (highlightData.storyIds || []).filter(id => id !== storyId);
+  
+  await updateDoc(highlightRef, {
+    storyIds,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteStoryHighlight(db, highlightId) {
+  await deleteDoc(doc(db, "storyHighlights", highlightId));
+}
+
+export async function updateStoryHighlightCover(db, highlightId, coverUrl) {
+  await updateDoc(doc(db, "storyHighlights", highlightId), {
+    coverUrl,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function getUserStoryHighlights(db, uid) {
+  const highlightsRef = collection(db, "storyHighlights");
+  const q = query(highlightsRef, orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .filter(highlight => highlight.authorUid === uid);
+}
+
+export function subscribeToUserStoryHighlights(db, uid, callback) {
+  const highlightsRef = collection(db, "storyHighlights");
+  const q = query(highlightsRef, orderBy("createdAt", "desc"));
+  
+  return onSnapshot(q, (snapshot) => {
+    const highlights = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(highlight => highlight.authorUid === uid);
+    callback(highlights);
+  });
+}
+
+export async function getHighlightStories(db, highlightId) {
+  const highlightRef = doc(db, "storyHighlights", highlightId);
+  const highlightSnap = await getDoc(highlightRef);
+  
+  if (!highlightSnap.exists()) {
+    return [];
+  }
+  
+  const highlightData = highlightSnap.data();
+  const storyIds = highlightData.storyIds || [];
+  
+  if (storyIds.length === 0) {
+    return [];
+  }
+  
+  const stories = [];
+  for (const storyId of storyIds) {
+    const storyRef = doc(db, "stories", storyId);
+    const storySnap = await getDoc(storyRef);
+    if (storySnap.exists()) {
+      stories.push({ id: storyId, ...storySnap.data() });
+    }
+  }
+  
+  return stories;
+}
+
+export function renderStoryHighlights(highlights, container, onHighlightClick) {
+  container.innerHTML = "";
+  
+  if (highlights.length === 0) {
+    container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No highlights yet.</p>';
+    return;
+  }
+  
+  highlights.forEach(highlight => {
+    const highlightEl = document.createElement("div");
+    highlightEl.className = "flex flex-col items-center gap-1 cursor-pointer group";
+    highlightEl.onclick = () => onHighlightClick(highlight);
+    
+    const coverEl = document.createElement("div");
+    coverEl.className = "w-16 h-16 rounded-full border-2 border-accent overflow-hidden bg-gray-200 dark:bg-gray-700 group-hover:scale-105 transition";
+    
+    if (highlight.coverUrl) {
+      coverEl.innerHTML = `<img src="${highlight.coverUrl}" alt="${highlight.name}" class="w-full h-full object-cover">`;
+    } else {
+      coverEl.innerHTML = `<div class="w-full h-full flex items-center justify-center text-2xl">📸</div>`;
+    }
+    
+    const nameEl = document.createElement("span");
+    nameEl.className = "text-xs text-gray-700 dark:text-gray-300 truncate w-16 text-center";
+    nameEl.textContent = highlight.name;
+    
+    highlightEl.appendChild(coverEl);
+    highlightEl.appendChild(nameEl);
+    container.appendChild(highlightEl);
   });
 }
