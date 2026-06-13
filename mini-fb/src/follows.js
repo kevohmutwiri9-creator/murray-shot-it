@@ -1,5 +1,5 @@
 // Follow system for SnapVerse
-import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getCurrentUser } from "./auth.js";
 import { createNotificationForFollow } from "./notifications.js";
 
@@ -61,4 +61,53 @@ export async function getFollowerUids(db, followingUid) {
   const q = query(collection(db, "followers"), where("followingUid", "==", followingUid));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data().followerUid).filter(Boolean);
+}
+
+// Close friends list functionality
+export async function addToCloseFriends(db, uid, friendUid) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to manage close friends.");
+  if (user.uid !== uid) throw new Error("You can only manage your own close friends.");
+  
+  const closeFriendRef = doc(db, "closeFriends", `${uid}_${friendUid}`);
+  await setDoc(closeFriendRef, {
+    uid,
+    friendUid,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function removeFromCloseFriends(db, uid, friendUid) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to manage close friends.");
+  if (user.uid !== uid) throw new Error("You can only manage your own close friends.");
+  
+  const closeFriendRef = doc(db, "closeFriends", `${uid}_${friendUid}`);
+  await deleteDoc(closeFriendRef);
+}
+
+export async function isCloseFriend(db, uid, friendUid) {
+  const closeFriendRef = doc(db, "closeFriends", `${uid}_${friendUid}`);
+  const snap = await getDoc(closeFriendRef);
+  return snap.exists();
+}
+
+export async function getCloseFriendsUids(db, uid) {
+  const q = query(collection(db, "closeFriends"), where("uid", "==", uid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data().friendUid).filter(Boolean);
+}
+
+export function subscribeToCloseFriends(db, uid, callback) {
+  const q = query(collection(db, "closeFriends"), where("uid", "==", uid));
+  return onSnapshot(q, (snapshot) => {
+    const closeFriendUids = snapshot.docs.map((d) => d.data().friendUid).filter(Boolean);
+    callback(closeFriendUids);
+  });
+}
+
+export async function getCloseFriendsCount(db, uid) {
+  const q = query(collection(db, "closeFriends"), where("uid", "==", uid));
+  const snap = await getDocs(q);
+  return snap.size;
 }
