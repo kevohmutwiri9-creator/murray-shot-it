@@ -537,6 +537,43 @@
       }
     }
 
+    // Image preview lightbox
+    function showImagePreview(imageUrl) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fade-in';
+      modal.innerHTML = `
+        <button class="absolute top-4 right-4 text-white hover:text-gray-300 transition p-2" title="Close">
+          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <img src="${imageUrl}" alt="Full size image" class="max-w-full max-h-full object-contain rounded-lg" />
+      `;
+      
+      // Close on button click
+      modal.querySelector('button').addEventListener('click', () => {
+        modal.remove();
+      });
+      
+      // Close on background click
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+      // Close on Escape key
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+          modal.remove();
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      
+      document.body.appendChild(modal);
+    }
+
     // Emoji picker functionality
     const commonEmojis = [
       '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
@@ -817,11 +854,41 @@
         }
         
         if (m.imageUrl) {
+          const imgContainer = document.createElement("div");
+          imgContainer.className = "relative group cursor-pointer";
+          
           const img = document.createElement("img");
           img.src = m.imageUrl;
           img.alt = "Image";
-          img.className = "max-w-full rounded-xl max-h-48 object-cover";
-          inner.appendChild(img);
+          img.className = "max-w-full rounded-xl max-h-48 object-cover transition-transform group-hover:scale-105";
+          img.loading = "lazy";
+          
+          // Add click handler for full-size preview
+          img.addEventListener("click", () => {
+            showImagePreview(m.imageUrl);
+          });
+          
+          // Add zoom icon overlay
+          const overlay = document.createElement("div");
+          overlay.className = "absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl";
+          overlay.innerHTML = '<svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>';
+          
+          imgContainer.appendChild(img);
+          imgContainer.appendChild(overlay);
+          inner.appendChild(imgContainer);
+        }
+        
+        if (m.videoUrl) {
+          const videoContainer = document.createElement("div");
+          videoContainer.className = "relative";
+          
+          const video = document.createElement("video");
+          video.src = m.videoUrl;
+          video.controls = true;
+          video.className = "max-w-full rounded-xl max-h-48 object-cover";
+          
+          videoContainer.appendChild(video);
+          inner.appendChild(videoContainer);
         }
         if (m.postLink) {
           const a = document.createElement("a");
