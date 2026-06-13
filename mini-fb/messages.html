@@ -537,6 +537,96 @@
       }
     }
 
+    // Profile details modal
+    function showProfileDetails(uid, profileData) {
+      const name = profileData?.displayName || "";
+      const bio = profileData?.bio || "";
+      const location = profileData?.location || "";
+      const website = profileData?.website || "";
+      const verified = profileData?.verified || false;
+      const followers = profileData?.followers?.length || 0;
+      const following = profileData?.following?.length || 0;
+      const photoUrl = profileData?.photoUrl || "";
+      
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in';
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg max-w-md w-full overflow-hidden animate-slide-up">
+          <div class="p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-4">
+                ${photoUrl 
+                  ? `<img src="${photoUrl}" alt="${escapeHtml(name)}" class="w-16 h-16 rounded-full object-cover" />`
+                  : `<div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary text-white text-2xl font-bold flex items-center justify-center">${name.charAt(0).toUpperCase()}</div>`
+                }
+                <div>
+                  <h3 class="font-semibold text-lg text-gray-900 dark:text-white flex items-center gap-2">${escapeHtml(name)}${verified ? '<span class="text-blue-500">✓</span>' : ''}</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">${followers} followers · ${following} following</p>
+                </div>
+              </div>
+              <button class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition p-1" title="Close">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            
+            ${bio ? `<p class="text-sm text-gray-700 dark:text-gray-300 mb-4">${escapeHtml(bio)}</p>` : ''}
+            
+            <div class="space-y-3">
+              ${location ? `
+                <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  ${escapeHtml(location)}
+                </div>
+              ` : ''}
+              
+              ${website ? `
+                <div class="flex items-center gap-2 text-sm">
+                  <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                  </svg>
+                  <a href="${escapeHtml(website)}" target="_blank" rel="noopener" class="text-accent hover:underline">${escapeHtml(website)}</a>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="mt-6 flex gap-3">
+              <a href="${profileUrl(uid)}" class="flex-1 text-center px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95">
+                View Profile
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Close on button click
+      modal.querySelector('button').addEventListener('click', () => {
+        modal.remove();
+      });
+      
+      // Close on background click
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+      // Close on Escape key
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+          modal.remove();
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      
+      document.body.appendChild(modal);
+    }
+
     // Image preview lightbox
     function showImagePreview(imageUrl) {
       const modal = document.createElement('div');
@@ -1075,17 +1165,48 @@
         const uid = otherUid || (convData.participants || []).find((p) => p !== user.uid);
         activeOtherUid = uid;
         const name = await displayName(uid);
-        chatHeaderTitle.innerHTML = `<a href="${profileUrl(uid)}" class="hover:text-accent transition">${escapeHtml(name)}</a>`;
         
-        // Fetch and display profile photo
+        // Fetch full profile data
         const profileDoc = await getDoc(doc(db, "profiles", uid));
         const profileData = profileDoc.data();
+        
+        // Build enhanced header with profile details
+        const bio = profileData?.bio || "";
+        const location = profileData?.location || "";
+        const website = profileData?.website || "";
+        const verified = profileData?.verified || false;
+        const followers = profileData?.followers?.length || 0;
+        const following = profileData?.following?.length || 0;
+        
+        let headerContent = `<a href="${profileUrl(uid)}" class="hover:text-accent transition flex items-center gap-2">${escapeHtml(name)}${verified ? '<span class="text-blue-500">✓</span>' : ''}</a>`;
+        
+        // Add bio if available
+        if (bio) {
+          headerContent += `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] truncate">${escapeHtml(bio)}</p>`;
+        }
+        
+        // Add location if available
+        if (location) {
+          headerContent += `<p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${escapeHtml(location)}</p>`;
+        }
+        
+        chatHeaderTitle.innerHTML = headerContent;
+        
+        // Fetch and display profile photo
         if (profileData?.photoUrl) {
           chatProfileAvatar.innerHTML = `<img src="${profileData.photoUrl}" alt="${escapeHtml(name)}" class="w-full h-full object-cover" />`;
         } else {
           chatProfileAvatar.innerHTML = `<span class="text-xl font-semibold text-gray-500">${name.charAt(0).toUpperCase()}</span>`;
         }
         
+        // Add profile details dropdown button
+        const detailsBtn = document.createElement('button');
+        detailsBtn.className = 'p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200';
+        detailsBtn.setAttribute('aria-label', 'Profile details');
+        detailsBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        detailsBtn.addEventListener('click', () => showProfileDetails(uid, profileData));
+        chatHeaderActions.appendChild(detailsBtn);
+
         const profileLink = document.createElement("a");
         profileLink.href = profileUrl(uid);
         profileLink.className = "text-xs text-accent font-medium hover:scale-105 active:scale-95 transition-all duration-200";
