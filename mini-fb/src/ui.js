@@ -624,3 +624,225 @@ export function bindFormValidation(formEl, rules, onSubmit) {
     });
   });
 }
+
+// Accessibility improvements
+export function setAriaLabel(element, label) {
+  if (!element) return;
+  element.setAttribute("aria-label", label);
+}
+
+export function setAriaDescribedBy(element, describedById) {
+  if (!element) return;
+  element.setAttribute("aria-describedby", describedById);
+}
+
+export function setAriaExpanded(element, expanded) {
+  if (!element) return;
+  element.setAttribute("aria-expanded", String(expanded));
+}
+
+export function setAriaHidden(element, hidden) {
+  if (!element) return;
+  element.setAttribute("aria-hidden", String(hidden));
+}
+
+export function setRole(element, role) {
+  if (!element) return;
+  element.setAttribute("role", role);
+}
+
+export function trapFocus(container) {
+  if (!container) return;
+  
+  const focusableElements = container.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+  
+  const handleTab = (e) => {
+    if (e.key !== "Tab") return;
+    
+    if (e.shiftKey) {
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  };
+  
+  container.addEventListener("keydown", handleTab);
+  
+  return () => container.removeEventListener("keydown", handleTab);
+}
+
+export function announceToScreenReader(message) {
+  const announcement = document.createElement("div");
+  announcement.setAttribute("role", "status");
+  announcement.setAttribute("aria-live", "polite");
+  announcement.className = "sr-only absolute -left-[9999px]";
+  announcement.textContent = message;
+  document.body.appendChild(announcement);
+  
+  setTimeout(() => announcement.remove(), 1000);
+}
+
+export function manageFocusOnOpen(modal, triggerElement) {
+  if (!modal) return;
+  
+  // Store the element that opened the modal
+  modal.dataset.previousFocus = triggerElement?.id || "";
+  
+  // Focus on first focusable element
+  const focusableElements = modal.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstFocusable = focusableElements[0];
+  if (firstFocusable) {
+    setTimeout(() => firstFocusable.focus(), 100);
+  }
+  
+  // Trap focus within modal
+  return trapFocus(modal);
+}
+
+export function restoreFocusOnClose(modal) {
+  if (!modal) return;
+  
+  const previousFocusId = modal.dataset.previousFocus;
+  if (previousFocusId) {
+    const previousElement = document.getElementById(previousFocusId);
+    if (previousElement) {
+      previousElement.focus();
+    }
+  }
+}
+
+export function addKeyboardNavigation(container, options = {}) {
+  if (!container) return;
+  
+  const {
+    onEnter,
+    onEscape,
+    onArrowUp,
+    onArrowDown,
+    onArrowLeft,
+    onArrowRight,
+    onHome,
+    onEnd,
+  } = options;
+  
+  const handleKeyDown = (e) => {
+    switch (e.key) {
+      case "Enter":
+        if (onEnter) {
+          e.preventDefault();
+          onEnter(e);
+        }
+        break;
+      case "Escape":
+        if (onEscape) {
+          e.preventDefault();
+          onEscape(e);
+        }
+        break;
+      case "ArrowUp":
+        if (onArrowUp) {
+          e.preventDefault();
+          onArrowUp(e);
+        }
+        break;
+      case "ArrowDown":
+        if (onArrowDown) {
+          e.preventDefault();
+          onArrowDown(e);
+        }
+        break;
+      case "ArrowLeft":
+        if (onArrowLeft) {
+          e.preventDefault();
+          onArrowLeft(e);
+        }
+        break;
+      case "ArrowRight":
+        if (onArrowRight) {
+          e.preventDefault();
+          onArrowRight(e);
+        }
+        break;
+      case "Home":
+        if (onHome) {
+          e.preventDefault();
+          onHome(e);
+        }
+        break;
+      case "End":
+        if (onEnd) {
+          e.preventDefault();
+          onEnd(e);
+        }
+        break;
+    }
+  };
+  
+  container.addEventListener("keydown", handleKeyDown);
+  
+  return () => container.removeEventListener("keydown", handleKeyDown);
+}
+
+export function setSkipLink() {
+  // Check if skip link already exists
+  if (document.getElementById("skip-link")) return;
+  
+  const skipLink = document.createElement("a");
+  skipLink.id = "skip-link";
+  skipLink.href = "#main-content";
+  skipLink.className = "sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded-xl focus:font-semibold";
+  skipLink.textContent = "Skip to main content";
+  
+  document.body.insertBefore(skipLink, document.body.firstChild);
+  
+  // Ensure main content has id
+  const mainContent = document.querySelector("main") || document.querySelector("[role='main']");
+  if (mainContent && !mainContent.id) {
+    mainContent.id = "main-content";
+  }
+}
+
+export function reduceMotionPreference() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function setReducedMotion(element) {
+  if (!element) return;
+  
+  if (reduceMotionPreference()) {
+    element.style.animation = "none";
+    element.style.transition = "none";
+  }
+}
+
+export function addLiveRegion(element, politeness = "polite") {
+  if (!element) return;
+  
+  element.setAttribute("role", "status");
+  element.setAttribute("aria-live", politeness);
+}
+
+export function updateLiveRegion(element, message) {
+  if (!element) return;
+  
+  element.textContent = message;
+  
+  // Trigger screen reader to announce
+  const previousContent = element.getAttribute("aria-live");
+  element.setAttribute("aria-live", "off");
+  setTimeout(() => {
+    element.setAttribute("aria-live", previousContent || "polite");
+  }, 100);
+}
