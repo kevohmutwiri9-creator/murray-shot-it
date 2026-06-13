@@ -190,6 +190,19 @@
             </div>
           </div>
         </div>
+        
+        <!-- Profile Completion Indicator -->
+        <div id="profileCompletionSection" class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-semibold text-gray-900 dark:text-white">Profile Completion</span>
+            <span id="profileCompletionPercent" class="text-sm font-bold text-accent">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+            <div id="profileCompletionBar" class="bg-gradient-to-r from-accent to-purple-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <div id="profileCompletionTips" class="mt-3 text-xs text-gray-600 dark:text-gray-400 space-y-1"></div>
+        </div>
+        
         <div class="mt-6">
           <p id="profileBio" class="text-gray-700 dark:text-gray-300">No bio yet. Click Edit Profile to add one!</p>
         </div>
@@ -607,6 +620,50 @@
       followingEl.classList.add("cursor-pointer");
       followersEl.onclick = () => openFollowList("followers");
       followingEl.onclick = () => openFollowList("following");
+
+      // Profile completion indicator (only for own profile)
+      const completionSection = document.getElementById("profileCompletionSection");
+      if (isOwnProfile) {
+        completionSection.classList.remove("hidden");
+        
+        // Calculate completion percentage
+        const checks = {
+          displayName: !!profile.displayName,
+          bio: !!profile.bio,
+          avatarUrl: !!profile.avatarUrl,
+          coverUrl: !!profile.coverUrl,
+          location: !!profile.location,
+          website: !!profile.website,
+          instagram: !!profile.instagram,
+        };
+        
+        const completed = Object.values(checks).filter(Boolean).length;
+        const total = Object.keys(checks).length;
+        const percentage = Math.round((completed / total) * 100);
+        
+        // Update UI
+        document.getElementById("profileCompletionPercent").textContent = `${percentage}%`;
+        document.getElementById("profileCompletionBar").style.width = `${percentage}%`;
+        
+        // Generate tips for incomplete items
+        const tips = [];
+        if (!checks.displayName) tips.push("Add a display name");
+        if (!checks.bio) tips.push("Add a bio");
+        if (!checks.avatarUrl) tips.push("Add a profile photo");
+        if (!checks.coverUrl) tips.push("Add a cover photo");
+        if (!checks.location) tips.push("Add your location");
+        if (!checks.website) tips.push("Add your website");
+        if (!checks.instagram) tips.push("Add your Instagram");
+        
+        const tipsEl = document.getElementById("profileCompletionTips");
+        if (tips.length > 0) {
+          tipsEl.innerHTML = tips.map(tip => `<div>• ${tip}</div>`).join("");
+        } else {
+          tipsEl.innerHTML = "<div>🎉 Your profile is complete!</div>";
+        }
+      } else {
+        completionSection.classList.add("hidden");
+      }
 
       const actions = document.getElementById("profileActions");
       actions.innerHTML = "";
