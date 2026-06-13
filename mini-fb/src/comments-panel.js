@@ -19,9 +19,9 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
-function renderCommentNode(c, { onReply, onReact }) {
+function renderCommentNode(c, { onReply, onReact, depth = 0 }) {
   const wrap = document.createElement("div");
-  wrap.className = "rounded-xl bg-gray-50 dark:bg-gray-900/50 p-3";
+  wrap.className = `rounded-xl bg-gray-50 dark:bg-gray-900/50 p-3 ${depth > 0 ? 'ml-4 mt-2 border-l-2 border-accent/20 pl-3' : ''}`;
   wrap.dataset.commentId = c.id;
 
   const profileHref = c.authorUid ? profileUrl(c.authorUid) : "#";
@@ -35,7 +35,17 @@ function renderCommentNode(c, { onReply, onReact }) {
   const user = getCurrentUser();
   const myReactions = Object.entries(reactions).filter(([_, uids]) => uids.includes(user?.uid)).map(([emoji]) => emoji);
 
+  // Show reply context if this is a reply
+  let replyContext = '';
+  if (c.parentCommentId && depth === 0) {
+    replyContext = `<div class="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+      Replying to a comment
+    </div>`;
+  }
+
   wrap.innerHTML = `
+    ${replyContext}
     <div class="flex items-center gap-2 mb-1">
       ${nameLink}
       <span class="text-xs text-gray-500">${formatTime(c.createdAt)}</span>
@@ -136,24 +146,43 @@ export function mountCommentsPanel(firebaseApp, post, container, statusEl) {
         '<p class="text-sm text-gray-500 dark:text-gray-400">No comments yet. Be the first!</p>';
     }
 
+    const renderReplies = (commentId, depth = 1) => {
+      const replies = byParent.get(commentId) || [];
+      if (replies.length === 0) return null;
+      
+      const repliesWrap = document.createElement("div");
+      repliesWrap.className = depth === 1 ? "ml-4 mt-2 space-y-2 border-l-2 border-accent/20 pl-3" : "ml-4 mt-2 space-y-2";
+      
+      replies.forEach((r) => {
+        const commentNode = renderCommentNode(r, { 
+          onReply: depth < 3 ? (parentId) => openReplyForm(parentId) : () => {},
+          onReact: (commentId, btn) => handleCommentReaction(commentId, btn),
+          depth
+        });
+        repliesWrap.appendChild(commentNode);
+        
+        // Render nested replies (up to 3 levels deep)
+        if (depth < 3) {
+          const nestedReplies = renderReplies(r.id, depth + 1);
+          if (nestedReplies) repliesWrap.appendChild(nestedReplies);
+        }
+      });
+      
+      return repliesWrap;
+    };
+
     topLevel.forEach((c) => {
       const block = document.createElement("div");
       block.className = "space-y-2";
       block.appendChild(renderCommentNode(c, { 
         onReply: (parentId) => openReplyForm(parentId),
-        onReact: (commentId, btn) => handleCommentReaction(commentId, btn)
+        onReact: (commentId, btn) => handleCommentReaction(commentId, btn),
+        depth: 0
       }));
 
-      const replies = byParent.get(c.id) || [];
-      if (replies.length) {
-        const repliesWrap = document.createElement("div");
-        repliesWrap.className = "ml-4 mt-2 space-y-2 border-l-2 border-accent/20 pl-3";
-        replies.forEach((r) => repliesWrap.appendChild(renderCommentNode(r, { 
-          onReply: () => {},
-          onReact: (commentId, btn) => handleCommentReaction(commentId, btn)
-        })));
-        block.appendChild(repliesWrap);
-      }
+      const replies = renderReplies(c.id, 1);
+      if (replies) block.appendChild(replies);
+      
       container.appendChild(block);
     });
 
