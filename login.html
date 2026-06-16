@@ -205,6 +205,9 @@
               />
               <p id="passwordError" class="mt-2 text-xs text-rose-400 hidden"></p>
               <p class="mt-2 text-xs text-white/50">Passwords must be at least 6 characters.</p>
+              <button type="button" id="forgotPasswordBtn" class="mt-2 text-xs text-accent hover:text-accent/80 transition">
+                Forgot password?
+              </button>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
@@ -232,9 +235,46 @@
     </div>
   </main>
 
+  <!-- Password Reset Modal -->
+  <div id="passwordResetModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Reset Password</h2>
+        <button type="button" id="closeResetModal" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Enter your email address and we'll send you a link to reset your password.
+      </p>
+      <form id="passwordResetForm" class="space-y-4">
+        <div>
+          <label for="resetEmail" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Email address</label>
+          <input
+            id="resetEmail"
+            type="email"
+            required
+            class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30"
+            placeholder="you@example.com"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition"
+          id="sendResetBtn"
+        >
+          Send Reset Link
+        </button>
+      </form>
+      <div id="resetStatus" class="mt-4 text-sm hidden"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { initFirebase } from "./mini-fb/src/firebase-config.js";
-    import { ensureAuth, login, createAccount, getCurrentUser } from "./mini-fb/src/auth.js";
+    import { ensureAuth, login, createAccount, getCurrentUser, resetPassword } from "./mini-fb/src/auth.js";
     import { ensureProfile } from "./mini-fb/src/page-boot.js";
     import { showToast } from "./mini-fb/src/ui.js";
 
@@ -248,6 +288,15 @@
     const authStatus = document.getElementById("authStatus");
     const loginBtn = document.getElementById("loginBtn");
     const createAccountBtn = document.getElementById("createAccountBtn");
+
+    // Password reset modal elements
+    const passwordResetModal = document.getElementById("passwordResetModal");
+    const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+    const closeResetModal = document.getElementById("closeResetModal");
+    const passwordResetForm = document.getElementById("passwordResetForm");
+    const resetEmail = document.getElementById("resetEmail");
+    const sendResetBtn = document.getElementById("sendResetBtn");
+    const resetStatus = document.getElementById("resetStatus");
 
     const showStatus = (msg, isError = false) => {
       authStatus.textContent = msg;
@@ -368,6 +417,64 @@
     const darkModeToggle = document.getElementById("darkModeToggle");
     const moonIcon = document.getElementById("moonIcon");
     const sunIcon = document.getElementById("sunIcon");
+
+    // Password reset modal functionality
+    forgotPasswordBtn.addEventListener("click", () => {
+      passwordResetModal.classList.remove("hidden");
+      resetEmail.value = emailEl.value || "";
+      resetEmail.focus();
+    });
+
+    closeResetModal.addEventListener("click", () => {
+      passwordResetModal.classList.add("hidden");
+      resetStatus.classList.add("hidden");
+      passwordResetForm.reset();
+    });
+
+    passwordResetModal.addEventListener("click", (e) => {
+      if (e.target === passwordResetModal) {
+        passwordResetModal.classList.add("hidden");
+        resetStatus.classList.add("hidden");
+        passwordResetForm.reset();
+      }
+    });
+
+    passwordResetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = resetEmail.value.trim();
+      
+      if (!validateEmail(email)) {
+        resetStatus.textContent = "Please enter a valid email address";
+        resetStatus.className = "mt-4 text-sm text-rose-500";
+        resetStatus.classList.remove("hidden");
+        return;
+      }
+
+      sendResetBtn.disabled = true;
+      sendResetBtn.textContent = "Sending...";
+      
+      try {
+        await resetPassword(firebase, email);
+        resetStatus.textContent = "Password reset email sent! Check your inbox.";
+        resetStatus.className = "mt-4 text-sm text-emerald-500";
+        resetStatus.classList.remove("hidden");
+        showToast("Password reset email sent!", "success");
+        
+        // Close modal after 3 seconds
+        setTimeout(() => {
+          passwordResetModal.classList.add("hidden");
+          resetStatus.classList.add("hidden");
+          passwordResetForm.reset();
+        }, 3000);
+      } catch (err) {
+        resetStatus.textContent = err.message || "Failed to send reset email. Please try again.";
+        resetStatus.className = "mt-4 text-sm text-rose-500";
+        resetStatus.classList.remove("hidden");
+      } finally {
+        sendResetBtn.disabled = false;
+        sendResetBtn.textContent = "Send Reset Link";
+      }
+    });
 
     // Check for saved preference or system preference
     if (localStorage.getItem("darkMode") === "true" ||

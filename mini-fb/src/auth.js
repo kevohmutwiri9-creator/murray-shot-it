@@ -1,4 +1,4 @@
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getDbService } from "./firebase-config.js";
 
@@ -48,4 +48,9 @@ export async function isAdmin(firebaseApp, uid) {
   const ref = doc(db, "admins", uid);
   const snap = await getDoc(ref);
   return snap.exists();
+}
+
+export async function resetPassword(firebaseApp, email) {
+  const auth = getAuth(firebaseApp);
+  await sendPasswordResetEmail(auth, email);
 }
