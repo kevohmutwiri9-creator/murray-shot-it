@@ -101,7 +101,7 @@ service cloud.firestore {
 
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.toUid == request.auth.uid;
-      allow create: if notBanned();
+      allow create: if isSignedIn();
       allow update: if isSignedIn()
         && resource.data.toUid == request.auth.uid
         && onlyKeysChanged(['read']);
@@ -143,8 +143,8 @@ service cloud.firestore {
 
     match /saves/{saveId} {
       allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
-      allow create: if notBanned() && request.resource.data.uid == request.auth.uid;
-      allow delete: if notBanned() && resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
     match /blocks/{blockId} {
