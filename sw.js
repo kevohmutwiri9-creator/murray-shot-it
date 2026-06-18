@@ -54,8 +54,18 @@ self.addEventListener('activate', event => {
 function getCacheStrategy(request) {
   const url = new URL(request.url);
 
+  // Only cache GET requests
+  if (request.method !== 'GET') {
+    return 'network-first';
+  }
+
   // Static assets - cache first
-  if (STATIC_ASSETS.some(asset => url.pathname.includes(asset) || url.href === asset)) {
+  if (STATIC_ASSETS.some(asset => {
+    if (asset.startsWith('http')) {
+      return url.href === asset;
+    }
+    return url.pathname === asset;
+  })) {
     return 'cache-first';
   }
 
@@ -140,6 +150,19 @@ async function staleWhileRevalidate(request) {
 
 // Fetch event - apply appropriate caching strategy
 self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+
+  // Bypass service worker for cross-origin static asset requests like Tailwind CDN
+  if (requestUrl.origin !== self.location.origin) {
+    if (
+      requestUrl.hostname.includes('cdn.tailwindcss.com') ||
+      requestUrl.hostname.includes('fonts.googleapis.com') ||
+      requestUrl.hostname.includes('fonts.gstatic.com')
+    ) {
+      return; // Let the browser handle cross-origin CDN and font fetches directly
+    }
+  }
+
   event.respondWith(
     (async () => {
       const strategy = getCacheStrategy(event.request);
