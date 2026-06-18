@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `snapverse-${CACHE_VERSION}`;
 const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
@@ -20,7 +20,6 @@ const STATIC_ASSETS = [
   '/mini-fb/saved.html',
   '/mini-fb/hashtag.html',
   '/mini-fb/admin.html',
-  'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
 
