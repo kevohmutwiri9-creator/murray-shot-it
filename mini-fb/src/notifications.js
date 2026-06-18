@@ -275,10 +275,11 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
         listEl.appendChild(item);
       });
     },
-    () => {
+    (error) => {
+      console.error("Could not load notifications:", error);
       if (listEl) {
         listEl.innerHTML =
-          '<div class="p-4 text-center text-rose-500 text-sm">Could not load notifications. Add a Firestore index for toUid + createdAt.</div>';
+          `<div class="p-4 text-center text-rose-500 text-sm">Could not load notifications. ${error?.message ? error.message : 'Check Firestore permissions and indexes.'}</div>`;
       }
     }
   );
@@ -334,8 +335,14 @@ export function startMessageNotifications(firebaseApp, { badgeEl, mobileBadgeEl 
         mobileBadgeEl.classList.toggle("hidden", unreadMessages === 0);
       }
     },
-    () => {
-      console.log("Could not load message notifications");
+    (error) => {
+      console.error("Could not load message notifications:", error);
+      if (badgeEl) {
+        badgeEl.classList.add("hidden");
+      }
+      if (mobileBadgeEl) {
+        mobileBadgeEl.classList.add("hidden");
+      }
     }
   );
 }
