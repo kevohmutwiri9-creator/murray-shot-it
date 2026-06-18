@@ -10,18 +10,23 @@ export async function isUserBanned(firebaseApp, uid) {
 }
 
 export async function ensureProfile(firebaseApp, user) {
-  const db = getDbService(firebaseApp);
-  const ref = doc(db, "profiles", user.uid);
-  const snap = await getDoc(ref);
-  if (snap.exists()) return;
+  try {
+    const db = getDbService(firebaseApp);
+    const ref = doc(db, "profiles", user.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
 
-  await setDoc(ref, {
-    uid: user.uid,
-    email: user.email || null,
-    displayName: user.email?.split("@")[0] || "User",
-    bio: "",
-    createdAt: serverTimestamp(),
-  });
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.email?.split("@")[0] || "User",
+      bio: "",
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.warn("Error ensuring profile:", error);
+    // Allow app to continue even if profile creation fails
+  }
 }
 
 /**
