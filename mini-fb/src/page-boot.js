@@ -86,8 +86,9 @@ export function bootPage(firebaseApp) {
 
 function startNavBadges(firebaseApp) {
   const badge = document.getElementById("messagesBadge");
-  if (!badge || !getCurrentUser()) return;
+  const mobileBadge = document.getElementById("mobileMessagesBadge");
+  if (!getCurrentUser()) return;
   import("./messages-unread.js").then(({ startMessagesBadge }) => {
-    startMessagesBadge(firebaseApp.__db, badge);
+    startMessagesBadge(firebaseApp.__db, badge, mobileBadge);
   });
 }

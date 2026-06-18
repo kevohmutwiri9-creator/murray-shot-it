@@ -98,6 +98,22 @@ export async function markConversationRead(db, convId) {
     }
   });
   if (n) await batch.commit();
+
+  const notifQuery = query(
+    collection(db, "notifications"),
+    where("toUid", "==", user.uid),
+    where("type", "==", "message"),
+    where("conversationId", "==", convId),
+    where("read", "==", false)
+  );
+  const notifSnap = await getDocs(notifQuery);
+  const notifBatch = writeBatch(db);
+  let notifUpdates = 0;
+  notifSnap.forEach((notifDoc) => {
+    notifBatch.update(doc(db, "notifications", notifDoc.id), { read: true });
+    notifUpdates++;
+  });
+  if (notifUpdates) await notifBatch.commit();
 }
 
 export async function markMessagesDelivered(db, convId) {
