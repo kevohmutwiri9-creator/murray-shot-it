@@ -5,9 +5,14 @@ import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/fi
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 export async function isUserBanned(firebaseApp, uid) {
-  const db = getDbService(firebaseApp);
-  const snap = await getDoc(doc(db, "banned", uid));
-  return snap.exists();
+  try {
+    const db = getDbService(firebaseApp);
+    const snap = await getDoc(doc(db, "banned", uid));
+    return snap.exists();
+  } catch (error) {
+    console.warn("Error checking ban status:", error);
+    return false; // Allow access if ban check fails
+  }
 }
 
 export async function ensureProfile(firebaseApp, user) {
