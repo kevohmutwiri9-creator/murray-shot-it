@@ -14,6 +14,17 @@ export async function uploadProfilePhoto(firebaseApp, file) {
   if (!user) throw new Error("Not logged in");
   if (!file) throw new Error("No file provided");
 
+  // Validate file type
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please select an image file");
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    throw new Error("Image must be less than 5MB");
+  }
+
   const db = getDbService(firebaseApp);
 
   // Compress image before upload
@@ -78,4 +89,23 @@ export function promptProfilePhotoUpload(firebaseApp, onSuccess, onError) {
   });
 
   input.click();
+}
+
+/**
+ * Get profile display info with photo
+ * @param {Object} profile - Profile data from Firestore
+ * @param {string} email - User email
+ * @returns {Object} - Display info with photo
+ */
+export function getProfileDisplay(profile, email) {
+  const displayName = profile?.displayName || email.split("@")[0];
+  const photoUrl = profile?.photoUrl || null;
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return {
+    displayName,
+    photoUrl,
+    initial,
+    isPhotoSet: !!photoUrl,
+  };
 }
