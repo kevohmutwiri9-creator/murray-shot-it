@@ -1,9 +1,8 @@
-const CACHE_VERSION = 'v3';
-const CACHE_NAME = `snapverse-${CACHE_VERSION}`;
-const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v5';
+const CACHE_NAME = snapverse-;
+const STATIC_CACHE = snapverse-static-;
+const DYNAMIC_CACHE = snapverse-dynamic-;
 
-// Static assets to cache on install
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -23,173 +22,80 @@ const STATIC_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
 
-// Install event - cache static assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
-      .then(cache => {
-        return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
-      })
-      .then(() => self.skipWaiting())
+      .then(cache => cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })))
+      ).then(() => self.skipWaiting())
   );
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then(cacheNames => Promise.all(
+      cacheNames.map(cacheName => {
+        if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+          console.log('Deleting old cache:', cacheName);
+          return caches.delete(cacheName);
+        }
+      })
+    )).then(() => self.clients.claim())
   );
 });
 
-// Determine caching strategy based on request
 function getCacheStrategy(request) {
   const url = new URL(request.url);
-
-  // Only cache GET requests
-  if (request.method !== 'GET') {
-    return 'network-first';
-  }
-
-  // Static assets - cache first
-  if (STATIC_ASSETS.some(asset => {
-    if (asset.startsWith('http')) {
-      return url.href === asset;
-    }
-    return url.pathname === asset;
-  })) {
-    return 'cache-first';
-  }
-
-  // API calls - network first
-  if (url.hostname.includes('firebase') || url.hostname.includes('gstatic')) {
-    return 'network-first';
-  }
-
-  // Images - cache first with short TTL
-  if (request.destination === 'image') {
-    return 'cache-first';
-  }
-
-  // HTML pages - network first with cache fallback
-  if (request.destination === 'document') {
-    return 'network-first';
-  }
-
-  // Default - stale while revalidate
+  if (request.method !== 'GET') return 'network-first';
+  if (STATIC_ASSETS.some(a => a.startsWith('http') ? url.href === a : url.pathname === a)) return 'cache-first';
+  if (url.hostname.includes('firebase') || url.hostname.includes('gstatic')) return 'network-first';
+  if (request.destination === 'image') return 'cache-first';
+  if (request.destination === 'document') return 'network-first';
   return 'stale-while-revalidate';
 }
 
-// Cache-first strategy
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cached = await cache.match(request);
-  
-  if (cached) {
-    return cached;
-  }
-
+  if (cached) return cached;
   try {
     const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
+    if (response.ok) cache.put(request, response.clone());
     return response;
-  } catch (error) {
-    console.error('Cache-first failed:', error);
-    throw error;
-  }
+  } catch (e) { throw e; }
 }
 
-// Network-first strategy
 async function networkFirst(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
-  
   try {
     const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
+    if (response.ok) cache.put(request, response.clone());
     return response;
-  } catch (error) {
-    console.log('Network failed, trying cache:', error);
+  } catch (e) {
     const cached = await cache.match(request);
-    if (cached) {
-      return cached;
-    }
-    throw error;
+    if (cached) return cached;
+    throw e;
   }
 }
 
-// Stale-while-revalidate strategy
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cached = await cache.match(request);
-
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(error => {
-    console.error('Fetch failed in stale-while-revalidate:', error);
-    if (cached) return cached;
-    throw error;
-  });
-
-  return cached || fetchPromise;
+  const p = fetch(request).then(r => { if (r.ok) cache.put(request, r.clone()); return r; }).catch(e => cached || Promise.reject(e));
+  return cached || p;
 }
 
-// Fetch event - apply appropriate caching strategy
 self.addEventListener('fetch', event => {
-  const requestUrl = new URL(event.request.url);
-
-  // Bypass service worker for cross-origin static asset requests like Tailwind CDN
-  if (requestUrl.origin !== self.location.origin) {
-    if (
-      requestUrl.hostname.includes('cdn.tailwindcss.com') ||
-      requestUrl.hostname.includes('fonts.googleapis.com') ||
-      requestUrl.hostname.includes('fonts.gstatic.com')
-    ) {
-      return; // Let the browser handle cross-origin CDN and font fetches directly
-    }
-  }
-
-  event.respondWith(
-    (async () => {
-      const strategy = getCacheStrategy(event.request);
-
-      switch (strategy) {
-        case 'cache-first':
-          return cacheFirst(event.request);
-        case 'network-first':
-          return networkFirst(event.request);
-        case 'stale-while-revalidate':
-          return staleWhileRevalidate(event.request);
-        default:
-          return staleWhileRevalidate(event.request);
-      }
-    })()
-  );
+  if (event.request.method !== 'GET') return;
+  try {
+    const url = new URL(event.request.url);
+    if (url.protocol === 'chrome-extension:' || url.protocol === 'about:' || url.protocol === 'data:') return;
+    if (url.origin !== self.location.origin && (url.hostname.includes('cdn.tailwindcss.com') || url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com'))) return;
+  } catch { return; }
+  event.respondWith((async () => {
+    const s = getCacheStrategy(event.request);
+    return s === 'cache-first' ? cacheFirst(event.request) : s === 'network-first' ? networkFirst(event.request) : staleWhileRevalidate(event.request);
+  })());
 });
 
-// Background sync for offline actions
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-posts') {
-    event.waitUntil(syncPosts());
-  }
-});
-
-// Sync posts when back online
-async function syncPosts() {
-  // Implementation for syncing offline posts
-  console.log('Syncing offline posts...');
-}
+self.addEventListener('sync', event => { if (event.tag === 'sync-posts') event.waitUntil(syncPosts()); });
+async function syncPosts() { console.log('Syncing offline posts...'); }
