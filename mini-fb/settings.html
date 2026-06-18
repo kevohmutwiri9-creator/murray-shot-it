@@ -357,6 +357,8 @@
     import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+    import { uploadProfilePhoto, promptProfilePhotoUpload } from "./src/profile-photo.js";
+
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("Not signed in");
@@ -373,29 +375,67 @@
       const accountInfo = document.getElementById("accountInfo");
       if (profileSnap.exists()) {
         const profile = profileSnap.data();
+        const photoUrl = profile.photoUrl || null;
+        const avatar = photoUrl 
+          ? `<img src="${photoUrl}" alt="Profile" class="w-12 h-12 rounded-xl object-cover">`
+          : `<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">${(profile.displayName || user.email).charAt(0).toUpperCase()}</div>`;
+        
         accountInfo.innerHTML = `
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
-              ${(profile.displayName || user.email).charAt(0).toUpperCase()}
+          <div class="flex items-center gap-4 justify-between">
+            <div class="flex items-center gap-4">
+              ${avatar}
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white">${profile.displayName || user.email}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">${user.email}</p>
+              </div>
             </div>
-            <div>
-              <p class="font-semibold text-gray-900 dark:text-white">${profile.displayName || user.email}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">${user.email}</p>
-            </div>
+            <button id="uploadPhotoBtn" class="px-3 py-1 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accentHover transition-colors">
+              Change Photo
+            </button>
           </div>
         `;
+
+        // Add photo upload handler
+        document.getElementById("uploadPhotoBtn")?.addEventListener("click", () => {
+          promptProfilePhotoUpload(firebase,
+            (photoUrl) => {
+              showToast("Profile photo updated!", "success");
+              loadAccountInfo();
+            },
+            (error) => {
+              showToast("Failed to upload photo: " + error.message, "error");
+            }
+          );
+        });
       } else {
         accountInfo.innerHTML = `
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
-              ${user.email.charAt(0).toUpperCase()}
+          <div class="flex items-center gap-4 justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold flex items-center justify-center">
+                ${user.email.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white">${user.email}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Complete your profile</p>
+              </div>
             </div>
-            <div>
-              <p class="font-semibold text-gray-900 dark:text-white">${user.email}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Complete your profile</p>
-            </div>
+            <button id="uploadPhotoBtn" class="px-3 py-1 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accentHover transition-colors">
+              Add Photo
+            </button>
           </div>
         `;
+
+        document.getElementById("uploadPhotoBtn")?.addEventListener("click", () => {
+          promptProfilePhotoUpload(firebase,
+            (photoUrl) => {
+              showToast("Profile photo added!", "success");
+              loadAccountInfo();
+            },
+            (error) => {
+              showToast("Failed to upload photo: " + error.message, "error");
+            }
+          );
+        });
       }
     };
 
@@ -776,10 +816,12 @@
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       try {
-        await signOut(getAuth(firebase));
+        const auth = getAuth();
+        await signOut(auth);
         window.location.href = "/login.html";
-      } catch {
-        showToast("Logout failed. Please try again.", "error");
+      } catch (err) {
+        console.error("Logout error:", err);
+        showToast("Logout failed: " + (err.message || "Please try again."), "error");
       }
     });
 
