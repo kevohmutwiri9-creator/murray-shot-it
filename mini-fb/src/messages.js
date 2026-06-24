@@ -19,8 +19,16 @@ import { getCurrentUser } from "./auth.js";
 import { createNotificationForMessage } from "./notifications.js";
 import { checkRateLimit, recordRateLimit } from "./rate-limit.js";
 
+// Conversation cache to reduce Firestore reads
+const conversationCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export function conversationId(uidA, uidB) {
   return [uidA, uidB].sort().join("_");
+}
+
+export function invalidateConversationCache(convId) {
+  conversationCache.delete(convId);
 }
 
 export function isGroupConversationId(id) {
@@ -33,6 +41,13 @@ export async function getOrCreateConversation(db, otherUid) {
   if (!otherUid || otherUid === user.uid) throw new Error("Invalid recipient.");
 
   const id = conversationId(user.uid, otherUid);
+  
+  // Check cache first
+  const cached = conversationCache.get(id);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return id;
+  }
+  
   const ref = doc(db, "conversations", id);
   await setDoc(
     ref,
@@ -44,6 +59,10 @@ export async function getOrCreateConversation(db, otherUid) {
     },
     { merge: true }
   );
+  
+  // Update cache
+  conversationCache.set(id, { timestamp: Date.now(), data: { type: 'dm' } });
+  
   return id;
 }
 
