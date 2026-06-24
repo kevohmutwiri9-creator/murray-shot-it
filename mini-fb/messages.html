@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
   <title>SnapVerse • Messages</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -113,7 +113,7 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
       <a href="/index.html" class="font-bold text-accent shrink-0 hover:scale-105 transition-transform">← Feed</a>
       <h1 class="font-bold text-gray-900 dark:text-dark-text">Messages</h1>
-      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Toggle dark mode">
         <span class="dark:hidden">🌙</span>
         <span class="hidden dark:block">☀️</span>
       </button>
@@ -126,7 +126,7 @@
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">New message</label>
         <input id="userSearch" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="searchResults" class="max-h-32 overflow-y-auto hidden"></div>
-        <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">+ New group chat</button>
+        <button type="button" id="newGroupBtn" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Create new group chat">+ New group chat</button>
       </div>
       
       <!-- Global Message Search -->
@@ -156,7 +156,7 @@
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">New message</label>
         <input id="userSearchMobile" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="searchResultsMobile" class="max-h-32 overflow-y-auto hidden"></div>
-        <button type="button" id="newGroupBtnMobile" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">+ New group chat</button>
+        <button type="button" id="newGroupBtnMobile" class="w-full text-sm font-semibold py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Create new group chat">+ New group chat</button>
       </div>
       
       <!-- Online People Section -->
@@ -176,7 +176,7 @@
     <section id="chatSection" class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up hidden lg:flex">
       <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50">
         <div class="flex items-center gap-3 mb-3">
-          <button id="backToConvList" class="lg:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
+          <button id="backToConvList" class="lg:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Back to conversations">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -189,7 +189,7 @@
             <p id="chatHeaderStatus" class="text-xs text-gray-500 dark:text-dark-muted hidden"></p>
           </div>
           <div id="chatHeaderActions" class="shrink-0 flex items-center gap-2">
-            <button id="toggleMessageSearchBtn" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Search messages">
+            <button id="toggleMessageSearchBtn" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Toggle message search">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
@@ -207,10 +207,13 @@
       <div id="replyContext" class="px-4 hidden"></div>
       <form id="chatForm" class="p-4 border-t border-gray-200/50 dark:border-dark-border/50 flex flex-wrap gap-2 hidden">
         <input id="chatImage" type="file" accept="image/*" class="hidden" />
-        <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">📷</button>
-        <button type="button" id="emojiBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">😊</button>
-        <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="flex-1 min-w-[120px] rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-4 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
-        <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow shrink-0">Send</button>
+        <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Attach image">📷</button>
+        <button type="button" id="emojiBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Open emoji picker">😊</button>
+        <div class="flex-1 min-w-[120px] relative">
+          <input id="chatInput" type="text" maxlength="500" placeholder="Type a message..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-4 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" aria-describedby="charCounter" />
+          <span id="charCounter" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">0/500</span>
+        </div>
+        <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow shrink-0" aria-label="Send message">Send</button>
       </form>
       <!-- Emoji Picker -->
       <div id="emojiPicker" class="absolute bottom-20 left-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg p-3 hidden z-50 w-64">
@@ -415,18 +418,35 @@
       picker.style.bottom = "60px";
       picker.style.left = "50%";
       picker.style.transform = "translateX(-50%)";
+      picker.setAttribute("role", "dialog");
+      picker.setAttribute("aria-label", "Select reaction");
       
-      reactionEmojis.forEach(emoji => {
+      reactionEmojis.forEach((emoji, index) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "text-2xl hover:scale-125 transition-transform p-1";
+        btn.className = "text-2xl hover:scale-125 transition-transform p-1 focus:outline-none focus:ring-2 focus:ring-accent rounded";
         btn.textContent = emoji;
+        btn.setAttribute("aria-label", `React with ${emoji}`);
+        btn.setAttribute("tabindex", "0");
         btn.addEventListener("click", () => {
           toggleReaction(messageId, emoji);
           picker.remove();
         });
+        btn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleReaction(messageId, emoji);
+            picker.remove();
+          }
+          if (e.key === "Escape") {
+            picker.remove();
+          }
+        });
         picker.appendChild(btn);
       });
+      
+      // Focus first button
+      setTimeout(() => picker.querySelector("button")?.focus(), 100);
       
       // Close on click outside
       const closePicker = (e) => {
@@ -741,9 +761,20 @@
         const emoji = emojiBtn.dataset.emoji;
         chatInput.value += emoji;
         chatInput.focus();
+        updateCharCounter();
         emojiPicker.classList.add('hidden');
       }
     });
+
+    // Character counter
+    const charCounter = document.getElementById('charCounter');
+    function updateCharCounter() {
+      const length = chatInput.value.length;
+      charCounter.textContent = `${length}/500`;
+      charCounter.className = `absolute right-3 top-1/2 -translate-y-1/2 text-xs ${length >= 450 ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'}`;
+    }
+    chatInput.addEventListener('input', updateCharCounter);
+    updateCharCounter();
 
     // Close emoji picker when clicking outside
     document.addEventListener('click', (e) => {

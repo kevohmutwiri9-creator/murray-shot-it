@@ -1,7 +1,7 @@
 const CACHE_VERSION = 'v5';
-const CACHE_NAME = snapverse-;
-const STATIC_CACHE = snapverse-static-;
-const DYNAMIC_CACHE = snapverse-dynamic-;
+const CACHE_NAME = `snapverse-${CACHE_VERSION}`;
+const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
   '/',
