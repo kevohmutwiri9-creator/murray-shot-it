@@ -58,6 +58,12 @@ async function flagPost(postId) {
 }
 
 function showTipModal(toUserId, postId) {
+  const getTillNumber = () => import.meta.env?.VITE_TILL_NUMBER || process.env?.TILL_NUMBER || '';
+  const getTillAccountName = () => import.meta.env?.VITE_TILL_ACCOUNT_NAME || process.env?.TILL_ACCOUNT_NAME || '';
+  
+  const tillNumber = getTillNumber();
+  const tillAccountName = getTillAccountName();
+  
   const modal = document.createElement('div');
   modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
   modal.innerHTML = `
@@ -66,8 +72,8 @@ function showTipModal(toUserId, postId) {
       
       <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800">
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pay via Till Number</p>
-        <p class="text-2xl font-bold text-green-600 dark:text-green-400">123456</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">SnapVerse Ltd</p>
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400">${tillNumber || 'Contact support for payment info'}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${tillAccountName}</p>
       </div>
       
       <div class="space-y-3 mb-4">
@@ -130,6 +136,11 @@ function showTipModal(toUserId, postId) {
     
     if (!transactionId || !phoneNumber) {
       showToast('Please enter transaction ID and phone number', 'error');
+      return;
+    }
+    
+    if (!tillNumber) {
+      showToast('Payment system not configured. Please contact support.', 'error');
       return;
     }
     

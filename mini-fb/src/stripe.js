@@ -1,14 +1,31 @@
 // Till Number Payment System for SnapVerse
 // This module handles till number payment processing for subscriptions
 
-// Your Till Number for payments
-const TILL_NUMBER = '123456'; // Replace with your actual Till Number
-const TILL_ACCOUNT_NAME = 'SnapVerse Ltd'; // Replace with your account name
+// IMPORTANT: Till Number should be loaded from environment variables or secure config
+// Do not hardcode sensitive payment information in client-side code
+const getTillNumber = () => {
+  // In production, load from environment variable or secure config
+  // For development, you can set this in a .env file or similar
+  return import.meta.env.VITE_TILL_NUMBER || process.env.TILL_NUMBER || '';
+};
+
+const getTillAccountName = () => {
+  // In production, load from environment variable or secure config
+  return import.meta.env.VITE_TILL_ACCOUNT_NAME || process.env.TILL_ACCOUNT_NAME || '';
+};
 
 /**
  * Show till number payment modal
  */
 export function showTillPaymentModal(plan, amount) {
+  const tillNumber = getTillNumber();
+  const tillAccountName = getTillAccountName();
+  
+  if (!tillNumber) {
+    alert('Payment system not configured. Please contact support.');
+    return Promise.reject(new Error('Payment system not configured'));
+  }
+
   const modal = document.createElement('div');
   modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
   modal.innerHTML = `
@@ -17,8 +34,8 @@ export function showTillPaymentModal(plan, amount) {
       
       <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800">
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pay via Till Number</p>
-        <p class="text-3xl font-bold text-green-600 dark:text-green-400">${TILL_NUMBER}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${TILL_ACCOUNT_NAME}</p>
+        <p class="text-3xl font-bold text-green-600 dark:text-green-400">${tillNumber}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${tillAccountName}</p>
       </div>
       
       <div class="space-y-3 mb-4">
@@ -136,12 +153,12 @@ export async function processTipPayment(db, fromUserId, toUserId, amount, descri
 }
 
 /**
- * Get till number info
+ * Get till number info (server-side only)
  */
 export function getTillInfo() {
   return {
-    tillNumber: TILL_NUMBER,
-    accountName: TILL_ACCOUNT_NAME,
+    tillNumber: getTillNumber(),
+    accountName: getTillAccountName(),
   };
 }
 
