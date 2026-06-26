@@ -53,22 +53,44 @@ function getCacheStrategy(request) {
   return 'stale-while-revalidate';
 }
 
+function isHttpGet(request) {
+  try {
+    const url = new URL(request.url);
+    return (request.method === 'GET') && (url.protocol === 'http:' || url.protocol === 'https:');
+  } catch {
+    return false;
+  }
+}
+
+async function safeCachePut(cache, request, response) {
+  if (!isHttpGet(request)) return;
+  if (!response || !response.ok) return;
+  try {
+    await cache.put(request, response.clone());
+  } catch (e) {
+    // Cache.put can throw for unsupported schemes/methods.
+    // Ignore to avoid SW crashing.
+  }
+}
+
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cached = await cache.match(request);
   if (cached) return cached;
   try {
     const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
+    await safeCachePut(cache, request, response);
     return response;
-  } catch (e) { throw e; }
+  } catch (e) {
+    throw e;
+  }
 }
 
 async function networkFirst(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
+    await safeCachePut(cache, request, response);
     return response;
   } catch (e) {
     const cached = await cache.match(request);
@@ -80,9 +102,15 @@ async function networkFirst(request) {
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cached = await cache.match(request);
-  const p = fetch(request).then(r => { if (r.ok) cache.put(request, r.clone()); return r; }).catch(e => cached || Promise.reject(e));
+  const p = fetch(request)
+    .then(async (r) => {
+      await safeCachePut(cache, request, r);
+      return r;
+    })
+    .catch((e) => cached || Promise.reject(e));
   return cached || p;
 }
+
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
