@@ -18,6 +18,7 @@ import { extractMentions, saveMentions, notifyMentionedUsers } from "./mentions.
 import { checkRateLimit, recordRateLimit } from "./rate-limit.js";
 import { INITIAL_POST_STATS } from "./post-stats.js";
 import { showToast } from "./ui.js";
+import { tagProductInPost } from "./products.js";
 
 function createEl(tag, className, text) {
   const el = document.createElement(tag);
@@ -270,6 +271,17 @@ export function bindCreatePost(firebaseApp, { titleEl, textEl, fileEl, scheduleE
           actorEmail: user.email,
         });
       }
+
+      // Tag products if any were selected
+      const selectedProducts = window.selectedProductsForPost?.() || [];
+      for (const product of selectedProducts) {
+        try {
+          await tagProductInPost(db, postRef.id, product.id, user.uid);
+        } catch (err) {
+          console.error('Error tagging product:', err);
+        }
+      }
+
       recordRateLimit("post", user.uid);
 
       statusEl.textContent = scheduledTime

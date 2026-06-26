@@ -63,7 +63,12 @@ function showTipModal(toUserId, postId) {
   modal.innerHTML = `
     <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Send a Tip</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Support this creator with a tip</p>
+      
+      <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800">
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pay via Till Number</p>
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400">123456</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">SnapVerse Ltd</p>
+      </div>
       
       <div class="space-y-3 mb-4">
         <button class="tip-amount w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent transition text-lg font-semibold" data-amount="1">$1</button>
@@ -75,6 +80,16 @@ function showTipModal(toUserId, postId) {
       <div class="mb-4">
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Custom amount</label>
         <input type="number" id="customTipAmount" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" placeholder="Enter amount" min="1" step="0.01">
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Transaction ID / M-Pesa Code</label>
+        <input type="text" id="tipTransactionId" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" placeholder="Enter your transaction ID" />
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+        <input type="tel" id="tipPhoneNumber" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" placeholder="e.g., 0712345678" />
       </div>
       
       <div class="flex gap-3">
@@ -105,14 +120,38 @@ function showTipModal(toUserId, postId) {
   
   document.getElementById('sendTipBtn').addEventListener('click', async () => {
     const amount = selectedAmount || parseFloat(customInput.value);
+    const transactionId = document.getElementById('tipTransactionId').value;
+    const phoneNumber = document.getElementById('tipPhoneNumber').value;
+    
     if (!amount || amount < 0.01) {
       showToast('Please enter a valid amount', 'error');
+      return;
+    }
+    
+    if (!transactionId || !phoneNumber) {
+      showToast('Please enter transaction ID and phone number', 'error');
       return;
     }
     
     try {
       const db = window.__firebaseApp.__db;
       const user = getCurrentUser();
+      
+      // Create payment record
+      const { addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+      await addDoc(collection(db, 'payments'), {
+        fromUserId: user.uid,
+        toUserId,
+        amount: dollarsToCents(amount),
+        description: `Tip for post ${postId}`,
+        transactionId,
+        phoneNumber,
+        status: 'pending',
+        paymentMethod: 'till',
+        createdAt: serverTimestamp(),
+      });
+      
+      // Process tip
       await processTip(db, user.uid, toUserId, dollarsToCents(amount), `Tip for post ${postId}`);
       showToast(`Tip of ${formatBalance(dollarsToCents(amount))} sent!`, 'success');
       modal.remove();

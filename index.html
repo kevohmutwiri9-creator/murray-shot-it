@@ -89,6 +89,7 @@
             <a href="mini-fb/saved.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Saved</a>
             <a href="/mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
             <a href="mini-fb/settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Settings</a>
+            <a href="mini-fb/subscriptions.html" class="text-accent font-medium text-sm">Premium</a>
           </div>
           <button id="mobileMenuBtn" class="sm:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -118,6 +119,7 @@
         <a href="mini-fb/saved.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Saved</a>
         <a href="/mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Profile</a>
         <a href="mini-fb/settings.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Settings</a>
+        <a href="mini-fb/subscriptions.html" class="block px-4 py-3 rounded-xl text-accent font-medium transition transform hover:scale-105">Premium</a>
       </nav>
     </div>
   </div>
@@ -346,6 +348,28 @@
                 type="datetime-local"
                 class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition"
               />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Tag Products (optional)</label>
+              <div class="flex gap-2">
+                <input
+                  id="productSearch"
+                  type="text"
+                  class="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition"
+                  placeholder="Search products..."
+                />
+                <button
+                  type="button"
+                  id="addProductBtn"
+                  class="px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                >
+                  Add
+                </button>
+              </div>
+              <div id="selectedProducts" class="flex flex-wrap gap-2 mt-2">
+                <!-- Selected products render here -->
+              </div>
             </div>
           </div>
 

@@ -135,6 +135,7 @@
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { initDarkMode } from "./src/shared.js";
     import { getSubscriptionStatus, getSubscriptionPlans } from "./src/subscriptions.js";
+    import { showTillPaymentModal, processSubscriptionPayment } from "./src/stripe.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
@@ -161,13 +162,31 @@
       `;
     }
 
-    // Stripe checkout (placeholder - needs actual Stripe integration)
-    document.getElementById("premiumBtn").addEventListener("click", () => {
-      alert("Stripe checkout integration needed. Add your Stripe publishable key to complete this.");
+    // Till Number checkout
+    document.getElementById("premiumBtn").addEventListener("click", async () => {
+      try {
+        const paymentDetails = await showTillPaymentModal('premium', 4.99);
+        await processSubscriptionPayment(db, user.uid, 'premium', paymentDetails);
+        alert('Payment confirmed! Your Premium subscription is now active.');
+        location.reload();
+      } catch (err) {
+        if (err.message !== 'Payment cancelled') {
+          console.error("Payment error:", err);
+        }
+      }
     });
 
-    document.getElementById("creatorBtn").addEventListener("click", () => {
-      alert("Stripe checkout integration needed. Add your Stripe publishable key to complete this.");
+    document.getElementById("creatorBtn").addEventListener("click", async () => {
+      try {
+        const paymentDetails = await showTillPaymentModal('creator', 9.99);
+        await processSubscriptionPayment(db, user.uid, 'creator', paymentDetails);
+        alert('Payment confirmed! Your Creator subscription is now active.');
+        location.reload();
+      } catch (err) {
+        if (err.message !== 'Payment cancelled') {
+          console.error("Payment error:", err);
+        }
+      }
     });
 
     // Cancel subscription
