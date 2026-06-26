@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
+  <title>SnapVerse • Product Marketplace</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com" async="false"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+</head>
+<body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30 px-4 py-3">
+    <div class="max-w-3xl mx-auto flex justify-between items-center">
+      <a href="/index.html" class="font-bold text-accent hover:scale-105 transition-transform">← Feed</a>
+      <h1 class="font-bold text-gray-900 dark:text-dark-text">Product Marketplace</h1>
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Toggle dark mode">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:block">☀️</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto p-4 space-y-6 animate-fade-in">
+    <!-- Search and Filter -->
+    <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border/50">
+      <div class="flex gap-3 mb-4">
+        <input id="searchInput" type="text" placeholder="Search products..." class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
+        <select id="categoryFilter" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
+        Loading products...
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-12">
+      <p class="text-gray-500 dark:text-gray-400">No products found</p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { requireAuth, bootPage } from "./src/page-boot.js";
+    import { initDarkMode } from "./src/shared.js";
+    import { searchProducts, getProductCategories } from "./src/products.js";
+
+    const firebase = initFirebase();
+    const user = await requireAuth(firebase);
+    if (!user) throw new Error("auth");
+    bootPage(firebase);
+    initDarkMode();
+
+    const db = firebase.__db;
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const productsGrid = document.getElementById("productsGrid");
+    const emptyState = document.getElementById("emptyState");
+
+    // Load categories
+    const categories = await getProductCategories(db);
+    categories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      categoryFilter.appendChild(option);
+    });
+
+    // Load products
+    async function loadProducts() {
+      const searchTerm = searchInput.value;
+      const category = categoryFilter.value;
+      
+      try {
+        const products = await searchProducts(db, searchTerm, category);
+        
+        if (products.length === 0) {
+          productsGrid.classList.add("hidden");
+          emptyState.classList.remove("hidden");
+          return;
+        }
+        
+        productsGrid.classList.remove("hidden");
+        emptyState.classList.add("hidden");
+        
+        productsGrid.innerHTML = products.map(product => `
+          <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border/50 hover:border-accent/50 transition-all cursor-pointer">
+            <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-48 object-cover rounded-xl mb-3" />
+            <h3 class="font-bold text-gray-900 dark:text-dark-text mb-1">${product.name}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">${product.description}</p>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-accent">$${(product.price / 100).toFixed(2)}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">${product.affiliateCommission}% commission</span>
+            </div>
+          </div>
+        `).join('');
+        
+        // Add click handlers
+        productsGrid.querySelectorAll('.cursor-pointer').forEach((card, index) => {
+          card.addEventListener('click', () => {
+            const product = products[index];
+            window.open(product.affiliateUrl, '_blank');
+          });
+        });
+      } catch (err) {
+        console.error("Failed to load products:", err);
+        productsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-rose-500">Failed to load products</div>';
+      }
+    }
+
+    // Debounce search
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(loadProducts, 300);
+    });
+
+    categoryFilter.addEventListener('change', loadProducts);
+
+    // Initial load
+    loadProducts();
+  </script>
+</body>
+</html>

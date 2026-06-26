@@ -18,6 +18,7 @@ import { profileUrl } from "./profiles-cache.js";
 import { promptFlagReason, showToast, showReactionPicker, promptTextInput } from "./ui.js";
 import { getReactionSummary, formatReactionSummaryBar } from "./reaction-summary.js";
 import { deleteMyPost } from "./posts.js";
+import { processTip, dollarsToCents, formatBalance } from "./transactions.js";
 
 const cardCommentsUnsubs = new Map();
 
@@ -54,6 +55,79 @@ async function flagPost(postId) {
     status: "pending",
   });
   showToast("Post flagged for review.", "success");
+}
+
+function showTipModal(toUserId, postId) {
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Send a Tip</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Support this creator with a tip</p>
+      
+      <div class="space-y-3 mb-4">
+        <button class="tip-amount w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent transition text-lg font-semibold" data-amount="1">$1</button>
+        <button class="tip-amount w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent transition text-lg font-semibold" data-amount="5">$5</button>
+        <button class="tip-amount w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent transition text-lg font-semibold" data-amount="10">$10</button>
+        <button class="tip-amount w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent transition text-lg font-semibold" data-amount="25">$25</button>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Custom amount</label>
+        <input type="number" id="customTipAmount" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" placeholder="Enter amount" min="1" step="0.01">
+      </div>
+      
+      <div class="flex gap-3">
+        <button id="sendTipBtn" class="flex-1 px-4 py-2 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">Send Tip</button>
+        <button id="cancelTipBtn" class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  let selectedAmount = 0;
+  
+  modal.querySelectorAll('.tip-amount').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.tip-amount').forEach(b => b.classList.remove('border-accent', 'bg-accent/10'));
+      btn.classList.add('border-accent', 'bg-accent/10');
+      selectedAmount = parseFloat(btn.dataset.amount);
+      document.getElementById('customTipAmount').value = '';
+    });
+  });
+  
+  const customInput = document.getElementById('customTipAmount');
+  customInput.addEventListener('input', () => {
+    modal.querySelectorAll('.tip-amount').forEach(b => b.classList.remove('border-accent', 'bg-accent/10'));
+    selectedAmount = parseFloat(customInput.value) || 0;
+  });
+  
+  document.getElementById('sendTipBtn').addEventListener('click', async () => {
+    const amount = selectedAmount || parseFloat(customInput.value);
+    if (!amount || amount < 0.01) {
+      showToast('Please enter a valid amount', 'error');
+      return;
+    }
+    
+    try {
+      const db = window.__firebaseApp.__db;
+      const user = getCurrentUser();
+      await processTip(db, user.uid, toUserId, dollarsToCents(amount), `Tip for post ${postId}`);
+      showToast(`Tip of ${formatBalance(dollarsToCents(amount))} sent!`, 'success');
+      modal.remove();
+    } catch (err) {
+      showToast(err.message || 'Failed to send tip', 'error');
+    }
+  });
+  
+  document.getElementById('cancelTipBtn').addEventListener('click', () => {
+    modal.remove();
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
 }
 
 function normalizeMediaList(post) {
@@ -327,6 +401,10 @@ export function renderPostCard(post, db) {
   sendDmBtn.type = "button";
   sendDmBtn.textContent = "✉ Send";
 
+  const tipBtn = createEl("button", "inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm font-semibold hover:border-yellow-500 transition");
+  tipBtn.type = "button";
+  tipBtn.textContent = "💰 Tip";
+
   if (me && post.authorUid === me.uid) {
     const editBtn = createEl("button", "inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm font-semibold");
     editBtn.type = "button";
@@ -355,6 +433,14 @@ export function renderPostCard(post, db) {
       window.location.href = `/mini-fb/messages.html?uid=${encodeURIComponent(post.authorUid)}&sharePost=${link}`;
     });
     actions.append(sendDmBtn);
+    
+    // Add tip button for other users' posts
+    if (post.authorUid !== me.uid) {
+      tipBtn.addEventListener("click", () => {
+        showTipModal(post.authorUid, post.id);
+      });
+      actions.append(tipBtn);
+    }
   }
 
   const counts = createEl("div", "w-full flex flex-col gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2");

@@ -353,7 +353,7 @@
     import { getCurrentUser, isAdmin } from "./src/auth.js";
     import { requireAuth, hideAdminNavIfNeeded, bootPage } from "./src/page-boot.js";
     import { addStoryFromFile } from "./src/stories.js";
-    import { showToast } from "./src/ui.js";
+    import { initDarkMode, initMobileMenu, showToast } from "./src/shared.js";
     import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -366,6 +366,8 @@
     const db = firebase.__db;
     await hideAdminNavIfNeeded(firebase, user);
     bootPage(firebase);
+    initDarkMode();
+    initMobileMenu();
 
     // Load account info
     const loadAccountInfo = async () => {

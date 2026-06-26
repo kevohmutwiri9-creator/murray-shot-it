@@ -14,6 +14,8 @@ import { canViewPost } from "./post-visibility.js";
 import { renderPostCard, openCommentsForPost } from "./post-card.js";
 import { getBlockedUids, filterBlockedPosts } from "./blocks.js";
 import { showToast } from "./ui.js";
+import { getTargetedAds, injectAdsIntoFeed, renderAdCard } from "./ads.js";
+import { hasFeature } from "./subscriptions.js";
 
 const FEED_PAGE_SIZE = 25;
 const LIVE_WINDOW = 30;
@@ -75,6 +77,13 @@ async function renderFeed(firebaseApp, mode) {
     posts = posts.filter((p) => followingSet.has(p.authorUid));
   }
 
+  // Inject ads if user is not premium
+  const showAds = user ? !(await hasFeature(db, user.uid, 'Ad-free experience')) : true;
+  if (showAds) {
+    const ads = await getTargetedAds(db, user || {});
+    posts = injectAdsIntoFeed(posts, ads);
+  }
+
   const total = posts.length;
   const visible = posts.slice(0, displayLimit);
 
@@ -89,7 +98,13 @@ async function renderFeed(firebaseApp, mode) {
     feedEmptyEl.classList.remove("hidden");
   }
 
-  visible.forEach((post) => feedEl.appendChild(renderPostCard(post, db)));
+  visible.forEach((item) => {
+    if (item.type === 'ad') {
+      feedEl.appendChild(renderAdCard(item, db, user?.uid));
+    } else {
+      feedEl.appendChild(renderPostCard(item, db));
+    }
+  });
 
   feedCountEl.textContent = `${visible.length}${total > visible.length ? ` of ${total}` : ""} post${total === 1 ? "" : "s"}`;
 

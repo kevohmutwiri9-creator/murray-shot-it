@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { globSync } from 'glob';
 
 export default defineConfig({
   root: '.',
@@ -7,10 +8,11 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'login.html'),
-      },
+      input: [
+        resolve(__dirname, 'index.html'),
+        resolve(__dirname, 'login.html'),
+        ...globSync('mini-fb/*.html').map(file => resolve(__dirname, file)),
+      ],
       output: {
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',

@@ -214,7 +214,7 @@
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { followUser, unfollowUser, isFollowing } from "./src/follows.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
-    import { showToast } from "./src/ui.js";
+    import { initDarkMode, initMobileMenu, showToast } from "./src/shared.js";
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
@@ -223,6 +223,8 @@
 
     const db = firebase.__db;
     bootPage(firebase);
+    initDarkMode();
+    initMobileMenu();
 
     const RECENT_KEY = "sv_recent_searches";
     function loadRecent() {

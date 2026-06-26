@@ -149,13 +149,13 @@
     import { getSavedPostIds } from "./src/bookmarks.js";
     import { fetchPost } from "./src/repost.js";
     import { renderPostCard } from "./src/post-card.js";
-    import { initDarkMode } from "./src/ui.js";
+    import { initDarkMode } from "./src/shared.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("auth");
     bootPage(firebase);
-    initDarkMode("darkModeToggle");
+    initDarkMode();
     window.currentFirebaseUser = user;
     window.__firebaseApp = firebase;
 

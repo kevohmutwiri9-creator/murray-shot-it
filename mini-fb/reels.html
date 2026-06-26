@@ -138,13 +138,13 @@
     import { initFirebase } from "./src/firebase-config.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { startReelsPage } from "./src/reels.js";
-    import { initDarkMode } from "./src/ui.js";
+    import { initDarkMode } from "./src/shared.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("auth");
     bootPage(firebase);
-    initDarkMode("darkModeToggle");
+    initDarkMode();
 
     const db = firebase.__db;
     startReelsPage(db, document.getElementById("reelsFeed"), { meUid: user.uid, firebase });

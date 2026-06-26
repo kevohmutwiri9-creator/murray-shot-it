@@ -219,13 +219,13 @@
     import { renderPostCard } from "./src/post-card.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
     import { filterBlockedPosts, getBlockedUids } from "./src/blocks.js";
-    import { initDarkMode } from "./src/ui.js";
+    import { initDarkMode } from "./src/shared.js";
     import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
     const user = await requireAuth(firebase);
     if (!user) throw new Error("auth");
-    initDarkMode("darkModeToggle");
+    initDarkMode();
     bootPage(firebase);
     window.__firebaseApp = firebase;
     window.currentFirebaseUser = user;

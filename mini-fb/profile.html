@@ -290,6 +290,7 @@
         <button type="button" id="tabPosts" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Posts</button>
         <button type="button" id="tabReels" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Reels</button>
         <button type="button" id="tabAbout" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">About</button>
+        <button type="button" id="tabAnalytics" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition hidden">Analytics</button>
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="postCount"></div>
     </section>
@@ -337,6 +338,48 @@
         <div id="aboutCard" class="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300"></div>
       </div>
     </section>
+
+    <!-- Analytics -->
+    <section id="analyticsSection" class="hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Creator Analytics</h3>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+            <p id="analyticsFollowers" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Followers</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+            <p id="analyticsPosts" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Posts</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+            <p id="analyticsLikes" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Likes</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+            <p id="analyticsEngagement" class="text-2xl font-bold text-accent">0%</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Engagement Rate</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Audience Demographics</h4>
+            <div id="audienceDemographics" class="text-sm text-gray-600 dark:text-gray-400">
+              <p class="text-center py-4">Loading demographics...</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Top Performing Posts</h4>
+            <div id="topPosts" class="space-y-2">
+              <p class="text-center py-4 text-sm text-gray-500 dark:text-gray-400">Loading top posts...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script type="module">
@@ -354,6 +397,8 @@
     import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount, getFollowingUids, getFollowerUids } from "./src/follows.js";
     import { blockUser, unblockUser, isBlocked } from "./src/blocks.js";
     import { reportUser } from "./src/user-reports.js";
+    import { getCreatorAnalytics, getAudienceInsights, getTopPosts } from "./src/creator-analytics.js";
+    import { isCreator } from "./src/subscriptions.js";
 
     const firebase = initFirebase();
     const me = await requireAuth(firebase);
@@ -377,10 +422,17 @@
     const tabPosts = document.getElementById("tabPosts");
     const tabReels = document.getElementById("tabReels");
     const tabAbout = document.getElementById("tabAbout");
+    const tabAnalytics = document.getElementById("tabAnalytics");
     const postsSection = document.getElementById("postsSection");
     const reelsSection = document.getElementById("reelsSection");
     const aboutSection = document.getElementById("aboutSection");
+    const analyticsSection = document.getElementById("analyticsSection");
     const aboutCard = document.getElementById("aboutCard");
+
+    // Show analytics tab for creators viewing their own profile
+    if (isOwnProfile && await isCreator(db, me.uid)) {
+      tabAnalytics.classList.remove("hidden");
+    }
 
     const styleTab = (btn, active) => {
       btn.className = active
@@ -391,14 +443,61 @@
       styleTab(tabPosts, tab === "posts");
       styleTab(tabReels, tab === "reels");
       styleTab(tabAbout, tab === "about");
+      styleTab(tabAnalytics, tab === "analytics");
       postsSection.classList.toggle("hidden", tab !== "posts");
       reelsSection.classList.toggle("hidden", tab !== "reels");
       aboutSection.classList.toggle("hidden", tab !== "about");
+      analyticsSection.classList.toggle("hidden", tab !== "analytics");
       localStorage.setItem("sv_profile_tab", tab);
+      
+      if (tab === "analytics" && isOwnProfile) {
+        loadAnalyticsData(me.uid);
+      }
     };
     tabPosts?.addEventListener("click", () => setTab("posts"));
     tabReels?.addEventListener("click", () => setTab("reels"));
     tabAbout?.addEventListener("click", () => setTab("about"));
+    tabAnalytics?.addEventListener("click", () => setTab("analytics"));
+
+    // Load analytics data
+    async function loadAnalyticsData(userId) {
+      try {
+        const analytics = await getCreatorAnalytics(db, userId);
+        const demographics = await getAudienceInsights(db, userId);
+        const topPosts = await getTopPosts(db, userId, 5);
+        
+        document.getElementById("analyticsFollowers").textContent = analytics.totalFollowers || 0;
+        document.getElementById("analyticsPosts").textContent = analytics.totalPosts || 0;
+        document.getElementById("analyticsLikes").textContent = analytics.totalLikes || 0;
+        document.getElementById("analyticsEngagement").textContent = analytics.engagementRate || "0%";
+        
+        // Render demographics
+        const demographicsEl = document.getElementById("audienceDemographics");
+        if (demographics.ageGroups && Object.keys(demographics.ageGroups).length > 0) {
+          demographicsEl.innerHTML = Object.entries(demographics.ageGroups)
+            .map(([age, count]) => `<div class="flex justify-between py-1"><span>${age}</span><span>${count}</span></div>`)
+            .join('');
+        } else {
+          demographicsEl.innerHTML = '<p class="text-center py-4 text-sm text-gray-500">No demographic data yet</p>';
+        }
+        
+        // Render top posts
+        const topPostsEl = document.getElementById("topPosts");
+        if (topPosts.length > 0) {
+          topPostsEl.innerHTML = topPosts.map(post => `
+            <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+              <span class="text-sm text-gray-600 dark:text-gray-300">Post ${post.postId?.slice(0, 8)}...</span>
+              <span class="text-sm font-semibold text-accent">${post.engagementRate || 0}% engagement</span>
+            </div>
+          `).join('');
+        } else {
+          topPostsEl.innerHTML = '<p class="text-center py-4 text-sm text-gray-500">No posts yet</p>';
+        }
+      } catch (err) {
+        console.error("Failed to load analytics:", err);
+        showToast("Failed to load analytics", "error");
+      }
+    }
 
     // Follow list modal
     const followListModal = document.getElementById("followListModal");

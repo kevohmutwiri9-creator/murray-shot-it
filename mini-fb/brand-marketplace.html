@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
+  <title>SnapVerse • Brand Marketplace</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com" async="false"></script>
+  <link rel="icon" href="murray.png" type="image/png" />
+</head>
+<body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30 px-4 py-3">
+    <div class="max-w-3xl mx-auto flex justify-between items-center">
+      <a href="/index.html" class="font-bold text-accent hover:scale-105 transition-transform">← Feed</a>
+      <h1 class="font-bold text-gray-900 dark:text-dark-text">Brand Marketplace</h1>
+      <button type="button" id="darkModeToggle" class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Toggle dark mode">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:block">☀️</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto p-4 space-y-6 animate-fade-in">
+    <!-- Creator Stats -->
+    <div class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border/50">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">Your Creator Stats</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <p id="statFollowers" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Followers</p>
+        </div>
+        <div class="text-center">
+          <p id="statEngagement" class="text-2xl font-bold text-accent">0%</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Engagement</p>
+        </div>
+        <div class="text-center">
+          <p id="statApplications" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Applications</p>
+        </div>
+        <div class="text-center">
+          <p id="statEarnings" class="text-2xl font-bold text-green-500">$0</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Earnings</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open Campaigns -->
+    <div class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border/50">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">Open Campaigns</h2>
+      <div id="campaignsGrid" class="space-y-4">
+        <p class="text-center py-8 text-gray-500 dark:text-gray-400">Loading campaigns...</p>
+      </div>
+    </div>
+
+    <!-- Your Applications -->
+    <div class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border/50">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">Your Applications</h2>
+      <div id="applicationsGrid" class="space-y-4">
+        <p class="text-center py-8 text-gray-500 dark:text-gray-400">Loading applications...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Campaign Detail Modal -->
+  <div id="campaignModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="modalTitle" class="text-xl font-bold text-gray-900 dark:text-white">Campaign Details</h2>
+        <button id="closeModalBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">✕</button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initFirebase } from "./src/firebase-config.js";
+    import { requireAuth, bootPage } from "./src/page-boot.js";
+    import { initDarkMode } from "./src/shared.js";
+    import { getOpenCampaigns, applyToCampaign, getCreatorApplications } from "./src/brand-campaigns.js";
+    import { getCreatorAnalytics } from "./src/creator-analytics.js";
+    import { formatBalance, getTotalEarnings } from "./src/transactions.js";
+    import { getFollowersCount } from "./src/follows.js";
+
+    const firebase = initFirebase();
+    const user = await requireAuth(firebase);
+    if (!user) throw new Error("auth");
+    bootPage(firebase);
+    initDarkMode();
+
+    const db = firebase.__db;
+
+    // Load creator stats
+    async function loadStats() {
+      try {
+        const followers = await getFollowersCount(db, user.uid);
+        const analytics = await getCreatorAnalytics(db, user.uid);
+        const applications = await getCreatorApplications(db, user.uid);
+        const earnings = await getTotalEarnings(db, user.uid);
+        
+        document.getElementById("statFollowers").textContent = followers;
+        document.getElementById("statEngagement").textContent = analytics.engagementRate || "0%";
+        document.getElementById("statApplications").textContent = applications.length;
+        document.getElementById("statEarnings").textContent = formatBalance(earnings);
+      } catch (err) {
+        console.error("Failed to load stats:", err);
+      }
+    }
+
+    // Load open campaigns
+    async function loadCampaigns() {
+      try {
+        const creatorData = {
+          followerCount: parseInt(document.getElementById("statFollowers").textContent),
+          engagementRate: parseFloat(document.getElementById("statEngagement").textContent) || 0,
+        };
+        
+        const campaigns = await getOpenCampaigns(db, creatorData);
+        const campaignsGrid = document.getElementById("campaignsGrid");
+        
+        if (campaigns.length === 0) {
+          campaignsGrid.innerHTML = '<p class="text-center py-8 text-gray-500 dark:text-gray-400">No open campaigns available</p>';
+          return;
+        }
+        
+        campaignsGrid.innerHTML = campaigns.map(campaign => `
+          <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-accent/50 transition cursor-pointer" data-campaign-id="${campaign.id}">
+            <div class="flex items-start gap-4">
+              <img src="${campaign.imageUrl}" alt="${campaign.title}" class="w-20 h-20 object-cover rounded-lg" />
+              <div class="flex-1">
+                <h3 class="font-bold text-gray-900 dark:text-white">${campaign.title}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">${campaign.description}</p>
+                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span>Budget: $${(campaign.budget / 100).toFixed(2)}</span>
+                  <span>${campaign.compensation.type === 'flat_fee' ? 'Flat fee' : campaign.compensation.type}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+        // Add click handlers
+        campaignsGrid.querySelectorAll('[data-campaign-id]').forEach(card => {
+          card.addEventListener('click', () => {
+            const campaignId = card.dataset.campaignId;
+            showCampaignDetail(campaigns.find(c => c.id === campaignId));
+          });
+        });
+      } catch (err) {
+        console.error("Failed to load campaigns:", err);
+        document.getElementById("campaignsGrid").innerHTML = '<p class="text-center py-8 text-rose-500">Failed to load campaigns</p>';
+      }
+    }
+
+    // Load applications
+    async function loadApplications() {
+      try {
+        const applications = await getCreatorApplications(db, user.uid);
+        const applicationsGrid = document.getElementById("applicationsGrid");
+        
+        if (applications.length === 0) {
+          applicationsGrid.innerHTML = '<p class="text-center py-8 text-gray-500 dark:text-gray-400">No applications yet</p>';
+          return;
+        }
+        
+        applicationsGrid.innerHTML = applications.map(app => `
+          <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Campaign ${app.campaignId.slice(0, 8)}...</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Applied: ${new Date(app.createdAt?.toDate?.() || app.createdAt).toLocaleDateString()}</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                app.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                app.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                'bg-yellow-100 text-yellow-700'
+              }">${app.status}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error("Failed to load applications:", err);
+        document.getElementById("applicationsGrid").innerHTML = '<p class="text-center py-8 text-rose-500">Failed to load applications</p>';
+      }
+    }
+
+    // Show campaign detail modal
+    function showCampaignDetail(campaign) {
+      const modal = document.getElementById("campaignModal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalContent = document.getElementById("modalContent");
+      
+      modalTitle.textContent = campaign.title;
+      modalContent.innerHTML = `
+        <img src="${campaign.imageUrl}" alt="${campaign.title}" class="w-full h-48 object-cover rounded-xl mb-4" />
+        <p class="text-gray-600 dark:text-gray-400 mb-4">${campaign.description}</p>
+        
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Budget</span>
+            <span class="font-semibold text-gray-900 dark:text-white">$${(campaign.budget / 100).toFixed(2)}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Compensation</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${campaign.compensation.type === 'flat_fee' ? `$${(campaign.compensation.amount / 100).toFixed(2)} flat fee` : `${campaign.compensation.affiliateCommission}% commission`}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Min Followers</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${campaign.requirements.followerCount || 0}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Min Engagement</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${campaign.requirements.engagementRate || 0}%</span>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Your Proposal</label>
+          <textarea id="proposalText" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" rows="3" placeholder="Describe why you're a good fit..."></textarea>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Requested Rate (cents)</label>
+          <input type="number" id="requestedRate" class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white" placeholder="Enter your rate" value="${campaign.compensation.amount || ''}">
+        </div>
+        
+        <button id="applyBtn" class="w-full px-4 py-3 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition">Apply to Campaign</button>
+      `;
+      
+      modal.classList.remove("hidden");
+      
+      document.getElementById("applyBtn").addEventListener("click", async () => {
+        const proposal = document.getElementById("proposalText").value;
+        const rate = parseInt(document.getElementById("requestedRate").value);
+        
+        if (!proposal) {
+          alert("Please provide a proposal");
+          return;
+        }
+        
+        try {
+          await applyToCampaign(db, campaign.id, user.uid, {
+            proposal,
+            rate,
+            portfolio: [],
+          });
+          alert("Application submitted!");
+          modal.classList.add("hidden");
+          loadApplications();
+        } catch (err) {
+          alert(err.message || "Failed to apply");
+        }
+      });
+    }
+    
+    document.getElementById("closeModalBtn").addEventListener("click", () => {
+      document.getElementById("campaignModal").classList.add("hidden");
+    });
+    
+    document.getElementById("campaignModal").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("campaignModal")) {
+        document.getElementById("campaignModal").classList.add("hidden");
+      }
+    });
+
+    // Initial load
+    loadStats();
+    loadCampaigns();
+    loadApplications();
+  </script>
+</body>
+</html>
