@@ -58,8 +58,8 @@ async function flagPost(postId) {
 }
 
 function showTipModal(toUserId, postId) {
-  const getTillNumber = () => import.meta.env?.VITE_TILL_NUMBER || process.env?.TILL_NUMBER || '';
-  const getTillAccountName = () => import.meta.env?.VITE_TILL_ACCOUNT_NAME || process.env?.TILL_ACCOUNT_NAME || '';
+  const getTillNumber = () => import.meta.env?.VITE_TILL_NUMBER || '';
+  const getTillAccountName = () => import.meta.env?.VITE_TILL_ACCOUNT_NAME || '';
   
   const tillNumber = getTillNumber();
   const tillAccountName = getTillAccountName();

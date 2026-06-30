@@ -4,14 +4,13 @@
 // IMPORTANT: Till Number should be loaded from environment variables or secure config
 // Do not hardcode sensitive payment information in client-side code
 const getTillNumber = () => {
-  // In production, load from environment variable or secure config
-  // For development, you can set this in a .env file or similar
-  return import.meta.env.VITE_TILL_NUMBER || process.env.TILL_NUMBER || '';
+  // Load from Vite environment variable (set in Netlify)
+  return import.meta.env.VITE_TILL_NUMBER || '';
 };
 
 const getTillAccountName = () => {
-  // In production, load from environment variable or secure config
-  return import.meta.env.VITE_TILL_ACCOUNT_NAME || process.env.TILL_ACCOUNT_NAME || '';
+  // Load from Vite environment variable (set in Netlify)
+  return import.meta.env.VITE_TILL_ACCOUNT_NAME || '';
 };
 
 /**
