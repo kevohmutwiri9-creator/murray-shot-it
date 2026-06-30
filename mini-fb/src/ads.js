@@ -118,44 +118,62 @@ export async function getTargetedAds(db, user) {
  * Track ad impression
  */
 export async function trackAdImpression(db, adId, userId) {
-  const impressionsRef = collection(db, "ad_impressions");
+  if (!adId) {
+    console.warn('Cannot track impression: adId is empty');
+    return;
+  }
   
-  await addDoc(impressionsRef, {
-    adId,
-    userId,
-    timestamp: serverTimestamp(),
-    device: navigator.userAgent,
-    location: navigator.language,
-  });
-  
-  // Update ad impression count
-  const adRef = doc(db, "ads", adId);
-  await updateDoc(adRef, {
-    impressions: increment(1),
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    const impressionsRef = collection(db, "ad_impressions");
+    
+    await addDoc(impressionsRef, {
+      adId,
+      userId,
+      timestamp: serverTimestamp(),
+      device: navigator.userAgent,
+      location: navigator.language,
+    });
+    
+    // Update ad impression count
+    const adRef = doc(db, "ads", adId);
+    await updateDoc(adRef, {
+      impressions: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error tracking ad impression:', error);
+  }
 }
 
 /**
  * Track ad click
  */
 export async function trackAdClick(db, adId, userId, impressionId) {
-  const clicksRef = collection(db, "ad_clicks");
+  if (!adId) {
+    console.warn('Cannot track click: adId is empty');
+    return;
+  }
   
-  await addDoc(clicksRef, {
-    adId,
-    userId,
-    impressionId,
-    timestamp: serverTimestamp(),
-    device: navigator.userAgent,
-  });
-  
-  // Update ad click count
-  const adRef = doc(db, "ads", adId);
-  await updateDoc(adRef, {
-    clicks: increment(1),
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    const clicksRef = collection(db, "ad_clicks");
+    
+    await addDoc(clicksRef, {
+      adId,
+      userId,
+      impressionId,
+      timestamp: serverTimestamp(),
+      device: navigator.userAgent,
+    });
+    
+    // Update ad click count
+    const adRef = doc(db, "ads", adId);
+    await updateDoc(adRef, {
+      clicks: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error tracking ad click:', error);
+  }
 }
 
 /**
