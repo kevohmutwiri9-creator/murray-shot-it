@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -12,7 +12,7 @@
   <link rel="icon" href="murray.png" type="image/png" />
 </head>
 <body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
-  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30 px-4 py-3">
+  <nav class="bg-white dark:bg-dark-surface backdrop-blur-lg border-b border-gray-200 dark:border-dark-border sticky top-0 z-30 px-4 py-3">
     <div class="max-w-3xl mx-auto flex justify-between items-center">
       <a href="/index.html" class="font-bold text-accent hover:scale-105 transition-transform">← Feed</a>
       <h1 class="font-bold text-gray-900 dark:text-dark-text">Product Marketplace</h1>
@@ -25,7 +25,7 @@
 
   <main class="max-w-4xl mx-auto p-4 space-y-6 animate-fade-in">
     <!-- Search and Filter -->
-    <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border/50">
+    <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border">
       <div class="flex gap-3 mb-4">
         <input id="searchInput" type="text" placeholder="Search products..." class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <select id="categoryFilter" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all">
@@ -92,7 +92,7 @@
         emptyState.classList.add("hidden");
         
         productsGrid.innerHTML = products.map(product => `
-          <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border/50 hover:border-accent/50 transition-all cursor-pointer">
+          <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border hover:border-accent/50 transition-all cursor-pointer">
             <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-48 object-cover rounded-xl mb-3" />
             <h3 class="font-bold text-gray-900 dark:text-dark-text mb-1">${product.name}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">${product.description}</p>

@@ -360,7 +360,7 @@ export function initDarkMode(toggleId = "darkModeToggle") {
 // Skeleton loading components
 export function createSkeletonCard() {
   const card = document.createElement("div");
-  card.className = "bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200/50 dark:border-dark-border/50 p-5 animate-pulse";
+  card.className = "bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200 dark:border-dark-border p-5 animate-pulse";
   card.innerHTML = `
     <div class="flex items-center gap-3 mb-4">
       <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>

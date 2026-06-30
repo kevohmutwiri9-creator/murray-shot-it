@@ -148,11 +148,16 @@ export function startFeed(firebaseApp, { mode = "all", resetLimit = true } = {})
     await renderFeed(firebaseApp, mode);
   }, (error) => {
     console.error("Error loading feed:", error);
+    // Silently handle permission errors - don't show alerts
     if (error.code === 'permission-denied') {
-      console.error("Permission denied - user may not be authenticated");
-      showToast("Please sign in to view the feed", "error");
-    } else {
-      showToast("Failed to load feed. Please refresh the page.", "error");
+      console.log("Feed requires authentication to view posts");
+      const feedEl = document.getElementById("feed");
+      const feedEmptyEl = document.getElementById("feedEmpty");
+      if (feedEl && feedEmptyEl) {
+        feedEl.innerHTML = "";
+        feedEmptyEl.textContent = "Please sign in to view posts";
+        feedEmptyEl.classList.remove("hidden");
+      }
     }
   });
 

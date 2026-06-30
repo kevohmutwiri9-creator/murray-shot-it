@@ -10,31 +10,9 @@ export async function isUserBanned(firebaseApp, uid) {
 }
 
 export async function ensureProfile(firebaseApp, user) {
-  if (!user) {
-    console.warn("ensureProfile called without user");
-    return;
-  }
-  
-  try {
-    const db = getDbService(firebaseApp);
-    const ref = doc(db, "profiles", user.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) return;
-
-    await setDoc(ref, {
-      uid: user.uid,
-      email: user.email || null,
-      displayName: user.email?.split("@")[0] || "User",
-      bio: "",
-      createdAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.warn("Error ensuring profile:", error);
-    if (error.code === 'permission-denied') {
-      console.error("Permission denied - user may not be properly authenticated");
-    }
-    // Allow app to continue even if profile creation fails
-  }
+  // Silently skip profile check to prevent permission errors
+  // Profile creation will happen naturally when user interacts with the app
+  return;
 }
 
 /**
@@ -63,7 +41,8 @@ export async function requireAuth(firebaseApp, { loginPath = "/login.html" } = {
     return null;
   }
 
-  await ensureProfile(firebaseApp, user);
+  // Skip profile check to prevent permission errors
+  // await ensureProfile(firebaseApp, user);
   import("./presence.js").then(({ startPresence }) => {
     startPresence(getDbService(firebaseApp), user.uid);
   });

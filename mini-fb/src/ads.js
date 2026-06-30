@@ -185,7 +185,7 @@ export function injectAdsIntoFeed(posts, ads) {
  */
 export function renderAdCard(ad, db, userId) {
   const card = document.createElement('div');
-  card.className = 'bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border/50';
+  card.className = 'bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft border border-gray-200 dark:border-dark-border';
   card.innerHTML = `
     <div class="flex items-center gap-2 mb-3">
       <span class="text-xs font-semibold text-accent uppercase tracking-wide">Sponsored</span>

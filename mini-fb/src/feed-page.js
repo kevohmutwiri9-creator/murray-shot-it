@@ -20,18 +20,19 @@ import { startReelsPreview } from "./reels.js";
 import { searchProducts } from "./products.js";
 
 export async function bootFeedPage(firebase) {
-  const user = await requireAuth(firebase);
-  if (!user) return;
+  try {
+    const user = await requireAuth(firebase);
+    if (!user) return;
 
-  document.getElementById("auth-loading")?.classList.add("hidden");
+    document.getElementById("auth-loading")?.classList.add("hidden");
 
-  await hideAdminNavIfNeeded(firebase, user);
-  bootPage(firebase);
+    await hideAdminNavIfNeeded(firebase, user);
+    bootPage(firebase);
 
-  window.currentFirebaseUser = user;
-  window.__firebaseApp = firebase;
+    window.currentFirebaseUser = user;
+    window.__firebaseApp = firebase;
 
-  const db = getDbService(firebase);
+    const db = getDbService(firebase);
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/mini-fb/sw.js").catch(() => {});
@@ -241,6 +242,14 @@ export async function bootFeedPage(firebase) {
       showToast(err.message || "Update failed.", "error");
     }
   });
+  } catch (error) {
+    console.error("Error booting feed page:", error);
+    document.getElementById("auth-loading")?.classList.add("hidden");
+    // Only show toast for non-permission errors
+    if (error.code !== 'permission-denied') {
+      showToast("Failed to load feed. Please refresh the page.", "error");
+    }
+  }
 }
 
 async function loadTrendingTopics(db) {

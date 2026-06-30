@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -108,7 +108,7 @@
   </script>
 </head>
 <body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
-  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30 px-4 py-3">
+  <nav class="bg-white dark:bg-dark-surface backdrop-blur-lg border-b border-gray-200 dark:border-dark-border sticky top-0 z-30 px-4 py-3">
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
       <a href="/index.html" class="font-bold text-accent shrink-0 hover:scale-105 transition-transform">← Feed</a>
       <h1 class="font-bold text-gray-900 dark:text-dark-text">Messages</h1>
@@ -120,8 +120,8 @@
   </nav>
 
   <main class="max-w-5xl mx-auto p-4 grid lg:grid-cols-[300px_1fr] gap-4 min-h-[calc(100vh-4rem)] animate-fade-in">
-    <aside id="sidebar" class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] lg:block hidden">
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 space-y-2">
+    <aside id="sidebar" class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] lg:block hidden">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border space-y-2">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">New message</label>
         <input id="userSearch" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="searchResults" class="max-h-32 overflow-y-auto hidden"></div>
@@ -129,14 +129,14 @@
       </div>
       
       <!-- Global Message Search -->
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 space-y-2">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border space-y-2">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">Search all messages</label>
         <input id="globalMessageSearch" type="search" placeholder="Search messages across all chats..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="globalMessageSearchResults" class="max-h-48 overflow-y-auto hidden"></div>
       </div>
       
       <!-- Online People Section -->
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide mb-2 block">Online now</label>
         <div id="onlinePeople" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <div class="flex gap-2">
@@ -147,8 +147,8 @@
         </div>
       </div>
       
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 font-semibold text-sm text-gray-900 dark:text-dark-text">Conversations</div>
-      <div id="convList" class="flex-1 overflow-y-auto divide-y divide-gray-100/50 dark:divide-dark-border/50">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border font-semibold text-sm text-gray-900 dark:text-dark-text">Conversations</div>
+      <div id="convList" class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-dark-border">
         <div class="p-4 space-y-3">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
@@ -169,8 +169,8 @@
     </aside>
 
     <!-- Mobile Conversation List (shown when no chat is open) -->
-    <div id="mobileConvList" class="lg:hidden bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 space-y-2">
+    <div id="mobileConvList" class="lg:hidden bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border space-y-2">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide">New message</label>
         <input id="userSearchMobile" type="search" placeholder="Search people..." class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-dark-bg px-3 py-2 text-sm text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all" />
         <div id="searchResultsMobile" class="max-h-32 overflow-y-auto hidden"></div>
@@ -178,7 +178,7 @@
       </div>
       
       <!-- Online People Section -->
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border">
         <label class="text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wide mb-2 block">Online now</label>
         <div id="onlinePeopleMobile" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <div class="flex gap-2">
@@ -189,8 +189,8 @@
         </div>
       </div>
       
-      <div class="p-3 border-b border-gray-200/50 dark:border-dark-border/50 font-semibold text-sm text-gray-900 dark:text-dark-text">Conversations</div>
-      <div id="convListMobile" class="flex-1 overflow-y-auto divide-y divide-gray-100/50 dark:divide-dark-border/50">
+      <div class="p-3 border-b border-gray-200 dark:border-dark-border font-semibold text-sm text-gray-900 dark:text-dark-text">Conversations</div>
+      <div id="convListMobile" class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-dark-border">
         <div class="p-4 space-y-3">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
@@ -210,8 +210,8 @@
       </div>
     </div>
 
-    <section id="chatSection" class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up hidden lg:flex">
-      <div id="chatHeader" class="p-4 border-b border-gray-200/50 dark:border-dark-border/50">
+    <section id="chatSection" class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200 dark:border-dark-border flex flex-col min-h-[400px] max-h-[calc(100vh-6rem)] animate-slide-up hidden lg:flex">
+      <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-dark-border">
         <div class="flex items-center gap-3 mb-3">
           <button id="backToConvList" class="lg:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Back to conversations">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +242,7 @@
         <p class="text-sm text-gray-500 dark:text-dark-muted text-center py-8">Pick someone from the list or search to start chatting.</p>
       </div>
       <div id="replyContext" class="px-4 hidden"></div>
-      <form id="chatForm" class="p-4 border-t border-gray-200/50 dark:border-dark-border/50 flex flex-wrap gap-2 hidden">
+      <form id="chatForm" class="p-4 border-t border-gray-200 dark:border-dark-border flex flex-wrap gap-2 hidden">
         <input id="chatImage" type="file" accept="image/*" class="hidden" />
         <button type="button" id="attachImageBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Attach image">📷</button>
         <button type="button" id="emojiBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Open emoji picker">😊</button>
