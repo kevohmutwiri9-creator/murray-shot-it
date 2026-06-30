@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = `snapverse-${CACHE_VERSION}`;
 const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
@@ -116,8 +116,14 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   try {
     const url = new URL(event.request.url);
+    // Skip non-HTTP protocols
     if (url.protocol === 'chrome-extension:' || url.protocol === 'about:' || url.protocol === 'data:') return;
+    // Skip Firebase API calls (they handle their own caching)
+    if (url.hostname.includes('firebaseio.com') || url.hostname.includes('firestore.googleapis.com') || url.hostname.includes('googleapis.com')) return;
+    // Skip CDN resources
     if (url.origin !== self.location.origin && (url.hostname.includes('cdn.tailwindcss.com') || url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com'))) return;
+    // Skip module scripts - let them load directly
+    if (url.pathname.endsWith('.js') && event.request.destination === 'script') return;
   } catch { return; }
   event.respondWith((async () => {
     const s = getCacheStrategy(event.request);
