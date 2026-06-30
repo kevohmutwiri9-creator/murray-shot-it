@@ -148,7 +148,12 @@ export function startFeed(firebaseApp, { mode = "all", resetLimit = true } = {})
     await renderFeed(firebaseApp, mode);
   }, (error) => {
     console.error("Error loading feed:", error);
-    showToast("Failed to load feed. Please refresh the page.", "error");
+    if (error.code === 'permission-denied') {
+      console.error("Permission denied - user may not be authenticated");
+      showToast("Please sign in to view the feed", "error");
+    } else {
+      showToast("Failed to load feed. Please refresh the page.", "error");
+    }
   });
 
   loadMoreBtn.onclick = async () => {
