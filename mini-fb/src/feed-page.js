@@ -21,12 +21,15 @@ import { searchProducts } from "./products.js";
 
 export async function bootFeedPage(firebase) {
   try {
-    const user = await requireAuth(firebase);
-    if (!user) return;
+    // Don't require auth - allow public feed viewing
+    const user = getCurrentUser();
 
     document.getElementById("auth-loading")?.classList.add("hidden");
 
-    await hideAdminNavIfNeeded(firebase, user);
+    if (user) {
+      await hideAdminNavIfNeeded(firebase, user);
+    }
+
     bootPage(firebase);
 
     window.currentFirebaseUser = user;
