@@ -10,6 +10,11 @@ export async function isUserBanned(firebaseApp, uid) {
 }
 
 export async function ensureProfile(firebaseApp, user) {
+  if (!user) {
+    console.warn("ensureProfile called without user");
+    return;
+  }
+  
   try {
     const db = getDbService(firebaseApp);
     const ref = doc(db, "profiles", user.uid);
@@ -25,6 +30,9 @@ export async function ensureProfile(firebaseApp, user) {
     });
   } catch (error) {
     console.warn("Error ensuring profile:", error);
+    if (error.code === 'permission-denied') {
+      console.error("Permission denied - user may not be properly authenticated");
+    }
     // Allow app to continue even if profile creation fails
   }
 }
@@ -34,7 +42,13 @@ export async function ensureProfile(firebaseApp, user) {
  * @returns {import('firebase/auth').User | null}
  */
 export async function requireAuth(firebaseApp, { loginPath = "/login.html" } = {}) {
-  await ensureAuth(firebaseApp).catch(() => {});
+  try {
+    await ensureAuth(firebaseApp);
+  } catch (error) {
+    console.warn("User not authenticated, redirecting to login");
+    window.location.href = loginPath;
+    return null;
+  }
 
   const user = getCurrentUser();
   if (!user) {
