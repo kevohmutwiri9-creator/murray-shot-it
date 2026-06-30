@@ -61,47 +61,57 @@ const AD_FREQUENCY = 5; // Show ad every 5 posts
  * Get active ads for a user based on targeting
  */
 export async function getTargetedAds(db, user) {
-  const now = new Date();
-  const adsRef = collection(db, "ads");
-  
-  const q = query(
-    adsRef,
-    where("status", "==", "active"),
-    where("schedule.startDate", "<=", now),
-    where("schedule.endDate", ">=", now),
-    orderBy("schedule.startDate", "desc")
-  );
-  
-  const snapshot = await getDocs(q);
-  const ads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
-  // Filter by targeting rules
-  return ads.filter(ad => {
-    if (!ad.targeting) return true;
+  try {
+    const now = new Date();
+    const adsRef = collection(db, "ads");
     
-    // Check age if provided
-    if (ad.targeting.ageRange && user.age) {
-      if (user.age < ad.targeting.ageRange.min || user.age > ad.targeting.ageRange.max) {
-        return false;
+    const q = query(
+      adsRef,
+      where("status", "==", "active"),
+      where("schedule.startDate", "<=", now),
+      where("schedule.endDate", ">=", now),
+      orderBy("schedule.startDate", "desc")
+    );
+    
+    const snapshot = await getDocs(q);
+    const ads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Filter by targeting rules
+    return ads.filter(ad => {
+      if (!ad.targeting) return true;
+      
+      // Check age if provided
+      if (ad.targeting.ageRange && user.age) {
+        if (user.age < ad.targeting.ageRange.min || user.age > ad.targeting.ageRange.max) {
+          return false;
+        }
       }
-    }
-    
-    // Check gender if provided
-    if (ad.targeting.gender && ad.targeting.gender !== 'all' && user.gender) {
-      if (user.gender !== ad.targeting.gender) {
-        return false;
+      
+      // Check gender if provided
+      if (ad.targeting.gender && ad.targeting.gender !== 'all' && user.gender) {
+        if (user.gender !== ad.targeting.gender) {
+          return false;
+        }
       }
-    }
-    
-    // Check location if provided
-    if (ad.targeting.locations && ad.targeting.locations.length > 0 && user.location) {
-      if (!ad.targeting.locations.includes(user.location)) {
-        return false;
+      
+      // Check location if provided
+      if (ad.targeting.locations && ad.targeting.locations.length > 0 && user.location) {
+        if (!ad.targeting.locations.includes(user.location)) {
+          return false;
+        }
       }
+      
+      return true;
+    });
+  } catch (error) {
+    // Handle missing index error gracefully
+    if (error.code === 'failed-precondition' && error.message.includes('index')) {
+      console.log('Ads index not yet created, skipping ads');
+      return [];
     }
-    
-    return true;
-  });
+    console.error('Error fetching ads:', error);
+    return [];
+  }
 }
 
 /**

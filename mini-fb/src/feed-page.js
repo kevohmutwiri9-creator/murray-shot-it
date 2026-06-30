@@ -215,7 +215,9 @@ export async function bootFeedPage(firebase) {
   startReelsPreview(db, document.getElementById("reelsPreview"));
 
   loadTrendingTopics(db);
-  loadFriendSuggestions(db, user.uid);
+  if (user) {
+    loadFriendSuggestions(db, user.uid);
+  }
 
   // Edit post modal
   const editPostModal = document.getElementById("editPostModal");
