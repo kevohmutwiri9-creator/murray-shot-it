@@ -12,7 +12,6 @@ import {
   serverTimestamp,
   increment,
   arrayUnion,
-  arrayRemove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getDbService } from "./firebase-config.js";
 
