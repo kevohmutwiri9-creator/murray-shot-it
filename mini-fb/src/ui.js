@@ -87,69 +87,6 @@ export function bindCharCounter(inputEl, counterEl, max) {
  */
 export function bindMediaPreview(fileEl, previewEl) {
   if (!fileEl || !previewEl) return;
-
-function ensureToastRoot() {
-  if (toastRoot) return toastRoot;
-  toastRoot = document.createElement("div");
-  toastRoot.id = "toast-root";
-  toastRoot.className = "fixed bottom-4 right-4 z-[10000] flex flex-col gap-2 pointer-events-none";
-  toastRoot.setAttribute("aria-live", "polite");
-  document.body.appendChild(toastRoot);
-  return toastRoot;
-}
-
-export function showToast(message, type = "info", durationMs = 3200) {
-  const root = ensureToastRoot();
-  const el = document.createElement("div");
-  const styles = {
-    success: "bg-emerald-600 text-white",
-    error: "bg-rose-600 text-white",
-    info: "bg-gray-900 dark:bg-gray-700 text-white",
-  };
-  const icons = {
-    success: "✓",
-    error: "✕",
-    info: "ℹ",
-  };
-
-  el.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm flex items-center gap-3 ${styles[type] || styles.info}`;
-  el.innerHTML = `
-    <span class="text-lg">${icons[type] || icons.info}</span>
-    <span class="flex-1">${message}</span>
-    <button class="opacity-70 hover:opacity-100 transition" aria-label="Dismiss">✕</button>
-  `;
-  root.appendChild(el);
-
-  // Dismiss on button click
-  const dismissBtn = el.querySelector("button");
-  dismissBtn.addEventListener("click", () => {
-    el.classList.add("opacity-0", "transition", "duration-300");
-    setTimeout(() => el.remove(), 300);
-  });
-
-  // Auto dismiss after duration
-  setTimeout(() => {
-    if (el.isConnected) {
-      el.classList.add("opacity-0", "transition", "duration-300");
-      setTimeout(() => el.remove(), 300);
-    }
-  }, durationMs);
-}
-
-export function bindCharCounter(inputEl, counterEl, max) {
-  if (!inputEl || !counterEl) return;
-  const update = () => {
-    const len = inputEl.value.length;
-    counterEl.textContent = `${len}/${max}`;
-    counterEl.classList.toggle("text-rose-500", len >= max);
-    counterEl.classList.toggle("text-gray-500", len < max);
-  };
-  inputEl.addEventListener("input", update);
-  update();
-}
-
-export function bindMediaPreview(fileEl, previewEl) {
-  if (!fileEl || !previewEl) return;
   
   fileEl.addEventListener("change", () => {
     const files = Array.from(fileEl.files || []);
