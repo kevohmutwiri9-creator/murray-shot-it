@@ -340,7 +340,7 @@
     const me = await requireAuth(firebase);
     if (!me) {
       window.location.replace("/login.html");
-      return;
+      throw new Error("auth");
     }
 
     const db = firebase.__db;

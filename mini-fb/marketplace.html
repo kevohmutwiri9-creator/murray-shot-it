@@ -103,7 +103,7 @@
     const user = await requireAuth(firebase);
     if (!user) {
       window.location.replace("/login.html");
-      return;
+      throw new Error("auth");
     }
     bootPage(firebase);
     initDarkMode();
