@@ -72,17 +72,26 @@ const PLANS = {
  */
 export async function getUserSubscription(db, userId) {
   const subRef = doc(db, "subscriptions", userId);
-  const snap = await getDoc(subRef);
-  
-  if (!snap.exists()) {
+  try {
+    const snap = await getDoc(subRef);
+    
+    if (!snap.exists()) {
+      return {
+        plan: 'free',
+        status: 'active',
+        features: [],
+      };
+    }
+    
+    return snap.data();
+  } catch (error) {
+    console.error('Subscription read error:', error);
     return {
       plan: 'free',
       status: 'active',
       features: [],
     };
   }
-  
-  return snap.data();
 }
 
 /**

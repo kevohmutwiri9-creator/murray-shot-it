@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com?config=tailwind.config.js"></script>
+  <script src="?config=tailwind.config.js"></script>
 </head>
 
 <body class="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(233,69,96,0.25),_transparent_30%),linear-gradient(135deg,#0f172a_0%,#1e293b_50%,#0f172a_100%)] text-white font-sans">
@@ -175,6 +175,8 @@
   </div>
 
   <script type="module">
+  import "/src/input.css";
+
     import { initFirebase } from "./snapverse/src/firebase-config.js";
     import { ensureAuth, login, createAccount, getCurrentUser, resetPassword } from "./snapverse/src/auth.js";
     import { ensureProfile } from "./snapverse/src/page-boot.js";

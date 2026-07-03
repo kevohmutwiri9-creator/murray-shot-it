@@ -8,53 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1a1a2e',
-            secondary: '#16213e',
-            accent: '#e94560',
-            accentHover: '#d63d55',
-            accentLight: '#f06b82',
-            light: '#f8f9fa',
-            dark: {
-              bg: '#0f172a',
-              surface: '#1e293b',
-              border: '#334155',
-              text: '#f1f5f9',
-              muted: '#94a3b8',
-            },
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.3s ease-in-out',
-            'slide-up': 'slideUp 0.3s ease-out',
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0' },
-              '100%': { opacity: '1' },
-            },
-            slideUp: {
-              '0%': { transform: 'translateY(10px)', opacity: '0' },
-              '100%': { transform: 'translateY(0)', opacity: '1' },
-            },
-          },
-          boxShadow: {
-            'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
-            'medium': '0 4px 16px rgba(0, 0, 0, 0.12)',
-            'strong': '0 8px 32px rgba(0, 0, 0, 0.16)',
-          },
-        },
-      },
-    }
-  </script>
   <link rel="icon" href="murray.png" type="image/png" />
 </head>
 <body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans min-h-screen">
@@ -94,6 +47,8 @@
   </main>
 
   <script type="module">
+  import "/src/input.css";
+
     import { initFirebase } from "./src/firebase-config.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { initDarkMode } from "./src/shared.js";
