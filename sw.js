@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
 
@@ -6,6 +6,8 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/login.html',
+  '/assets/manifest.json',
+  '/assets/murray.png',
   '/mini-fb/manifest.json',
   '/murray.png',
   '/mini-fb/murray.png',

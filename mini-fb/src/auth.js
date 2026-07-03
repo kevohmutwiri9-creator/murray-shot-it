@@ -22,9 +22,17 @@ export function getCurrentUser() {
 export async function ensureAuth(firebaseApp) {
   const auth = getAuth(firebaseApp);
 
+  if (auth.currentUser) {
+    _currentUser = auth.currentUser;
+    window.__currentUser = auth.currentUser;
+    return auth.currentUser;
+  }
+
   return await new Promise((resolve, reject) => {
-    onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
       _currentUser = user;
+      window.__currentUser = user;
       if (!user) {
         reject(new Error("Not logged in."));
         return;
