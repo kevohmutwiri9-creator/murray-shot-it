@@ -68,7 +68,7 @@ login.html              — auth
 firestore.rules         — security rules
 firestore.indexes.json  — composite indexes
 firebase.json           — hosting + firestore config
-mini-fb/src/            — JS modules
+snapverse/src/            — JS modules
 ```
 
 ## Security notes
@@ -80,3 +80,4 @@ mini-fb/src/            — JS modules
 ## License
 
 © SnapVerse / Murray Shot
+

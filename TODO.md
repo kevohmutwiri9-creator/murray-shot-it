@@ -5,5 +5,6 @@
 
 - [ ] Identify remaining Firestore “Missing or insufficient permissions” source (log which call/collection)
 - [ ] Patch Firestore security rules only for the failing paths (avoid broad relaxations)
-- [ ] Re-test main load flow: index.html + mini-fb pages
+- [ ] Re-test main load flow: index.html + snapverse pages
+
 

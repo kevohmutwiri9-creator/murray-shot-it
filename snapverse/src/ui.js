@@ -232,7 +232,7 @@ export function openStoryViewer(story) {
     : new Date(story.expiresAt);
 
   const profileLink = story.authorUid
-    ? `/mini-fb/profile.html?uid=${encodeURIComponent(story.authorUid)}`
+    ? `/snapverse/profile.html?uid=${encodeURIComponent(story.authorUid)}`
     : null;
 
   overlay.innerHTML = `
@@ -1042,3 +1042,4 @@ export function getPerformanceMetrics() {
     firstContentfulPaint: paint?.find(p => p.name === 'first-contentful-paint')?.startTime,
   };
 }
+

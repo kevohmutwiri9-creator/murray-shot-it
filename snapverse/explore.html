@@ -188,7 +188,7 @@
     import { renderPostCard } from "./src/post-card.js";
     import { isPostVisible } from "./src/scheduled-posts.js";
     import { filterBlockedPosts, getBlockedUids } from "./src/blocks.js";
-    import { initDarkMode } from "./src/ui.js";
+    import { initDarkMode, showToast } from "./src/ui.js";
     import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebase = initFirebase();
@@ -256,19 +256,15 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(error => {
-            console.log('Service Worker registration failed:', error);
-          });
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
   </script>
 
   <!-- PWA Install Handler -->
-  <script>
+  <script type="module">
+    import { showToast } from "./src/ui.js";
+
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
 
@@ -276,17 +272,14 @@
     installBtn.classList.remove('hidden');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('beforeinstallprompt event fired!');
       e.preventDefault();
       deferredPrompt = e;
       installBtn.classList.remove('hidden');
     });
 
     installBtn.addEventListener('click', async () => {
-      console.log('Install button clicked');
       if (!deferredPrompt) {
-        console.log('No deferred prompt available');
-        alert('The app cannot be installed right now. Make sure you are on HTTPS or localhost.');
+        showToast('The app cannot be installed right now. Make sure you are on HTTPS or localhost.', 'error');
         return;
       }
 
@@ -294,9 +287,9 @@
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+        showToast('SnapVerse install started. Follow your browser prompts to finish.', 'success');
       } else {
-        console.log('User dismissed the install prompt');
+        showToast('Installation cancelled. You can install SnapVerse anytime from your browser menu.', 'info');
       }
 
       deferredPrompt = null;
@@ -305,7 +298,7 @@
 
     window.addEventListener('appinstalled', () => {
       installBtn.classList.add('hidden');
-      console.log('PWA was installed');
+      showToast('SnapVerse is now installed. Enjoy the app!', 'success');
     });
   </script>
 </body>

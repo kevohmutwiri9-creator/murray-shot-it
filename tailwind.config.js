@@ -4,8 +4,8 @@ module.exports = {
   content: [
     './index.html',
     './login.html',
-    './mini-fb/**/*.html',
-    './mini-fb/src/**/*.js',
+    './snapverse/**/*.html',
+    './snapverse/src/**/*.js',
   ],
   theme: {
     extend: {
@@ -101,3 +101,4 @@ module.exports = {
   },
   plugins: [],
 }
+

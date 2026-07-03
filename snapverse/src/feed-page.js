@@ -164,7 +164,7 @@ async function loadTrendingTopics(db) {
     } else {
       topTrending.forEach((hashtag) => {
         const tag = document.createElement("a");
-        tag.href = `mini-fb/hashtag.html?tag=${encodeURIComponent(hashtag.id)}`;
+        tag.href = `snapverse/hashtag.html?tag=${encodeURIComponent(hashtag.id)}`;
         tag.className =
           "inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition";
         tag.textContent = `#${hashtag.id}`;
@@ -200,3 +200,4 @@ async function loadFriendSuggestions(db, uid) {
     container.innerHTML = '<p class="text-sm text-gray-500">Suggestions unavailable</p>';
   }
 }
+

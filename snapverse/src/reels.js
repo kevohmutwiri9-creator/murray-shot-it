@@ -155,7 +155,7 @@ export function startReelsPreview(db, containerEl) {
 
     reels.forEach((item) => {
       const a = document.createElement("a");
-      a.href = `/mini-fb/reels.html#${item.id}`;
+      a.href = `/snapverse/reels.html#${item.id}`;
       a.className =
         "relative block h-44 w-28 shrink-0 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700";
       a.innerHTML = `
@@ -166,3 +166,4 @@ export function startReelsPreview(db, containerEl) {
     });
   });
 }
+

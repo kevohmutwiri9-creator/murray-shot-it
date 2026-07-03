@@ -3,17 +3,17 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/login.html',
-  '/mini-fb/search.html',
-  '/mini-fb/explore.html',
-  '/mini-fb/reels.html',
-  '/mini-fb/profile.html',
-  '/mini-fb/admin.html',
-  '/mini-fb/hashtag.html',
-  '/mini-fb/settings.html',
-  '/mini-fb/messages.html',
-  '/mini-fb/saved.html',
-  '/mini-fb/manifest.json',
-  '/mini-fb/murray.png',
+  '/snapverse/search.html',
+  '/snapverse/explore.html',
+  '/snapverse/reels.html',
+  '/snapverse/profile.html',
+  '/snapverse/admin.html',
+  '/snapverse/hashtag.html',
+  '/snapverse/settings.html',
+  '/snapverse/messages.html',
+  '/snapverse/saved.html',
+  '/snapverse/manifest.json',
+  '/snapverse/murray.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -65,3 +65,4 @@ self.addEventListener('activate', (event) => {
   );
   self.clients.claim();
 });
+

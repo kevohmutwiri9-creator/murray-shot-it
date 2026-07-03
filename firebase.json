@@ -19,9 +19,10 @@
     ],
     "headers": [
       {
-        "source": "/mini-fb/sw.js",
+        "source": "/snapverse/sw.js",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       }
     ]
   }
 }
+

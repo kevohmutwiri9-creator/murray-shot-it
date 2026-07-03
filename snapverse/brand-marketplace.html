@@ -125,6 +125,7 @@
     import { initFirebase } from "./src/firebase-config.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { initDarkMode } from "./src/shared.js";
+    import { showToast } from "./src/ui.js";
     import { getOpenCampaigns, applyToCampaign, getCreatorApplications } from "./src/brand-campaigns.js";
     import { getCreatorAnalytics } from "./src/creator-analytics.js";
     import { formatBalance, getTotalEarnings } from "./src/transactions.js";
@@ -162,8 +163,9 @@
     async function loadCampaigns() {
       try {
         const creatorData = {
-          followerCount: parseInt(document.getElementById("statFollowers").textContent),
-          engagementRate: parseFloat(document.getElementById("statEngagement").textContent) || 0,
+          followerCount: Number.parseInt(document.getElementById("statFollowers").textContent, 10) || 0,
+          engagementRate: Number.parseFloat(document.getElementById("statEngagement").textContent) || 0,
+          niche: [],
         };
         
         const campaigns = await getOpenCampaigns(db, creatorData);
@@ -174,21 +176,24 @@
           return;
         }
         
-        campaignsGrid.innerHTML = campaigns.map(campaign => `
+        campaignsGrid.innerHTML = campaigns.map(campaign => {
+          const imageUrl = campaign.imageUrl || 'https://via.placeholder.com/120?text=Campaign';
+          const compensationType = campaign.compensation?.type || 'Paid';
+          return `
           <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-accent/50 transition cursor-pointer" data-campaign-id="${campaign.id}">
             <div class="flex items-start gap-4">
-              <img src="${campaign.imageUrl}" alt="${campaign.title}" class="w-20 h-20 object-cover rounded-lg" />
+              <img src="${imageUrl}" alt="${campaign.title || 'Campaign'}" class="w-20 h-20 object-cover rounded-lg" />
               <div class="flex-1">
-                <h3 class="font-bold text-gray-900 dark:text-white">${campaign.title}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">${campaign.description}</p>
+                <h3 class="font-bold text-gray-900 dark:text-white">${campaign.title || 'Untitled campaign'}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">${campaign.description || 'No campaign description available.'}</p>
                 <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>Budget: $${(campaign.budget / 100).toFixed(2)}</span>
-                  <span>${campaign.compensation.type === 'flat_fee' ? 'Flat fee' : campaign.compensation.type}</span>
+                  <span>Budget: $${((campaign.budget || 0) / 100).toFixed(2)}</span>
+                  <span>${compensationType === 'flat_fee' ? 'Flat fee' : compensationType}</span>
                 </div>
               </div>
             </div>
           </div>
-        `).join('');
+        `}).join('');
         
         // Add click handlers
         campaignsGrid.querySelectorAll('[data-campaign-id]').forEach(card => {
@@ -242,26 +247,29 @@
       const modalContent = document.getElementById("modalContent");
       
       modalTitle.textContent = campaign.title;
+      const requirements = campaign.requirements || {};
+      const compensation = campaign.compensation || {};
+
       modalContent.innerHTML = `
-        <img src="${campaign.imageUrl}" alt="${campaign.title}" class="w-full h-48 object-cover rounded-xl mb-4" />
-        <p class="text-gray-600 dark:text-gray-400 mb-4">${campaign.description}</p>
+        <img src="${campaign.imageUrl || 'https://via.placeholder.com/640x240?text=Campaign'}" alt="${campaign.title || 'Campaign'}" class="w-full h-48 object-cover rounded-xl mb-4" />
+        <p class="text-gray-600 dark:text-gray-400 mb-4">${campaign.description || 'No campaign description available.'}</p>
         
         <div class="space-y-3 mb-6">
           <div class="flex justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">Budget</span>
-            <span class="font-semibold text-gray-900 dark:text-white">$${(campaign.budget / 100).toFixed(2)}</span>
+            <span class="font-semibold text-gray-900 dark:text-white">$${((campaign.budget || 0) / 100).toFixed(2)}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">Compensation</span>
-            <span class="font-semibold text-gray-900 dark:text-white">${campaign.compensation.type === 'flat_fee' ? `$${(campaign.compensation.amount / 100).toFixed(2)} flat fee` : `${campaign.compensation.affiliateCommission}% commission`}</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${compensation.type === 'flat_fee' ? `$${((compensation.amount || 0) / 100).toFixed(2)} flat fee` : compensation.affiliateCommission ? `${compensation.affiliateCommission}% commission` : 'Details pending'}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">Min Followers</span>
-            <span class="font-semibold text-gray-900 dark:text-white">${campaign.requirements.followerCount || 0}</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${requirements.followerCount || 0}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">Min Engagement</span>
-            <span class="font-semibold text-gray-900 dark:text-white">${campaign.requirements.engagementRate || 0}%</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${requirements.engagementRate || 0}%</span>
           </div>
         </div>
         
@@ -281,11 +289,15 @@
       modal.classList.remove("hidden");
       
       document.getElementById("applyBtn").addEventListener("click", async () => {
-        const proposal = document.getElementById("proposalText").value;
-        const rate = parseInt(document.getElementById("requestedRate").value);
+        const proposal = document.getElementById("proposalText").value.trim();
+        const rate = parseInt(document.getElementById("requestedRate").value, 10);
         
         if (!proposal) {
-          alert("Please provide a proposal");
+          showToast("Please provide a proposal.", "error");
+          return;
+        }
+        if (!rate || rate <= 0) {
+          showToast("Please enter a valid requested rate.", "error");
           return;
         }
         
@@ -295,11 +307,11 @@
             rate,
             portfolio: [],
           });
-          alert("Application submitted!");
+          showToast("Application submitted! The brand will review your proposal.", "success");
           modal.classList.add("hidden");
           loadApplications();
         } catch (err) {
-          alert(err.message || "Failed to apply");
+          showToast(err.message || "Failed to apply to campaign.", "error");
         }
       });
     }

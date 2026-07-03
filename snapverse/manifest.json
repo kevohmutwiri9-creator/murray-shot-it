@@ -78,7 +78,7 @@
       "name": "Explore",
       "short_name": "Explore",
       "description": "Explore trending content",
-      "url": "/mini-fb/explore.html",
+      "url": "/snapverse/explore.html",
       "icons": [
         {
           "src": "murray.png",
@@ -88,3 +88,4 @@
     }
   ]
 }
+

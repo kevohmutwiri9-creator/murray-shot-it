@@ -12,9 +12,9 @@ export default defineConfig({
       apply: 'build',
       enforce: 'post',
       closeBundle() {
-        cpSync(resolve(__dirname, 'mini-fb/src'), resolve(__dirname, 'dist/mini-fb/src'), { recursive: true });
+        cpSync(resolve(__dirname, 'snapverse/src'), resolve(__dirname, 'dist/snapverse/src'), { recursive: true });
         copyFileSync(resolve(__dirname, 'sw.js'), resolve(__dirname, 'dist/sw.js'));
-        copyFileSync(resolve(__dirname, 'sw.js'), resolve(__dirname, 'dist/mini-fb/sw.js'));
+        copyFileSync(resolve(__dirname, 'sw.js'), resolve(__dirname, 'dist/snapverse/sw.js'));
       },
     },
   ],
@@ -26,7 +26,7 @@ export default defineConfig({
       input: [
         resolve(__dirname, 'index.html'),
         resolve(__dirname, 'login.html'),
-        ...globSync('mini-fb/*.html').map(file => resolve(__dirname, file)),
+        ...globSync('snapverse/*.html').map(file => resolve(__dirname, file)),
       ],
       output: {
         entryFileNames: 'assets/[name].js',
@@ -40,3 +40,4 @@ export default defineConfig({
     open: true,
   },
 });
+

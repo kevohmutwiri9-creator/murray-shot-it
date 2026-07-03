@@ -3,8 +3,8 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/
 let handleToUid = new Map();
 
 export function profileUrl(uid) {
-  if (!uid) return "/mini-fb/profile.html";
-  return `/mini-fb/profile.html?uid=${encodeURIComponent(uid)}`;
+  if (!uid) return "/snapverse/profile.html";
+  return `/snapverse/profile.html?uid=${encodeURIComponent(uid)}`;
 }
 
 export async function loadProfilesCache(db) {
@@ -26,5 +26,6 @@ export function uidForHandle(handle) {
 
 export function profileUrlForHandle(handle) {
   const uid = uidForHandle(handle);
-  return uid ? profileUrl(uid) : `/mini-fb/search.html?q=${encodeURIComponent(handle)}`;
+  return uid ? profileUrl(uid) : `/snapverse/search.html?q=${encodeURIComponent(handle)}`;
 }
+

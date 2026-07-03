@@ -266,9 +266,9 @@ export function startNotifications(firebaseApp, { listEl, badgeEl, panelEl, btnE
           if (notif.postId) {
             window.location.href = `/index.html?post=${notif.postId}`;
           } else if (notif.type === "follow" && notif.actorUid) {
-            window.location.href = `/mini-fb/profile.html?uid=${notif.actorUid}`;
+            window.location.href = `/snapverse/profile.html?uid=${notif.actorUid}`;
           } else if (notif.type === "message" && notif.actorUid) {
-            window.location.href = `/mini-fb/messages.html?uid=${notif.actorUid}`;
+            window.location.href = `/snapverse/messages.html?uid=${notif.actorUid}`;
           }
         });
 
@@ -346,3 +346,4 @@ export function startMessageNotifications(firebaseApp, { badgeEl, mobileBadgeEl 
     }
   );
 }
+

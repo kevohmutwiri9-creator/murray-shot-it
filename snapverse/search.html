@@ -389,7 +389,7 @@
           </div>
           <div class="flex gap-2">
             <button type="button" class="follow-btn px-4 py-2 rounded-xl font-semibold transition ${following ? "border border-gray-200 dark:border-gray-600" : "bg-accent text-white hover:bg-accent/90"}">${following ? "Following" : "Follow"}</button>
-            <a href="/mini-fb/profile.html?uid=${profile.id}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
+            <a href="/snapverse/profile.html?uid=${profile.id}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">View</a>
           </div>
         `;
 
@@ -460,15 +460,10 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(error => {
-            console.log('Service Worker registration failed:', error);
-          });
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
   </script>
 </body>
 </html>
+

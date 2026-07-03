@@ -1,3 +1,5 @@
+import { showToast } from "./ui.js";
+
 // Till Number Payment System for SnapVerse
 // This module handles till number payment processing for subscriptions
 
@@ -21,7 +23,7 @@ export function showTillPaymentModal(plan, amount) {
   const tillAccountName = getTillAccountName();
   
   if (!tillNumber) {
-    alert('Payment system not configured. Please contact support.');
+    showToast('Payment system not configured. Please contact support.', 'error');
     return Promise.reject(new Error('Payment system not configured'));
   }
 
@@ -78,8 +80,7 @@ export function showTillPaymentModal(plan, amount) {
       const phoneNumber = document.getElementById('phoneNumber').value;
       
       if (!transactionId || !phoneNumber) {
-        alert('Please enter both transaction ID and phone number');
-        return;
+      showToast('Please enter both transaction ID and phone number.', 'error');
       }
       
       modal.remove();

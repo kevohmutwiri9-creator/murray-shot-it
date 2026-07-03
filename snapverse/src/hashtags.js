@@ -12,7 +12,7 @@ export function extractHashtags(text) {
 }
 
 export function formatTextWithHashtags(text) {
-  return text.replace(/#(\w+)/g, '<a href="/mini-fb/hashtag.html?tag=$1" class="text-accent hover:underline font-medium">#$1</a>');
+  return text.replace(/#(\w+)/g, '<a href="/snapverse/hashtag.html?tag=$1" class="text-accent hover:underline font-medium">#$1</a>');
 }
 
 export async function saveHashtags(db, postId, hashtags) {
@@ -35,3 +35,4 @@ export async function saveHashtags(db, postId, hashtags) {
 
   await Promise.all(batch);
 }
+

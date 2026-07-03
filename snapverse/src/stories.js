@@ -62,27 +62,38 @@ async function recordStoryView(db, storyId) {
 }
 
 export function startStories(db, { containerEl, addBtnEl }) {
+  if (!containerEl) return;
+
   const storiesCol = collection(db, "stories");
   const q = query(storiesCol, orderBy("createdAt", "desc"));
 
   onSnapshot(q, async (snapshot) => {
-    const now = new Date();
-    containerEl.innerHTML = "";
-    const stories = [];
+    let stories = [];
 
-    for (const docSnap of snapshot.docs) {
-      const story = { id: docSnap.id, ...docSnap.data() };
-      const expiresAt = parseExpiresAt(story);
-      if (expiresAt <= now) {
-        deleteDoc(doc(db, "stories", docSnap.id)).catch(() => {});
-        continue;
+    try {
+      const now = new Date();
+      containerEl.innerHTML = "";
+      stories = [];
+
+      for (const docSnap of snapshot.docs) {
+        const story = { id: docSnap.id, ...docSnap.data() };
+        const expiresAt = parseExpiresAt(story);
+        if (expiresAt <= now) {
+          deleteDoc(doc(db, "stories", docSnap.id)).catch(() => {});
+          continue;
+        }
+        stories.push(story);
       }
-      stories.push(story);
-    }
 
-    if (stories.length === 0) {
+      if (stories.length === 0) {
+        containerEl.innerHTML =
+          '<span class="text-gray-500 dark:text-gray-400 text-sm">No stories yet — add one!</span>';
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to load stories:', err);
       containerEl.innerHTML =
-        '<span class="text-gray-500 dark:text-gray-400 text-sm">No stories yet — add one!</span>';
+        '<span class="text-red-500 dark:text-red-400 text-sm">Stories unavailable right now.</span>';
       return;
     }
 

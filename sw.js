@@ -8,18 +8,18 @@ const STATIC_ASSETS = [
   '/login.html',
   '/assets/manifest.json',
   '/assets/murray.png',
-  '/mini-fb/manifest.json',
+  '/snapverse/manifest.json',
   '/murray.png',
-  '/mini-fb/murray.png',
-  '/mini-fb/messages.html',
-  '/mini-fb/settings.html',
-  '/mini-fb/profile.html',
-  '/mini-fb/explore.html',
-  '/mini-fb/search.html',
-  '/mini-fb/reels.html',
-  '/mini-fb/saved.html',
-  '/mini-fb/hashtag.html',
-  '/mini-fb/admin.html',
+  '/snapverse/murray.png',
+  '/snapverse/messages.html',
+  '/snapverse/settings.html',
+  '/snapverse/profile.html',
+  '/snapverse/explore.html',
+  '/snapverse/search.html',
+  '/snapverse/reels.html',
+  '/snapverse/saved.html',
+  '/snapverse/hashtag.html',
+  '/snapverse/admin.html',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
 
@@ -110,3 +110,4 @@ self.addEventListener('sync', (event) => {
 async function syncPosts() {
   console.log('Syncing offline posts...');
 }
+

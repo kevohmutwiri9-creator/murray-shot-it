@@ -480,7 +480,7 @@ export function renderPostCard(post, db) {
   } else if (me && post.authorUid) {
     sendDmBtn.addEventListener("click", () => {
       const link = encodeURIComponent(`${location.origin}/index.html?post=${post.id}`);
-      window.location.href = `/mini-fb/messages.html?uid=${encodeURIComponent(post.authorUid)}&sharePost=${link}`;
+      window.location.href = `/snapverse/messages.html?uid=${encodeURIComponent(post.authorUid)}&sharePost=${link}`;
     });
     actions.append(sendDmBtn);
     
@@ -615,3 +615,4 @@ export function renderPostCard(post, db) {
   card.dataset.commentsReady = "1";
   return card;
 }
+

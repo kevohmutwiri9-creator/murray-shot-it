@@ -414,7 +414,7 @@
           const row = document.createElement("div");
           row.className = "flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 p-3";
           row.innerHTML = `
-            <a href="/mini-fb/profile.html?uid=${encodeURIComponent(uid)}" class="min-w-0">
+            <a href="/snapverse/profile.html?uid=${encodeURIComponent(uid)}" class="min-w-0">
               <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">${displayName}</p>
               <p class="text-xs text-gray-500 truncate">${email}</p>
             </a>
@@ -424,7 +424,7 @@
 
           if (uid !== me.uid) {
             const msg = document.createElement("a");
-            msg.href = `/mini-fb/messages.html?uid=${encodeURIComponent(uid)}`;
+            msg.href = `/snapverse/messages.html?uid=${encodeURIComponent(uid)}`;
             msg.className = "text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700";
             msg.textContent = "Message";
             actions.appendChild(msg);
@@ -501,7 +501,7 @@
       });
 
       const msgBtn = document.createElement("a");
-      msgBtn.href = `/mini-fb/messages.html?uid=${encodeURIComponent(viewUid)}`;
+      msgBtn.href = `/snapverse/messages.html?uid=${encodeURIComponent(viewUid)}`;
       msgBtn.className = `${btnClass} border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`;
       msgBtn.textContent = "Message";
 
@@ -677,7 +677,7 @@
         shareBtn.className = `${btnClass} border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`;
         shareBtn.textContent = "Share profile";
         shareBtn.addEventListener("click", async () => {
-          const link = `${location.origin}/mini-fb/profile.html?uid=${encodeURIComponent(viewUid)}`;
+          const link = `${location.origin}/snapverse/profile.html?uid=${encodeURIComponent(viewUid)}`;
           try {
             await navigator.clipboard.writeText(link);
             showToast("Profile link copied.", "success");
@@ -794,7 +794,7 @@
         noReels.classList.toggle("hidden", reels.length > 0);
         reels.slice(0, 24).forEach((r) => {
           const a = document.createElement("a");
-          a.href = `/mini-fb/reels.html#${encodeURIComponent(r.id)}`;
+          a.href = `/snapverse/reels.html#${encodeURIComponent(r.id)}`;
           a.className = "relative block rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black aspect-[9/16]";
           a.innerHTML = `
             <video src="${r.mediaUrl}" class="h-full w-full object-cover" muted playsinline preload="metadata"></video>
@@ -896,13 +896,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(error => {
-            console.log('Service Worker registration failed:', error);
-          });
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
   </script>
@@ -916,17 +910,14 @@
     installBtn.classList.remove('hidden');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('beforeinstallprompt event fired!');
       e.preventDefault();
       deferredPrompt = e;
       installBtn.classList.remove('hidden');
     });
 
     installBtn.addEventListener('click', async () => {
-      console.log('Install button clicked');
       if (!deferredPrompt) {
-        console.log('No deferred prompt available');
-        alert('The app cannot be installed right now. Make sure you are on HTTPS or localhost.');
+        showToast('The app cannot be installed right now. Make sure you are on HTTPS or localhost.', 'error');
         return;
       }
 
@@ -934,9 +925,9 @@
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+        showToast('SnapVerse install started. Follow your browser prompts to finish.', 'success');
       } else {
-        console.log('User dismissed the install prompt');
+        showToast('Installation cancelled. You can install SnapVerse anytime from your browser menu.', 'info');
       }
 
       deferredPrompt = null;
@@ -945,7 +936,7 @@
 
     window.addEventListener('appinstalled', () => {
       installBtn.classList.add('hidden');
-      console.log('PWA was installed');
+      showToast('SnapVerse is now installed. Enjoy the app!', 'success');
     });
   </script>
 
@@ -987,3 +978,4 @@
   </nav>
 </body>
 </html>
+
