@@ -596,57 +596,20 @@
     const notificationsPanel = document.getElementById('notificationsPanel');
     const notificationsList = document.getElementById('notificationsList');
     const notificationBadge = document.getElementById('notificationBadge');
-    
-    // Sample notifications data (in a real app, this would come from Firestore)
-    let notifications = [
-      { id: 1, type: 'like', user: 'John Doe', message: 'liked your post', time: '2m ago', read: false },
-      { id: 2, type: 'comment', user: 'Jane Smith', message: 'commented on your post', time: '5m ago', read: false },
-      { id: 3, type: 'follow', user: 'Bob Wilson', message: 'started following you', time: '1h ago', read: true },
-    ];
-    
+
+    let notifications = [];
+
     function renderNotifications() {
       const unreadCount = notifications.filter(n => !n.read).length;
-      
+
       if (unreadCount > 0) {
         notificationBadge.textContent = unreadCount;
         notificationBadge.classList.remove('hidden');
       } else {
         notificationBadge.classList.add('hidden');
       }
-      
-      if (notifications.length === 0) {
-        notificationsList.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
-        return;
-      }
-      
-      notificationsList.innerHTML = notifications.map(notification => `
-        <div class="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition ${notification.read ? 'opacity-60' : ''}" role="listitem" data-id="${notification.id}">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center font-bold flex-shrink-0">
-              ${notification.user.charAt(0)}
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-white">
-                <span class="font-semibold">${notification.user}</span> ${notification.message}
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${notification.time}</p>
-            </div>
-            ${!notification.read ? '<div class="w-2 h-2 rounded-full bg-accent flex-shrink-0"></div>' : ''}
-          </div>
-        </div>
-      `).join('');
-      
-      // Add click handlers to mark as read
-      notificationsList.querySelectorAll('[data-id]').forEach(item => {
-        item.addEventListener('click', () => {
-          const id = parseInt(item.dataset.id);
-          const notification = notifications.find(n => n.id === id);
-          if (notification) {
-            notification.read = true;
-            renderNotifications();
-          }
-        });
-      });
+
+      notificationsList.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications yet</div>';
     }
     
     // Toggle notifications panel
