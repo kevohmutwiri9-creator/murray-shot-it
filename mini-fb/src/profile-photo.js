@@ -1,4 +1,4 @@
-import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { compressImage, uploadImageToImgbb } from "./image-upload.js";
 import { getDbService } from "./firebase-config.js";
 import { getCurrentUser } from "./auth.js";
@@ -11,7 +11,7 @@ import { getCurrentUser } from "./auth.js";
  */
 export async function uploadProfilePhoto(firebaseApp, file) {
   const user = getCurrentUser();
-  if (!user) throw new Error("Not logged in");
+  if (!user?.uid) throw new Error("Not logged in");
   if (!file) throw new Error("No file provided");
 
   // Validate file type
@@ -32,13 +32,19 @@ export async function uploadProfilePhoto(firebaseApp, file) {
 
   // Upload to imgbb
   const result = await uploadImageToImgbb(compressed);
-  const photoUrl = result.data.url;
+  const photoUrl = result.url;
 
-  // Update user profile in Firestore
-  await updateDoc(doc(db, "profiles", user.uid), {
-    photoUrl,
-    updatedAt: new Date(),
-  });
+  // Update user profile in Firestore, creating the profile document if needed
+  await setDoc(
+    doc(db, "profiles", user.uid),
+    {
+      uid: user.uid,
+      email: user.email || null,
+      photoUrl,
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
 
   return photoUrl;
 }
@@ -51,18 +57,20 @@ export async function uploadProfilePhoto(firebaseApp, file) {
  */
 export async function updateProfileFields(firebaseApp, updates) {
   const user = getCurrentUser();
-  if (!user) throw new Error("Not logged in");
+  if (!user?.uid) throw new Error("Not logged in");
 
   const db = getDbService(firebaseApp);
   const profileRef = doc(db, "profiles", user.uid);
 
   // Add updatedAt timestamp
   const dataToUpdate = {
+    uid: user.uid,
+    email: user.email || null,
     ...updates,
     updatedAt: new Date(),
   };
 
-  await updateDoc(profileRef, dataToUpdate);
+  await setDoc(profileRef, dataToUpdate, { merge: true });
 }
 
 /**

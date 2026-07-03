@@ -91,6 +91,8 @@ export async function createAccount(firebaseApp, email, password, showToast = nu
  */
 export async function isAdmin(firebaseApp, uid) {
   try {
+    if (!uid) return false;
+
     // Admins are managed via Firestore doc: admins/{uid}
     // If admins/{uid} exists => admin
     const db = getDbService(firebaseApp);

@@ -19,16 +19,8 @@ import { getCurrentUser } from "./auth.js";
 import { createNotificationForMessage } from "./notifications.js";
 import { checkRateLimit, recordRateLimit } from "./rate-limit.js";
 
-// Conversation cache to reduce Firestore reads
-const conversationCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 export function conversationId(uidA, uidB) {
   return [uidA, uidB].sort().join("_");
-}
-
-export function invalidateConversationCache(convId) {
-  conversationCache.delete(convId);
 }
 
 export function isGroupConversationId(id) {
@@ -37,17 +29,10 @@ export function isGroupConversationId(id) {
 
 export async function getOrCreateConversation(db, otherUid) {
   const user = getCurrentUser();
-  if (!user) throw new Error("Not logged in.");
+  if (!user?.uid) throw new Error("Not logged in.");
   if (!otherUid || otherUid === user.uid) throw new Error("Invalid recipient.");
 
   const id = conversationId(user.uid, otherUid);
-  
-  // Check cache first
-  const cached = conversationCache.get(id);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return id;
-  }
-  
   const ref = doc(db, "conversations", id);
   await setDoc(
     ref,
@@ -59,16 +44,12 @@ export async function getOrCreateConversation(db, otherUid) {
     },
     { merge: true }
   );
-  
-  // Update cache
-  conversationCache.set(id, { timestamp: Date.now(), data: { type: 'dm' } });
-  
   return id;
 }
 
 export async function createGroupConversation(db, participantUids, title) {
   const user = getCurrentUser();
-  if (!user) throw new Error("Not logged in.");
+  if (!user?.uid) throw new Error("Not logged in.");
   const participants = [...new Set([user.uid, ...participantUids])].sort();
   if (participants.length < 3) throw new Error("Pick at least 2 other people for a group.");
 
@@ -94,7 +75,7 @@ async function bumpUnreadForRecipients(db, convId, senderUid, participantUids) {
 
 export async function markConversationRead(db, convId) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user?.uid || !convId) return;
 
   await setDoc(
     doc(db, "conversations", convId),
@@ -137,7 +118,7 @@ export async function markConversationRead(db, convId) {
 
 export async function markMessagesDelivered(db, convId) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user?.uid || !convId) return;
 
   const q = query(
     collection(db, "conversations", convId, "messages"),
@@ -158,7 +139,7 @@ export async function markMessagesDelivered(db, convId) {
 
 export async function setTyping(db, convId, isTyping) {
   const user = getCurrentUser();
-  if (!user || !convId) return;
+  if (!user?.uid || !convId) return;
 
   await setDoc(
     doc(db, "conversations", convId),
@@ -170,6 +151,7 @@ export async function setTyping(db, convId, isTyping) {
 export async function sendMessage(firebaseApp, target, payload) {
   const db = getDbService(firebaseApp);
   const user = getCurrentUser();
+  if (!user?.uid) throw new Error("Not logged in.");
   checkRateLimit("message", user.uid);
 
   let convId;
@@ -241,6 +223,8 @@ export async function sendMessage(firebaseApp, target, payload) {
 
 export function listenMyConversations(db, onData, onError) {
   const user = getCurrentUser();
+  if (!user?.uid) return () => {};
+
   const q = query(
     collection(db, "conversations"),
     where("participants", "array-contains", user.uid),
@@ -252,6 +236,8 @@ export function listenMyConversations(db, onData, onError) {
 }
 
 export function listenMessages(db, convId, onData, onError) {
+  if (!convId) return () => {};
+
   const q = query(
     collection(db, "conversations", convId, "messages"),
     orderBy("createdAt", "asc")
@@ -263,6 +249,8 @@ export function listenMessages(db, convId, onData, onError) {
 
 export async function searchProfilesForMessaging(db, searchTerm, limit = 12) {
   const user = getCurrentUser();
+  if (!user?.uid) return [];
+
   const q = searchTerm.trim().toLowerCase();
   if (!q) return [];
 
@@ -282,6 +270,8 @@ export async function searchProfilesForMessaging(db, searchTerm, limit = 12) {
 }
 
 export async function getProfileDisplayName(db, uid) {
+  if (!uid) return "User";
+
   const docSnap = await getDoc(doc(db, "profiles", uid));
   if (docSnap.exists()) {
     const p = docSnap.data();

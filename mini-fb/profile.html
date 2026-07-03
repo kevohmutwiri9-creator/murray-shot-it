@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
   <title>SnapVerse • Profile</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="../murray.png">
@@ -11,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com" async="false"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -113,7 +114,7 @@
 
 <body class="bg-light dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans pb-20 sm:pb-0">
   <!-- Header -->
-  <nav class="bg-white dark:bg-dark-surface backdrop-blur-lg border-b border-gray-200 dark:border-dark-border sticky top-0 z-30">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
       <div class="flex items-center justify-between h-14 sm:h-16">
         <a href="/index.html" class="flex items-center space-x-2 group">
@@ -122,10 +123,10 @@
         </a>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <button id="installBtn" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow" aria-label="Install SnapVerse app">
+          <button id="installBtn" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow">
             Install App
           </button>
-          <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Toggle dark mode">
+          <button id="darkModeToggle" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
             <svg id="moonIcon" class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
             </svg>
@@ -139,7 +140,7 @@
             <a href="search.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Search</a>
             <a href="settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Settings</a>
           </div>
-          <button id="mobileMenuBtn" class="sm:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+          <button id="mobileMenuBtn" class="sm:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
@@ -151,8 +152,8 @@
 
   <!-- Mobile Menu -->
   <div id="mobileMenu" class="fixed inset-0 bg-black/50 z-50 hidden sm:hidden">
-    <div class="absolute right-0 top-0 h-full w-64 bg-white dark:bg-dark-surface backdrop-blur-lg shadow-medium">
-      <div class="p-4 border-b border-gray-200 dark:border-dark-border">
+    <div class="absolute right-0 top-0 h-full w-64 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-medium">
+      <div class="p-4 border-b border-gray-200/50 dark:border-dark-border/50">
         <button id="closeMobileMenu" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -169,7 +170,7 @@
   <!-- Main -->
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 animate-fade-in">
     <!-- Profile Header -->
-    <section class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200 dark:border-dark-border mb-8">
+    <section class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200/50 dark:border-dark-border/50 mb-8">
       <div id="profileCover" class="h-32 bg-gradient-to-r from-accent to-purple-600 relative overflow-hidden">
         <img id="profileCoverImg" class="absolute inset-0 h-full w-full object-cover hidden" alt="" />
       </div>
@@ -289,7 +290,6 @@
         <button type="button" id="tabPosts" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Posts</button>
         <button type="button" id="tabReels" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">Reels</button>
         <button type="button" id="tabAbout" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition">About</button>
-        <button type="button" id="tabAnalytics" class="px-3 py-1.5 text-sm font-semibold rounded-lg transition hidden">Analytics</button>
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="postCount"></div>
     </section>
@@ -297,26 +297,7 @@
     <!-- Posts -->
     <section id="postsSection">
       <div id="userPosts" class="space-y-4">
-        <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft">
-          <div class="flex gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-            <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3"></div>
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4"></div>
-            </div>
-          </div>
-          <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-        </div>
-        <div class="bg-white dark:bg-dark-surface rounded-2xl p-4 shadow-soft">
-          <div class="flex gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-            <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3"></div>
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4"></div>
-            </div>
-          </div>
-          <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-        </div>
+        <!-- Posts render here -->
       </div>
 
       <div id="noPosts" class="text-center text-gray-500 dark:text-gray-400 py-12 hidden">
@@ -337,48 +318,6 @@
         <div id="aboutCard" class="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300"></div>
       </div>
     </section>
-
-    <!-- Analytics -->
-    <section id="analyticsSection" class="hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Creator Analytics</h3>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-            <p id="analyticsFollowers" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Followers</p>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-            <p id="analyticsPosts" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Posts</p>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-            <p id="analyticsLikes" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Likes</p>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-            <p id="analyticsEngagement" class="text-2xl font-bold text-accent">0%</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Engagement Rate</p>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Audience Demographics</h4>
-            <div id="audienceDemographics" class="text-sm text-gray-600 dark:text-gray-400">
-              <p class="text-center py-4">Loading demographics...</p>
-            </div>
-          </div>
-          
-          <div>
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Top Performing Posts</h4>
-            <div id="topPosts" class="space-y-2">
-              <p class="text-center py-4 text-sm text-gray-500 dark:text-gray-400">Loading top posts...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <script type="module">
@@ -396,12 +335,13 @@
     import { isFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount, getFollowingUids, getFollowerUids } from "./src/follows.js";
     import { blockUser, unblockUser, isBlocked } from "./src/blocks.js";
     import { reportUser } from "./src/user-reports.js";
-    import { getCreatorAnalytics, getAudienceInsights, getTopPosts } from "./src/creator-analytics.js";
-    import { isCreator } from "./src/subscriptions.js";
 
     const firebase = initFirebase();
     const me = await requireAuth(firebase);
-    if (!me) throw new Error("Not signed in");
+    if (!me) {
+      window.location.replace("/login.html");
+      return;
+    }
 
     const db = firebase.__db;
     bootPage(firebase);
@@ -421,17 +361,10 @@
     const tabPosts = document.getElementById("tabPosts");
     const tabReels = document.getElementById("tabReels");
     const tabAbout = document.getElementById("tabAbout");
-    const tabAnalytics = document.getElementById("tabAnalytics");
     const postsSection = document.getElementById("postsSection");
     const reelsSection = document.getElementById("reelsSection");
     const aboutSection = document.getElementById("aboutSection");
-    const analyticsSection = document.getElementById("analyticsSection");
     const aboutCard = document.getElementById("aboutCard");
-
-    // Show analytics tab for creators viewing their own profile
-    if (isOwnProfile && await isCreator(db, me.uid)) {
-      tabAnalytics.classList.remove("hidden");
-    }
 
     const styleTab = (btn, active) => {
       btn.className = active
@@ -442,61 +375,14 @@
       styleTab(tabPosts, tab === "posts");
       styleTab(tabReels, tab === "reels");
       styleTab(tabAbout, tab === "about");
-      styleTab(tabAnalytics, tab === "analytics");
       postsSection.classList.toggle("hidden", tab !== "posts");
       reelsSection.classList.toggle("hidden", tab !== "reels");
       aboutSection.classList.toggle("hidden", tab !== "about");
-      analyticsSection.classList.toggle("hidden", tab !== "analytics");
       localStorage.setItem("sv_profile_tab", tab);
-      
-      if (tab === "analytics" && isOwnProfile) {
-        loadAnalyticsData(me.uid);
-      }
     };
     tabPosts?.addEventListener("click", () => setTab("posts"));
     tabReels?.addEventListener("click", () => setTab("reels"));
     tabAbout?.addEventListener("click", () => setTab("about"));
-    tabAnalytics?.addEventListener("click", () => setTab("analytics"));
-
-    // Load analytics data
-    async function loadAnalyticsData(userId) {
-      try {
-        const analytics = await getCreatorAnalytics(db, userId);
-        const demographics = await getAudienceInsights(db, userId);
-        const topPosts = await getTopPosts(db, userId, 5);
-        
-        document.getElementById("analyticsFollowers").textContent = analytics.totalFollowers || 0;
-        document.getElementById("analyticsPosts").textContent = analytics.totalPosts || 0;
-        document.getElementById("analyticsLikes").textContent = analytics.totalLikes || 0;
-        document.getElementById("analyticsEngagement").textContent = analytics.engagementRate || "0%";
-        
-        // Render demographics
-        const demographicsEl = document.getElementById("audienceDemographics");
-        if (demographics.ageGroups && Object.keys(demographics.ageGroups).length > 0) {
-          demographicsEl.innerHTML = Object.entries(demographics.ageGroups)
-            .map(([age, count]) => `<div class="flex justify-between py-1"><span>${age}</span><span>${count}</span></div>`)
-            .join('');
-        } else {
-          demographicsEl.innerHTML = '<p class="text-center py-4 text-sm text-gray-500">No demographic data yet</p>';
-        }
-        
-        // Render top posts
-        const topPostsEl = document.getElementById("topPosts");
-        if (topPosts.length > 0) {
-          topPostsEl.innerHTML = topPosts.map(post => `
-            <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-              <span class="text-sm text-gray-600 dark:text-gray-300">Post ${post.postId?.slice(0, 8)}...</span>
-              <span class="text-sm font-semibold text-accent">${post.engagementRate || 0}% engagement</span>
-            </div>
-          `).join('');
-        } else {
-          topPostsEl.innerHTML = '<p class="text-center py-4 text-sm text-gray-500">No posts yet</p>';
-        }
-      } catch (err) {
-        console.error("Failed to load analytics:", err);
-        showToast("Failed to load analytics", "error");
-      }
-    }
 
     // Follow list modal
     const followListModal = document.getElementById("followListModal");

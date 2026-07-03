@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
   <title>SnapVerse • Feed</title>
   <link rel="manifest" href="mini-fb/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="murray.png">
@@ -11,27 +12,104 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com?config=tailwind.config.js"></script>
-  <style>
-    /* Fallback dark mode styles in case Tailwind fails to load */
-    html.dark body {
-      background-color: #0f172a;
-      color: #f1f5f9;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1a1a2e',
+            secondary: '#16213e',
+            accent: '#e94560',
+            accentHover: '#d63d55',
+            accentLight: '#f06b82',
+            light: '#f8f9fa',
+            dark: {
+              bg: '#0f172a',
+              surface: '#1e293b',
+              border: '#334155',
+              text: '#f1f5f9',
+              muted: '#94a3b8',
+            },
+            gradient: {
+              from: '#e94560',
+              to: '#8b5cf6',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          fontSize: {
+            'xs': ['0.75rem', { lineHeight: '1rem' }],
+            'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+            'base': ['1rem', { lineHeight: '1.5rem' }],
+            'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+            'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+            '2xl': ['1.5rem', { lineHeight: '2rem' }],
+            '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+          },
+          letterSpacing: {
+            'tight': '-0.025em',
+            'normal': '0',
+            'wide': '0.025em',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'slide-down': 'slideDown 0.3s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'gradient-x': 'gradientX 3s ease infinite',
+            'float': 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            slideDown: {
+              '0%': { transform: 'translateY(-10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            gradientX: {
+              '0%, 100%': {
+                'background-size': '200% 200%',
+                'background-position': 'left center'
+              },
+              '50%': {
+                'background-size': '200% 200%',
+                'background-position': 'right center'
+              },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' },
+            },
+          },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+          },
+          boxShadow: {
+            'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
+            'medium': '0 4px 16px rgba(0, 0, 0, 0.12)',
+            'strong': '0 8px 32px rgba(0, 0, 0, 0.16)',
+            'glow': '0 0 20px rgba(233, 69, 96, 0.3)',
+            'glow-purple': '0 0 20px rgba(139, 92, 246, 0.3)',
+          },
+        },
+      },
     }
-    html.dark .bg-white {
-      background-color: #1e293b !important;
-      color: #f1f5f9 !important;
-    }
-    html.dark .text-gray-900 {
-      color: #f1f5f9 !important;
-    }
-    html.dark .text-gray-600 {
-      color: #94a3b8 !important;
-    }
-    html.dark .border-gray-200 {
-      border-color: #334155 !important;
-    }
-  </style>
+  </script>
   <style>
     #auth-loading {
       position: fixed;
@@ -64,7 +142,7 @@
     <div class="spinner"></div>
   </div>
   <!-- Header -->
-  <nav class="bg-white dark:bg-dark-surface backdrop-blur-lg border-b border-gray-200 dark:border-dark-border sticky top-0 z-30">
+  <nav class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-dark-border/50 sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
       <div class="flex items-center justify-between h-14 sm:h-16">
         <a href="index.html" class="flex items-center space-x-2 group" aria-label="SnapVerse Home">
@@ -81,7 +159,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12 a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
           </button>
-          <button id="installBtn" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow" aria-label="Install SnapVerse app">
+          <button id="installBtn" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white font-semibold text-sm hover:from-accentHover hover:to-purple-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-glow">
             Install App
           </button>
           <div class="relative">
@@ -108,7 +186,6 @@
             <a href="mini-fb/saved.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Saved</a>
             <a href="/mini-fb/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Profile</a>
             <a href="mini-fb/settings.html" class="text-gray-700 dark:text-gray-300 hover:text-accent font-medium text-sm">Settings</a>
-            <a href="mini-fb/subscriptions.html" class="text-accent font-medium text-sm">Premium</a>
           </div>
           <button id="mobileMenuBtn" class="sm:hidden p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-200" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -121,7 +198,7 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div id="mobileMenu" class="fixed inset-0 bg-black/70 z-50 hidden sm:hidden animate-fade-in" role="dialog" aria-label="Mobile navigation menu">
+  <div id="mobileMenu" class="fixed inset-0 bg-black/50 z-50 hidden sm:hidden animate-fade-in" role="dialog" aria-label="Mobile navigation menu">
     <div class="absolute right-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl animate-slide-down">
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
         <button id="closeMobileMenu" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition transform hover:scale-105 active:scale-95" aria-label="Close menu">
@@ -138,7 +215,6 @@
         <a href="mini-fb/saved.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Saved</a>
         <a href="/mini-fb/profile.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Profile</a>
         <a href="mini-fb/settings.html" class="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition transform hover:scale-105">Settings</a>
-        <a href="mini-fb/subscriptions.html" class="block px-4 py-3 rounded-xl text-accent font-medium transition transform hover:scale-105">Premium</a>
       </nav>
     </div>
   </div>
@@ -184,7 +260,7 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8 animate-fade-in">
     <!-- Stories Section -->
     <section class="mb-8 animate-slide-up">
-      <div class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200 dark:border-dark-border p-5">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200/50 dark:border-dark-border/50 p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text">Stories</h2>
           <span class="text-xs text-gray-500 dark:text-dark-muted">Share moments that disappear in 24h</span>
@@ -259,14 +335,14 @@
 
     <!-- Trending & suggestions -->
     <section class="mb-8 grid md:grid-cols-2 gap-4">
-      <div class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200 dark:border-dark-border p-5">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text">Trending Topics</h2>
           <a href="mini-fb/explore.html" class="text-sm text-accent font-medium">Explore →</a>
         </div>
         <div id="trendingTopics" class="flex flex-wrap gap-2"></div>
       </div>
-      <div class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200 dark:border-dark-border p-5">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-soft border border-gray-200/50 dark:border-dark-border/50 p-5">
         <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">People you may know</h2>
         <div id="friendSuggestions" class="space-y-1"></div>
       </div>
@@ -274,8 +350,8 @@
 
     <!-- Post composer -->
     <section class="mb-8 animate-slide-up">
-      <div class="bg-white dark:bg-dark-surface backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200 dark:border-dark-border overflow-hidden">
-        <div class="p-5 border-b border-gray-200 dark:border-dark-border">
+      <div class="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-lg rounded-2xl shadow-medium border border-gray-200/50 dark:border-dark-border/50 overflow-hidden">
+        <div class="p-5 border-b border-gray-200/50 dark:border-dark-border/50">
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-gray-900 dark:text-dark-text">Create a post</h2>
@@ -368,28 +444,6 @@
                 class="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition"
               />
             </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Tag Products (optional)</label>
-              <div class="flex gap-2">
-                <input
-                  id="productSearch"
-                  type="text"
-                  class="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-accent/30 transition"
-                  placeholder="Search products..."
-                />
-                <button
-                  type="button"
-                  id="addProductBtn"
-                  class="px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                >
-                  Add
-                </button>
-              </div>
-              <div id="selectedProducts" class="flex flex-wrap gap-2 mt-2">
-                <!-- Selected products render here -->
-              </div>
-            </div>
           </div>
 
           <div class="flex items-center justify-between pt-2">
@@ -443,7 +497,7 @@
     </section>
 
     <!-- Edit Post Modal -->
-    <div id="editPostModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+    <div id="editPostModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
       <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Edit Post</h2>
         <form id="editPostForm" class="space-y-4">
@@ -498,12 +552,7 @@
     // Global error handler
     window.addEventListener('error', (event) => {
       console.error('Global error:', event.error);
-      // Ignore Firebase permission errors - they're handled gracefully
-      if (event.error?.code === 'permission-denied' || 
-          event.error?.message?.includes('Missing or insufficient permissions')) {
-        return;
-      }
-      // Show user-friendly error message for other errors
+      // Show user-friendly error message
       const errorDiv = document.createElement('div');
       errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
       errorDiv.textContent = 'An error occurred. Please refresh the page.';
@@ -514,20 +563,6 @@
     // Unhandled promise rejection handler
     window.addEventListener('unhandledrejection', (event) => {
       console.error('Unhandled promise rejection:', event.reason);
-      // Ignore Firebase permission errors - they're handled gracefully
-      const errorStr = String(event.reason || '');
-      const isFirebasePermissionError = 
-        event.reason?.code === 'permission-denied' || 
-        event.reason?.message?.includes('Missing or insufficient permissions') ||
-        event.reason?.message?.includes('permission-denied') ||
-        errorStr.includes('Missing or insufficient permissions') ||
-        errorStr.includes('permission-denied') ||
-        event.reason?.name === 'FirebaseError';
-      
-      if (isFirebasePermissionError) {
-        event.preventDefault(); // Prevent default error handling
-        return;
-      }
       const errorDiv = document.createElement('div');
       errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
       errorDiv.textContent = 'An error occurred. Please refresh the page.';
@@ -629,8 +664,107 @@
     
     // Initial render
     renderNotifications();
+
+    import { initFirebase } from "./mini-fb/src/firebase-config.js";
+    import { bootFeedPage } from "./mini-fb/src/feed-page.js";
+
+    try {
+      const firebase = initFirebase();
+      await bootFeedPage(firebase);
+
+      // Emoji picker functionality
+      const emojiBtn = document.getElementById('emojiBtn');
+      const postText = document.getElementById('postText');
+      
+      const commonEmojis = ['😀', '😂', '🥰', '😎', '🤔', '👍', '❤️', '🔥', '✨', '🎉', '💯', '🙌', '👏', '💪', '🌟', '📸', '🎬', '🎵', '💬', '📍'];
+      
+      if (emojiBtn && postText) {
+        let emojiPicker = null;
+        
+        emojiBtn.addEventListener('click', () => {
+          if (emojiPicker) {
+            emojiPicker.remove();
+            emojiPicker = null;
+            return;
+          }
+        
+          emojiPicker = document.createElement('div');
+          emojiPicker.className = 'absolute z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 grid grid-cols-5 gap-2 animate-scale-in';
+          emojiPicker.style.top = 'auto';
+          emojiPicker.style.bottom = '100%';
+          emojiPicker.style.left = '0';
+          emojiPicker.style.marginBottom = '8px';
+        
+          commonEmojis.forEach(emoji => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition';
+            btn.textContent = emoji;
+            btn.addEventListener('click', () => {
+              const start = postText.selectionStart;
+              const end = postText.selectionEnd;
+              const text = postText.value;
+              postText.value = text.substring(0, start) + emoji + text.substring(end);
+              postText.focus();
+              postText.selectionStart = postText.selectionEnd = start + emoji.length;
+              postText.dispatchEvent(new Event('input'));
+              emojiPicker.remove();
+              emojiPicker = null;
+            });
+            emojiPicker.appendChild(btn);
+          });
+        
+          emojiBtn.parentElement.style.position = 'relative';
+          emojiBtn.parentElement.appendChild(emojiPicker);
+        
+          // Close when clicking outside
+          const closeEmojiPicker = (e) => {
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+              emojiPicker.remove();
+              emojiPicker = null;
+              document.removeEventListener('click', closeEmojiPicker);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', closeEmojiPicker), 0);
+        });
+      }
+
+      // Drag and drop functionality for media
+      const mediaDropZone = document.getElementById('mediaDropZone');
+      const postFile = document.getElementById('postFile');
+      
+      if (mediaDropZone && postFile) {
+        mediaDropZone.addEventListener('click', () => postFile.click());
+      
+        mediaDropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          mediaDropZone.classList.add('border-accent', 'bg-accent/5');
+        });
+      
+        mediaDropZone.addEventListener('dragleave', () => {
+          mediaDropZone.classList.remove('border-accent', 'bg-accent/5');
+        });
+      
+        mediaDropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          mediaDropZone.classList.remove('border-accent', 'bg-accent/5');
+        
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            postFile.files = files;
+            postFile.dispatchEvent(new Event('change'));
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading page:', error);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      errorDiv.textContent = 'Failed to load page. Please refresh.';
+      document.body.appendChild(errorDiv);
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
   </script>
-  <script type="module" src="./mini-fb/src/index-entry.js"></script>
 
   <!-- Service Worker Registration -->
   <script>

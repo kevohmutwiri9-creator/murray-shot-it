@@ -10,9 +10,25 @@ export async function isUserBanned(firebaseApp, uid) {
 }
 
 export async function ensureProfile(firebaseApp, user) {
-  // Silently skip profile check to prevent permission errors
-  // Profile creation will happen naturally when user interacts with the app
-  return;
+  try {
+    if (!user?.uid) return;
+
+    const db = getDbService(firebaseApp);
+    const ref = doc(db, "profiles", user.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
+
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.email?.split("@")[0] || "User",
+      bio: "",
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.warn("Error ensuring profile:", error);
+    // Allow app to continue even if profile creation fails
+  }
 }
 
 /**
@@ -20,29 +36,22 @@ export async function ensureProfile(firebaseApp, user) {
  * @returns {import('firebase/auth').User | null}
  */
 export async function requireAuth(firebaseApp, { loginPath = "/login.html" } = {}) {
-  try {
-    await ensureAuth(firebaseApp);
-  } catch (error) {
-    console.warn("User not authenticated, redirecting to login");
-    window.location.href = loginPath;
-    return null;
-  }
+  await ensureAuth(firebaseApp).catch(() => {});
 
   const user = getCurrentUser();
-  if (!user) {
-    window.location.href = loginPath;
+  if (!user?.uid) {
+    window.location.replace(loginPath);
     return null;
   }
 
   if (await isUserBanned(firebaseApp, user.uid)) {
     showToast("This account has been suspended.", "error");
     await signOut(getAuth(firebaseApp));
-    window.location.href = loginPath;
+    window.location.replace(loginPath);
     return null;
   }
 
-  // Skip profile check to prevent permission errors
-  // await ensureProfile(firebaseApp, user);
+  await ensureProfile(firebaseApp, user);
   import("./presence.js").then(({ startPresence }) => {
     startPresence(getDbService(firebaseApp), user.uid);
   });
