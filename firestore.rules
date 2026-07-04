@@ -269,5 +269,55 @@ service cloud.firestore {
           && onlyKeysChanged(['read', 'delivered']);
       }
     }
+
+    match /brand_campaigns/{campaignId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin()
+        || resource.data.brandId == request.auth.uid
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.brandId == request.auth.uid);
+    }
+
+    match /campaign_applications/{appId} {
+      allow read: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid
+        || resource.data.brandId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        isAdmin()
+        || (resource.data.brandId == request.auth.uid && onlyKeysChanged(['status']))
+        || (resource.data.creatorId == request.auth.uid && onlyKeysChanged(['status']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /campaign_deliverables/{delivId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /post_analytics/{analyticsId} {
+      allow read: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid
+        || isAdmin()
+      );
+      allow create, update: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /creator_analytics/{creatorId} {
+      allow read: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid
+        || isAdmin()
+      );
+      allow create, update: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
   }
 }
