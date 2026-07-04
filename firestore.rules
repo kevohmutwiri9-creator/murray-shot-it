@@ -304,19 +304,53 @@ service cloud.firestore {
 
     match /post_analytics/{analyticsId} {
       allow read: if isSignedIn() && (
-        resource.data.creatorId == request.auth.uid
+        resource.data.authorId == request.auth.uid
+        || resource.data.creatorId == request.auth.uid
         || isAdmin()
       );
-      allow create, update: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow create, update: if isSignedIn() && (
+        request.resource.data.authorId == request.auth.uid
+        || request.resource.data.creatorId == request.auth.uid
+      );
       allow delete: if isAdmin();
     }
 
     match /creator_analytics/{creatorId} {
       allow read: if isSignedIn() && (
-        resource.data.creatorId == request.auth.uid
+        creatorId == request.auth.uid
+        || resource.data.userId == request.auth.uid
+        || resource.data.creatorId == request.auth.uid
         || isAdmin()
       );
-      allow create, update: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow create, update: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid
+        || request.resource.data.creatorId == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /wallets/{walletId} {
+      allow read: if isSignedIn() && (
+        walletId == request.auth.uid
+        || resource.data.userId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        walletId == request.auth.uid
+        || request.resource.data.userId == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid
+        || resource.data.toUserId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
   }
