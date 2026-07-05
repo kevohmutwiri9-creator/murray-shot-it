@@ -231,6 +231,7 @@ export function listenMyConversations(db, onData, onError) {
     orderBy("updatedAt", "desc")
   );
   return onSnapshot(q, onData, (err) => {
+    console.warn("Conversations listener unavailable:", err);
     if (onError) onError(err);
   });
 }
@@ -243,6 +244,7 @@ export function listenMessages(db, convId, onData, onError) {
     orderBy("createdAt", "asc")
   );
   return onSnapshot(q, onData, (err) => {
+    console.warn("Messages listener unavailable:", err);
     if (onError) onError(err);
   });
 }

@@ -54,9 +54,11 @@ export async function requireAuth(firebaseApp, { loginPath = "/login.html" } = {
   }
 
   await ensureProfile(firebaseApp, user);
-  import("./presence.js").then(({ startPresence }) => {
-    startPresence(getDbService(firebaseApp), user.uid);
-  });
+  import("./presence.js")
+    .then(({ startPresence }) => {
+      startPresence(getDbService(firebaseApp), user.uid);
+    })
+    .catch(() => {});
   return user;
 }
 
@@ -92,7 +94,9 @@ function startNavBadges(firebaseApp) {
   const badge = document.getElementById("messagesBadge");
   const mobileBadge = document.getElementById("mobileMessagesBadge");
   if (!getCurrentUser()) return;
-  import("./messages-unread.js").then(({ startMessagesBadge }) => {
-    startMessagesBadge(firebaseApp.__db, badge, mobileBadge);
-  });
+  import("./messages-unread.js")
+    .then(({ startMessagesBadge }) => {
+      startMessagesBadge(firebaseApp.__db, badge, mobileBadge);
+    })
+    .catch(() => {});
 }

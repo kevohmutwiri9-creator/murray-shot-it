@@ -131,6 +131,10 @@ export function startReelsPage(db, containerEl, opts = {}) {
       const target = document.getElementById(`reel-${targetId}`);
       target?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+  }, (error) => {
+    console.warn("Reels listener unavailable:", error);
+    containerEl.innerHTML =
+      '<p class="text-sm text-gray-500 text-center py-10">Reels are temporarily unavailable.</p>';
   });
 }
 
@@ -164,6 +168,9 @@ export function startReelsPreview(db, containerEl) {
       `;
       containerEl.appendChild(a);
     });
+  }, (error) => {
+    console.warn("Reels preview unavailable:", error);
+    containerEl.innerHTML = '<p class="text-sm text-gray-500">Reels unavailable right now.</p>';
   });
 }
 

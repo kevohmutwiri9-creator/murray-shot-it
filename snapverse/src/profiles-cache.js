@@ -9,15 +9,19 @@ export function profileUrl(uid) {
 
 export async function loadProfilesCache(db) {
   handleToUid = new Map();
-  const snap = await getDocs(collection(db, "profiles"));
-  snap.forEach((docSnap) => {
-    const p = docSnap.data();
-    const uid = docSnap.id;
-    const display = (p.displayName || "").trim().toLowerCase();
-    const emailHandle = (p.email || "").split("@")[0].trim().toLowerCase();
-    if (display) handleToUid.set(display, uid);
-    if (emailHandle) handleToUid.set(emailHandle, uid);
-  });
+  try {
+    const snap = await getDocs(collection(db, "profiles"));
+    snap.forEach((docSnap) => {
+      const p = docSnap.data();
+      const uid = docSnap.id;
+      const display = (p.displayName || "").trim().toLowerCase();
+      const emailHandle = (p.email || "").split("@")[0].trim().toLowerCase();
+      if (display) handleToUid.set(display, uid);
+      if (emailHandle) handleToUid.set(emailHandle, uid);
+    });
+  } catch (error) {
+    console.warn("Profiles cache unavailable:", error);
+  }
 }
 
 export function uidForHandle(handle) {

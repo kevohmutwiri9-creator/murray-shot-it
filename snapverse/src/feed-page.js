@@ -72,7 +72,11 @@ export async function bootFeedPage(firebase) {
   feedFilterAll?.addEventListener("click", () => setFeedMode("all"));
   feedFilterFollowing?.addEventListener("click", () => setFeedMode("following"));
 
-  await loadProfilesCache(db);
+  await Promise.allSettled([
+    loadProfilesCache(db),
+    loadTrendingTopics(db),
+    loadFriendSuggestions(db, user.uid),
+  ]);
   setFeedMode(feedMode);
 
   // Hide skeleton when feed loads
@@ -111,9 +115,6 @@ export async function bootFeedPage(firebase) {
     addBtnEl: document.getElementById("addStoryBtn"),
   });
   startReelsPreview(db, document.getElementById("reelsPreview"));
-
-  loadTrendingTopics(db);
-  loadFriendSuggestions(db, user.uid);
 
   // Edit post modal
   const editPostModal = document.getElementById("editPostModal");

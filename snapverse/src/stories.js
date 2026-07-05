@@ -156,6 +156,10 @@ export function startStories(db, { containerEl, addBtnEl }) {
       });
       containerEl.appendChild(storyEl);
     });
+  }, (error) => {
+    console.warn("Stories listener unavailable:", error);
+    containerEl.innerHTML =
+      '<span class="text-gray-500 dark:text-gray-400 text-sm">Stories unavailable right now.</span>';
   });
 
   addBtnEl?.addEventListener("click", () => {
