@@ -353,5 +353,28 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // Ads and related analytics (impressions / clicks)
+    match /ads/{adId} {
+      // Ads are publicly readable so feed can fetch active ads
+      allow read: if true;
+      // Only advertiser or admin can create/update/delete ad documents
+      allow create: if isSignedIn() && request.resource.data.advertiserId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.advertiserId == request.auth.uid);
+    }
+
+    match /ad_impressions/{impId} {
+      // Allow signed-in users to record their impressions
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.adId is string;
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /ad_clicks/{clickId} {
+      // Allow signed-in users to record clicks
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.adId is string;
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+    }
   }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com  font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://api.imgbb.com;">
   <title>SnapVerse • Feed</title>
   <link rel="manifest" href="snapverse/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="murray.png">
@@ -91,8 +91,6 @@
   <div id="auth-loading" role="status" aria-live="polite">
     <div class="loader-panel">
       <img src="snapverse/murray.png" alt="SnapVerse" class="loader-logo" />
-      <div class="loader-label">SnapVerse</div>
-      <div class="loader-meta">Launching your creator network. Please wait while we load your feed.</div>
       <div class="loader-dots" aria-hidden="true">
         <span></span>
         <span></span>
