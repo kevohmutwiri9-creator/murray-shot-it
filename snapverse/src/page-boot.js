@@ -26,8 +26,10 @@ export async function ensureProfile(firebaseApp, user) {
       createdAt: serverTimestamp(),
     });
   } catch (error) {
+    if (error?.code === "permission-denied" || error?.code === "unauthenticated") {
+      return;
+    }
     console.warn("Error ensuring profile:", error);
-    // Allow app to continue even if profile creation fails
   }
 }
 
