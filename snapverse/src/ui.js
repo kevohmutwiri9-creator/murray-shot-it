@@ -159,6 +159,34 @@ export function bindMediaPreview(fileEl, previewEl) {
   });
 }
 
+export function renderEmptyState(container, { title, message, icon = "✨", actionLabel, actionHandler } = {}) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/50 p-6 text-center shadow-sm">
+      <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-xl shadow-sm dark:bg-gray-900/80">${icon}</div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white">${title}</h3>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">${message}</p>
+      ${actionLabel ? `<button type="button" class="mt-4 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent/90">${actionLabel}</button>` : ""}
+    </div>
+  `;
+
+  const actionBtn = container.querySelector("button");
+  if (actionBtn && actionHandler) {
+    actionBtn.addEventListener("click", actionHandler);
+  }
+}
+
+export function renderSkeletonCards(container, count = 3) {
+  if (!container) return;
+  container.innerHTML = Array.from({ length: count }, () => `
+    <div class="animate-pulse rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/70 p-4 shadow-sm dark:bg-gray-800/70">
+      <div class="mb-3 h-4 w-24 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+      <div class="mb-2 h-4 w-full rounded-full bg-gray-200 dark:bg-gray-700"></div>
+      <div class="h-4 w-4/5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+    </div>
+  `).join("");
+}
+
 export function openModal(id) {
   const el = document.getElementById(id);
   if (el) {

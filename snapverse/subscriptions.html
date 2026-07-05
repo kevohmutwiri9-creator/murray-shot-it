@@ -25,10 +25,18 @@
   </nav>
 
   <main class="max-w-4xl mx-auto p-4 space-y-6 animate-fade-in">
-    <div class="text-center mb-8">
-      <h2 class="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">Upgrade Your Experience</h2>
-      <p class="text-gray-600 dark:text-gray-400">Choose the plan that's right for you</p>
-    </div>
+    <section class="rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/10 via-white to-purple-100 p-6 shadow-soft dark:from-accent/20 dark:via-dark-surface dark:to-purple-900/20">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-accent">Premium access</p>
+          <h2 class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">Upgrade your SnapVerse experience</h2>
+          <p class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-300">Choose a plan, pay with M-Pesa, and unlock more creator tools, better analytics, and a smoother content workflow.</p>
+        </div>
+        <div class="rounded-2xl bg-white/80 px-4 py-3 text-sm text-gray-600 shadow-sm dark:bg-gray-900/70 dark:text-gray-300">
+          <span class="font-semibold text-gray-900 dark:text-white">Fast setup:</span> pay via till number and confirm on your phone.
+        </div>
+      </div>
+    </section>
 
     <!-- Current Plan Status -->
     <div id="currentPlan" class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border mb-6">
@@ -109,21 +117,36 @@
       </div>
     </div>
 
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-dark-surface">
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">M-Pesa support</p>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Use your phone number to receive the payment prompt instantly.</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-dark-surface">
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">Instant access</p>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Your subscription becomes active as soon as the payment is confirmed.</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-dark-surface">
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">Flexible plans</p>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Upgrade, switch, or cancel anytime from your dashboard.</p>
+      </div>
+    </div>
+
     <!-- FAQ Section -->
     <div class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border">
       <h3 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">Frequently Asked Questions</h3>
       <div class="space-y-4">
         <div>
           <h4 class="font-semibold text-gray-900 dark:text-dark-text mb-2">Can I cancel anytime?</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Yesyou can cancel your subscription at any time. You'll continue to have access until the end of your billing period.</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Yes, you can cancel your subscription at any time. You will keep access until the end of your current billing period.</p>
         </div>
         <div>
           <h4 class="font-semibold text-gray-900 dark:text-dark-text mb-2">What payment methods do you accept?</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">We accept all major credit cards through Stripe.</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">We currently support M-Pesa till payments, with a simple prompt for your phone number and PIN confirmation.</p>
         </div>
         <div>
           <h4 class="font-semibold text-gray-900 dark:text-dark-text mb-2">Can I switch plans?</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Yes, you can upgrade or downgrade your plan at any time. Prorated charges will apply.</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Yes, you can upgrade or downgrade your plan at any time whenever it suits your content goals.</p>
         </div>
       </div>
     </div>

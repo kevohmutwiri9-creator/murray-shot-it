@@ -24,9 +24,25 @@
   </nav>
 
   <main class="max-w-4xl mx-auto p-4 space-y-6 animate-fade-in">
+    <section class="rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/10 via-white to-purple-100 p-5 shadow-soft dark:from-accent/20 dark:via-dark-surface dark:to-purple-900/20">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-accent">Creator growth</p>
+          <h2 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">Find campaigns that fit your audience</h2>
+          <p class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-300">Track your performance, review applications, and discover paid opportunities without leaving the app.</p>
+        </div>
+        <div class="rounded-2xl bg-white/80 px-4 py-3 text-sm text-gray-600 shadow-sm dark:bg-gray-900/60 dark:text-gray-300">
+          <span class="font-semibold text-gray-900 dark:text-white">Tip:</span> Keep your profile polished to improve your match rate.
+        </div>
+      </div>
+    </section>
+
     <!-- Creator Stats -->
     <div class="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-soft border border-gray-200 dark:border-dark-border">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text mb-4">Your Creator Stats</h2>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-dark-text">Your Creator Stats</h2>
+        <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Live snapshot</span>
+      </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="text-center">
           <p id="statFollowers" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
@@ -79,7 +95,7 @@
     import { initFirebase } from "./src/firebase-config.js";
     import { requireAuth, bootPage } from "./src/page-boot.js";
     import { initDarkMode } from "./src/shared.js";
-    import { showToast } from "./src/ui.js";
+    import { showToast, renderEmptyState, renderSkeletonCards } from "./src/ui.js";
     import { getOpenCampaigns, applyToCampaign, getCreatorApplications } from "./src/brand-campaigns.js";
     import { getCreatorAnalytics } from "./src/creator-analytics.js";
     import { formatBalance, getTotalEarnings } from "./src/transactions.js";
@@ -124,9 +140,13 @@
         
         const campaigns = await getOpenCampaigns(db, creatorData);
         const campaignsGrid = document.getElementById("campaignsGrid");
-        
+
         if (campaigns.length === 0) {
-          campaignsGrid.innerHTML = '<p class="text-center py-8 text-gray-500 dark:text-gray-400">No open campaigns available</p>';
+          renderEmptyState(campaignsGrid, {
+            title: "No campaigns available yet",
+            message: "New brand opportunities will appear here as soon as they are posted.",
+            icon: "📣"
+          });
           return;
         }
         
@@ -134,15 +154,18 @@
           const imageUrl = campaign.imageUrl || 'https://via.placeholder.com/120?text=Campaign';
           const compensationType = campaign.compensation?.type || 'Paid';
           return `
-          <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-accent/50 transition cursor-pointer" data-campaign-id="${campaign.id}">
+          <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md dark:border-gray-700 dark:bg-gray-800/80" data-campaign-id="${campaign.id}">
             <div class="flex items-start gap-4">
-              <img src="${imageUrl}" alt="${campaign.title || 'Campaign'}" class="w-20 h-20 object-cover rounded-lg" />
+              <img src="${imageUrl}" alt="${campaign.title || 'Campaign'}" class="h-20 w-20 rounded-xl object-cover" />
               <div class="flex-1">
-                <h3 class="font-bold text-gray-900 dark:text-white">${campaign.title || 'Untitled campaign'}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">${campaign.description || 'No campaign description available.'}</p>
-                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>Budget: $${((campaign.budget || 0) / 100).toFixed(2)}</span>
-                  <span>${compensationType === 'flat_fee' ? 'Flat fee' : compensationType}</span>
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="font-bold text-gray-900 dark:text-white">${campaign.title || 'Untitled campaign'}</h3>
+                  <span class="rounded-full bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent">${compensationType === 'flat_fee' ? 'Flat fee' : compensationType}</span>
+                </div>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">${campaign.description || 'No campaign description available.'}</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span class="rounded-full bg-gray-100 px-2.5 py-1 dark:bg-gray-700">Budget: $${((campaign.budget || 0) / 100).toFixed(2)}</span>
+                  <span class="rounded-full bg-gray-100 px-2.5 py-1 dark:bg-gray-700">Open application</span>
                 </div>
               </div>
             </div>
@@ -169,18 +192,22 @@
         const applicationsGrid = document.getElementById("applicationsGrid");
         
         if (applications.length === 0) {
-          applicationsGrid.innerHTML = '<p class="text-center py-8 text-gray-500 dark:text-gray-400">No applications yet</p>';
+          renderEmptyState(applicationsGrid, {
+            title: "No applications yet",
+            message: "Your submissions will appear here once you apply to a campaign.",
+            icon: "📝"
+          });
           return;
         }
         
         applicationsGrid.innerHTML = applications.map(app => `
-          <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-            <div class="flex items-center justify-between">
+          <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/80">
+            <div class="flex items-center justify-between gap-3">
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Campaign ${app.campaignId.slice(0, 8)}...</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Applied: ${new Date(app.createdAt?.toDate?.() || app.createdAt).toLocaleDateString()}</p>
               </div>
-              <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+              <span class="rounded-full px-3 py-1 text-xs font-semibold ${
                 app.status === 'accepted' ? 'bg-green-100 text-green-700' :
                 app.status === 'rejected' ? 'bg-red-100 text-red-700' :
                 'bg-yellow-100 text-yellow-700'
