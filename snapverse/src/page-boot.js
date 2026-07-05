@@ -1,7 +1,7 @@
 import { ensureAuth, getCurrentUser, isAdmin } from "./auth.js";
 import { getDbService } from "./firebase-config.js";
 import { initDarkMode, showToast } from "./ui.js";
-import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 export async function isUserBanned(firebaseApp, uid) {
@@ -15,16 +15,18 @@ export async function ensureProfile(firebaseApp, user) {
 
     const db = getDbService(firebaseApp);
     const ref = doc(db, "profiles", user.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) return;
-
-    await setDoc(ref, {
-      uid: user.uid,
-      email: user.email || null,
-      displayName: user.email?.split("@")[0] || "User",
-      bio: "",
-      createdAt: serverTimestamp(),
-    });
+    await setDoc(
+      ref,
+      {
+        uid: user.uid,
+        email: user.email || null,
+        displayName: user.email?.split("@")[0] || "User",
+        bio: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     if (error?.code === "permission-denied" || error?.code === "unauthenticated") {
       return;

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const STATIC_CACHE = `snapverse-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `snapverse-dynamic-${CACHE_VERSION}`;
 

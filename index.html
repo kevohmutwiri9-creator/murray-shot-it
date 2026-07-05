@@ -592,6 +592,12 @@
     // Initial render
     renderNotifications();
 
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        return Promise.all(registrations.map((registration) => registration.unregister()));
+      }).catch(() => {});
+    }
+
     import { initFirebase } from "./snapverse/src/firebase-config.js";
     import { bootFeedPage } from "./snapverse/src/feed-page.js";
 
