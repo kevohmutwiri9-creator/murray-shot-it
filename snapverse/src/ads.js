@@ -104,12 +104,13 @@ export async function getTargetedAds(db, user) {
       return true;
     });
   } catch (error) {
-    // Handle missing index error gracefully
-    if (error.code === 'failed-precondition' && error.message.includes('index')) {
-      console.log('Ads index not yet created, skipping ads');
+    const code = error?.code;
+    if (code === 'failed-precondition' && error?.message?.includes('index')) {
       return [];
     }
-    console.error('Error fetching ads:', error);
+    if (code === 'permission-denied' || code === 'unauthenticated') {
+      return [];
+    }
     return [];
   }
 }

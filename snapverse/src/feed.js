@@ -80,8 +80,12 @@ async function renderFeed(firebaseApp, mode) {
   // Inject ads if user is not premium
   const showAds = user ? !(await hasFeature(db, user.uid, 'Ad-free experience')) : true;
   if (showAds) {
-    const ads = await getTargetedAds(db, user || {});
-    posts = injectAdsIntoFeed(posts, ads);
+    try {
+      const ads = await getTargetedAds(db, user || {});
+      posts = injectAdsIntoFeed(posts, ads);
+    } catch (error) {
+      // Ignore ad feed failures so the main feed still renders.
+    }
   }
 
   const total = posts.length;
