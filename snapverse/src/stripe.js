@@ -1,7 +1,8 @@
 import { showToast } from "./ui.js";
+import { initFirebase } from "./firebase-config.js";
 
 // Till Number Payment System for SnapVerse
-// This module handles till number payment processing for subscriptions
+// This module handles till number payment processing for subscriptions via M-Pesa API
 
 // IMPORTANT: Till Number should be loaded from environment variables or secure config
 // Do not hardcode sensitive payment information in client-side code
@@ -189,32 +190,37 @@ export function showTillPaymentModal(plan, amount) {
 }
 
 /**
- * Trigger M-Pesa STK push to send payment prompt to phone
+ * Trigger M-Pesa STK push via Cloud Function
+ * Calls Firebase Cloud Function which integrates with M-Pesa API
  */
 async function triggerMpesaStkPush(phoneNumber, amount, description) {
   try {
-    // Use Safaricom M-Pesa API to send STK push
-    // Format phone number for M-Pesa (254 format)
-    let formattedPhone = phoneNumber;
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '254' + formattedPhone.substring(1);
-    }
+    console.log('📱 Calling Cloud Function to send M-Pesa payment prompt...');
     
-    // In development, we simulate the M-Pesa push
-    // In production, this would call your backend which calls the M-Pesa API
-    console.log('📱 Sending M-Pesa STK push to:', formattedPhone);
+    // Get Firebase instance
+    const firebase = initFirebase();
+    const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
     
-    // Simulate M-Pesa API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const processMpesaPayment = httpsCallable(firebase.app.functions(), 'processMpesaPayment');
     
-    console.log('✅ M-Pesa prompt sent to phone');
+    // Call the Cloud Function
+    const result = await processMpesaPayment({
+      phoneNumber,
+      amount,
+      plan: description.split(' ')[1].toLowerCase(), // Extract plan from description
+    });
+
+    console.log('✅ Cloud Function response:', result.data);
+    
     return {
       success: true,
-      message: `M-Pesa payment prompt sent to ${phoneNumber}`,
+      message: result.data.message,
+      transactionId: result.data.transactionId,
     };
   } catch (error) {
-    console.error('❌ M-Pesa STK push failed:', error);
-    throw new Error(`Failed to send payment prompt: ${error.message}`);
+    console.error('❌ M-Pesa error:', error);
+    const errorMessage = error.message || 'Failed to send payment prompt';
+    throw new Error(errorMessage);
   }
 }
 

@@ -1,0 +1,24 @@
+{
+  "name": "snapverse-functions",
+  "description": "Firebase Cloud Functions for SnapVerse",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "shell": "firebase functions:shell",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.9.0",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  }
+}

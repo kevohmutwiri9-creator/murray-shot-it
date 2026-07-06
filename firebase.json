@@ -6,6 +6,13 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs18"
+    }
+  ],
   "hosting": {
     "public": ".",
     "ignore": [
@@ -15,7 +22,8 @@
       "firestore.indexes.json",
       "**/.*",
       "**/node_modules/**",
-      "TODO.md"
+      "TODO.md",
+      "functions/"
     ],
     "headers": [
       {

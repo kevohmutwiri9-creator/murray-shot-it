@@ -376,5 +376,27 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // Payments collection - M-Pesa and subscription payments
+    match /payments/{paymentId} {
+      // Users can read their own payment records
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Cloud Functions create payment records
+      allow create: if request.auth.uid is string;
+      // Cloud Functions update payment records with M-Pesa callback data
+      allow update: if request.auth.uid is string || isAdmin();
+      // Only admin can delete payment records
+      allow delete: if isAdmin();
+    }
+
+    // Payment errors collection - for logging and debugging
+    match /payment_errors/{errorId} {
+      // Only admin can view payment errors
+      allow read: if isAdmin();
+      // Cloud Functions log errors
+      allow create: if request.auth.uid is string;
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
   }
 }
