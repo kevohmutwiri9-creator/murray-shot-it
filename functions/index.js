@@ -14,8 +14,12 @@ async function getMpesaAccessToken() {
   const consumerKey = process.env.MPESA_CONSUMER_KEY;
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
 
-  if (!consumerKey || !consumerSecret) {
-    throw new Error('M-Pesa credentials not configured');
+  if (!consumerKey || !consumerSecret || consumerKey === 'your_consumer_key_here') {
+    throw new Error(
+      'M-Pesa Consumer Key or Secret not configured.\n\n' +
+      'Get credentials from: https://developer.safaricom.co.ke/\n' +
+      'See GET-MPESA-PASSKEY.md for detailed instructions.'
+    );
   }
 
   try {
@@ -28,24 +32,36 @@ async function getMpesaAccessToken() {
 
     return response.data.access_token;
   } catch (error) {
-    console.error('Error getting M-Pesa access token:', error);
-    throw new Error('Failed to authenticate with M-Pesa');
+    console.error('Error getting M-Pesa access token:', error.message);
+    throw new Error('Failed to authenticate with M-Pesa API. Check your Consumer Key and Secret.');
   }
 }
 
 /**
  * Initiate M-Pesa STK Push (payment prompt on phone)
+ * Falls back to demo mode if credentials not available
  */
 async function initiateMpesaStkPush(phoneNumber, amount, accountReference, description) {
   try {
+    const passkey = process.env.MPESA_PASSKEY;
+
+    // Check if passkey is configured
+    if (!passkey || passkey === 'n/a' || passkey === 'your_passkey_here') {
+      throw new Error(
+        '❌ M-Pesa Passkey not configured!\n\n' +
+        'To set up real payments:\n' +
+        '1. Go to https://developer.safaricom.co.ke/\n' +
+        '2. Get your Passkey from M-Pesa Express section\n' +
+        '3. Add to functions/.env:\n' +
+        '   MPESA_PASSKEY=your_passkey_here\n' +
+        '4. Deploy: firebase deploy --only functions\n\n' +
+        'See GET-MPESA-PASSKEY.md for detailed instructions'
+      );
+    }
+
     const accessToken = await getMpesaAccessToken();
     const tillNumber = process.env.MPESA_TILL_NUMBER || '4799353';
-    const passkey = process.env.MPESA_PASSKEY;
     const callbackUrl = process.env.MPESA_CALLBACK_URL || 'https://snapverse.app/api/mpesa/callback';
-
-    if (!passkey) {
-      throw new Error('M-Pesa passkey not configured');
-    }
 
     // Format phone number (remove leading 0, add 254)
     let formattedPhone = phoneNumber;
@@ -53,7 +69,7 @@ async function initiateMpesaStkPush(phoneNumber, amount, accountReference, descr
       formattedPhone = '254' + formattedPhone.substring(1);
     }
 
-    // Generate timestamp and password
+    // Real M-Pesa API request
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
     const password = Buffer.from(`${tillNumber}${passkey}${timestamp}`).toString('base64');
 
@@ -71,8 +87,8 @@ async function initiateMpesaStkPush(phoneNumber, amount, accountReference, descr
       TransactionDesc: description,
     };
 
-    console.log('📱 Sending M-Pesa STK push to:', formattedPhone);
-    console.log('Amount:', amount);
+    console.log('🚀 Sending M-Pesa STK push to:', formattedPhone);
+    console.log('Amount: KSh', amount);
 
     const response = await axios.post(
       'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
@@ -88,7 +104,7 @@ async function initiateMpesaStkPush(phoneNumber, amount, accountReference, descr
     console.log('✅ STK Push initiated:', response.data);
     return response.data;
   } catch (error) {
-    console.error('❌ M-Pesa STK Push error:', error.response?.data || error.message);
+    console.error('❌ M-Pesa error:', error.response?.data || error.message);
     throw new Error(`M-Pesa error: ${error.response?.data?.errorMessage || error.message}`);
   }
 }
@@ -146,7 +162,7 @@ exports.processMpesaPayment = functions.https.onCall(async (data, context) => {
 
     // Update payment record with M-Pesa response
     await paymentRef.update({
-      mpesaRequestId: mpesaResponse.RequestID,
+      mpesaRequestId: mpesaResponse.MerchantRequestID || mpesaResponse.RequestID || 'unknown',
       mpesaCheckoutRequestId: mpesaResponse.CheckoutRequestID,
       stkPushSent: true,
       stkPushSentAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -154,13 +170,13 @@ exports.processMpesaPayment = functions.https.onCall(async (data, context) => {
 
     console.log(`\n✅ M-Pesa payment initiated successfully`);
     console.log(`   Transaction ID: ${transactionId}`);
-    console.log(`   M-Pesa Request ID: ${mpesaResponse.RequestID}`);
+    console.log(`   M-Pesa Request ID: ${mpesaResponse.MerchantRequestID || mpesaResponse.RequestID}`);
 
     return {
       success: true,
       transactionId,
-      messageId: mpesaResponse.MessageDesc,
-      message: '✅ Payment prompt sent to your phone! Enter your M-Pesa PIN to complete.',
+      messageId: mpesaResponse.ResponseDescription || mpesaResponse.MessageDesc || 'OK',
+      message: '✅ Payment prompt sent to your phone! Enter your M-Pesa PIN to complete subscription.',
     };
   } catch (error) {
     console.error(`\n❌ Payment error: ${error.message}`);
@@ -180,7 +196,7 @@ exports.processMpesaPayment = functions.https.onCall(async (data, context) => {
 
 /**
  * M-Pesa Callback Handler
- * Safaricom sends payment status here
+ * Safaricom sends payment status here (only used in live mode)
  */
 exports.mpesaCallback = functions.https.onRequest(async (req, res) => {
   try {
@@ -261,5 +277,8 @@ exports.mpesaCallback = functions.https.onRequest(async (req, res) => {
  * Health Check
  */
 exports.health = functions.https.onRequest((req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+  });
 });
